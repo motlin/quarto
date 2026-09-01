@@ -294,6 +294,26 @@
   .toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
   .toggle input { accent-color: var(--amber); }
 
+  .rules { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .rules-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-muted);
+  }
+  .segment { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .segment button {
+    border: 0;
+    background: var(--panel);
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--ink-muted);
+  }
+  .segment button + button { border-left: 1px solid var(--line); }
+  .segment button[aria-checked="true"] { background: var(--amber); color: #2B1D06; font-weight: 500; }
+  .segment button:disabled { cursor: default; opacity: 0.6; }
+
   .log {
     font-family: "IBM Plex Mono", monospace;
     font-size: 12px;
@@ -337,7 +357,8 @@
     <div class="board-wrap">
       <div class="board" id="board" role="grid" aria-label="Quarto board"></div>
       <div class="legend">
-        Four in a line or a 2×2 square sharing any trait wins: <b>light / dark</b>, <b>round / square</b>, <b>tall / short</b>, <b>solid / hollow</b>.
+        <span id="legendSquares">Four in a line or a 2×2 square sharing any trait wins:</span><span id="legendLines" hidden>Four in a row, column or diagonal sharing any trait wins:</span>
+        <b>light / dark</b>, <b>round / square</b>, <b>tall / short</b>, <b>solid / hollow</b>.
         You hand your opponent the piece they must place.
       </div>
     </div>
@@ -357,6 +378,14 @@
       </div>
 
       <div class="tray" id="tray" role="group" aria-label="Pieces remaining"></div>
+
+      <div class="rules">
+        <span class="rules-label">Rules</span>
+        <div class="segment" role="radiogroup" aria-label="Win conditions" id="rulesGroup">
+          <button type="button" role="radio" aria-checked="false" data-squares="0">Lines only</button>
+          <button type="button" role="radio" aria-checked="true" data-squares="1">Lines + 2×2 squares</button>
+        </div>
+      </div>
 
       <div class="controls">
         <button class="btn primary" id="newGameButton">New game</button>
@@ -555,6 +584,9 @@
   const log = document.getElementById("log");
   const statusLine = document.getElementById("statusLine");
   const hintsToggle = document.getElementById("hintsToggle");
+  const rulesButtons = [...document.getElementById("rulesGroup").querySelectorAll("button")];
+  const legendSquares = document.getElementById("legendSquares");
+  const legendLines = document.getElementById("legendLines");
   const undoButton = document.getElementById("undoButton");
   const swapButton = document.getElementById("swapButton");
 
@@ -584,7 +616,9 @@
     for (let r = 0; r < 4; r++) lines.push([0, 1, 2, 3].map((c) => r * 4 + c));
     for (let c = 0; c < 4; c++) lines.push([0, 1, 2, 3].map((r) => r * 4 + c));
     lines.push([0, 5, 10, 15], [3, 6, 9, 12]);
-    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) lines.push([r * 4 + c, r * 4 + c + 1, r * 4 + c + 4, r * 4 + c + 5]);
+    if (solver.rules_squares()) {
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) lines.push([r * 4 + c, r * 4 + c + 1, r * 4 + c + 4, r * 4 + c + 5]);
+    }
     const winning = new Set();
     for (const line of lines) {
       const pieces = line.map((cell) => solver.piece_at(cell));
@@ -687,6 +721,14 @@
     }).join("");
     log.scrollTop = log.scrollHeight;
 
+    const squares = solver.rules_squares() === 1;
+    for (const button of rulesButtons) {
+      button.setAttribute("aria-checked", String((button.dataset.squares === "1") === squares));
+      button.disabled = game.thinking;
+    }
+    legendSquares.hidden = !squares;
+    legendLines.hidden = squares;
+
     undoButton.disabled = game.thinking || game.log.length === 0;
     swapButton.disabled = game.thinking || game.log.length > 0;
     swapButton.textContent = game.humanFirst ? "Let engine start" : "Let me start";
@@ -724,6 +766,15 @@
     lastVerdict = null;
     await refreshOracle();
   });
+  for (const button of rulesButtons) {
+    button.addEventListener("click", async () => {
+      if (game.thinking) return;
+      const squares = button.dataset.squares === "1";
+      if ((solver.rules_squares() === 1) === squares) return;
+      solver.set_rules(squares ? 1 : 0);
+      await newGame();
+    });
+  }
   hintsToggle.addEventListener("change", async () => {
     if (game.thinking) return;
     await refreshOracle();

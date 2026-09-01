@@ -1,5 +1,5 @@
 // 🖥️ Native driver: reads move tokens from stdin, prints upstream play() transcript format.
-// Usage: quarto_native [skipPlies]  — skipPlies plies are applied without evaluation (cold timing).
+// Usage: quarto_native [skipPlies] [lines|squares]  — skipPlies plies are applied without evaluation (cold timing).
 #include "quarto.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -102,6 +102,12 @@ int main(int argc, char** argv)
 {
     int skipPlies = argc > 1 ? atoi(argv[1]) : 0;
     init();
+    if (argc > 2)
+    {
+        if (strcmp(argv[2], "lines") == 0) set_rules(0);
+        else if (strcmp(argv[2], "squares") == 0) set_rules(1);
+        else { fprintf(stderr, "rules must be lines or squares, got %s\n", argv[2]); return 1; }
+    }
 
     int player = 0;
     int ply = 0;

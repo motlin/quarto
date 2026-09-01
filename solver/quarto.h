@@ -7,6 +7,8 @@
 #define QUARTO_NO_PIECE 16
 
 void init(void);
+void set_rules(int32_t squares);
+int32_t rules_squares(void);
 void reset(void);
 
 int32_t apply_select(int32_t piece);

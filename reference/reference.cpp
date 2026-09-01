@@ -76,7 +76,7 @@ void clearBit(uint16_t& val, uint16_t n)
     val &= ~(1 << n);
 }
 
-std::vector<uint16_t> computeRegWinMasks()
+std::vector<uint16_t> computeRegWinMasks(bool squares)
 {
     std::vector<uint16_t> winMasks;
 
@@ -125,7 +125,7 @@ std::vector<uint16_t> computeRegWinMasks()
             winMasks.push_back(winMask);
         }
 
-        if (row + WIN_SQ_SIDE <= NUM_ROWS && col + WIN_SQ_SIDE <= NUM_COLS)
+        if (squares && row + WIN_SQ_SIDE <= NUM_ROWS && col + WIN_SQ_SIDE <= NUM_COLS)
         {
             uint16_t winMask = 0;
             FOR_WIN_LEN(j)
@@ -197,7 +197,7 @@ std::vector<uint16_t> computeTorusWinMasks()
     return winMasks;
 }
 
-const std::vector<uint16_t> winMasks = computeRegWinMasks();
+std::vector<uint16_t> winMasks;
 
 std::array<std::vector<uint16_t>, NUM_CELLS> computeCellWinMasks()
 {
@@ -214,7 +214,7 @@ std::array<std::vector<uint16_t>, NUM_CELLS> computeCellWinMasks()
     return cellWinMasks;
 }
 
-const std::array<std::vector<uint16_t>, NUM_CELLS> cellWinMasks = computeCellWinMasks();
+std::array<std::vector<uint16_t>, NUM_CELLS> cellWinMasks;
 
 constexpr uint32_t NUM_CELL_MASKS = 1 << NUM_CELLS;
 
@@ -493,7 +493,7 @@ std::array<uint16_t, NUM_CELL_MASKS> computeLosePropVarCells()
     return losePropVarCells;
 }
 
-const std::array<uint16_t, NUM_CELL_MASKS> losePropVarCells = computeLosePropVarCells();
+std::array<uint16_t, NUM_CELL_MASKS> losePropVarCells;
 
 constexpr uint16_t NUM_LOSE_MASKS = 1 << (NUM_PROPS * NUM_VARS);
 
@@ -1001,8 +1001,20 @@ void play(int skipPlies)
     }
 }
 
+// Usage: quarto_reference [skipPlies] [lines|squares]
 int main(int argc, char** argv)
 {
+    bool squares = true;
+    if (argc > 2)
+    {
+        std::string rules = argv[2];
+        if (rules == "lines") squares = false;
+        else if (rules != "squares") { std::cerr << "rules must be lines or squares" << std::endl; return 1; }
+    }
+    winMasks = computeRegWinMasks(squares);
+    cellWinMasks = computeCellWinMasks();
+    losePropVarCells = computeLosePropVarCells();
+
     play(argc > 1 ? std::atoi(argv[1]) : 0);
 
     return 0;

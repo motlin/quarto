@@ -10,11 +10,15 @@ typedef struct __attribute__((packed))
 } BookEntry;
 
 #ifdef BOOK_EMPTY
-#define BOOK_DEPTH 0
-#define BOOK_ENTRIES 0
-static const BookEntry bookData[1] = { { 0, 0, 0 } };
+#define BOOK_SQUARES_DEPTH 0
+#define BOOK_SQUARES_ENTRIES 0
+static const BookEntry bookDataSquares[1] = { { 0, 0, 0 } };
+#define BOOK_LINES_DEPTH 0
+#define BOOK_LINES_ENTRIES 0
+static const BookEntry bookDataLines[1] = { { 0, 0, 0 } };
 #else
-#include "book_data.h"
+#include "book_data_squares.h"
+#include "book_data_lines.h"
 #endif
 
 #ifdef __wasm__
@@ -54,6 +58,9 @@ typedef unsigned __int128 uint128_t;
 #define FOR_PIECES(i) for (uint16_t i = 0; i < NUM_PIECES; ++i)
 #define FOR_CELLS(i) for (uint16_t i = 0; i < NUM_CELLS; ++i)
 #define FOR_WIN_LEN(i) for (uint16_t i = 0; i < WIN_LEN; ++i)
+
+// Rules: 1 = rows, columns, diagonals and 2x2 squares win (upstream "regular"); 0 = lines only
+static int rulesSquares = 1;
 
 static uint16_t winMasks[MAX_WIN_MASKS];
 static uint16_t numWinMasks;
@@ -104,7 +111,7 @@ static void addWinMask(uint16_t winMask)
     winMasks[numWinMasks++] = winMask;
 }
 
-static void computeRegWinMasks(void)
+static void computeWinMasks(int squares)
 {
     numWinMasks = 0;
 
@@ -141,7 +148,7 @@ static void computeRegWinMasks(void)
             addWinMask(winMask);
         }
 
-        if (row + WIN_SQ_SIDE <= NUM_ROWS && col + WIN_SQ_SIDE <= NUM_COLS)
+        if (squares && row + WIN_SQ_SIDE <= NUM_ROWS && col + WIN_SQ_SIDE <= NUM_COLS)
         {
             uint16_t winMask = 0;
             FOR_WIN_LEN(j) setBit(&winMask, rowColToCell(row + j / WIN_SQ_SIDE, col + j % WIN_SQ_SIDE));
@@ -579,27 +586,25 @@ static int16_t eval(State* s)
     return isToPlace(s) ? evalPlace(s, min, max) : evalSelect(s, min, max);
 }
 
-// Seeds the transposition tables with exact values for every book position
+static const BookEntry* activeBook(void) { return rulesSquares ? bookDataSquares : bookDataLines; }
+static uint32_t activeBookEntries(void) { return rulesSquares ? BOOK_SQUARES_ENTRIES : BOOK_LINES_ENTRIES; }
+static int32_t activeBookDepth(void) { return rulesSquares ? BOOK_SQUARES_DEPTH : BOOK_LINES_DEPTH; }
+
+// Seeds the transposition tables with exact values for every book position of the active rules
 static void loadBook(void)
 {
-    for (uint32_t i = 0; i < BOOK_ENTRIES; ++i)
+    const BookEntry* book = activeBook();
+    uint32_t count = activeBookEntries();
+    for (uint32_t i = 0; i < count; ++i)
     {
-        uint128_t key = ((uint128_t) bookData[i].cellsTaken << 64) | bookData[i].keyLow;
-        uint16_t movesDone = (uint16_t) __builtin_popcount(bookData[i].cellsTaken);
-        tablePut(tableForMovesDone(movesDone), key, bookData[i].value, 1, 1);
+        uint128_t key = ((uint128_t) book[i].cellsTaken << 64) | book[i].keyLow;
+        uint16_t movesDone = (uint16_t) __builtin_popcount(book[i].cellsTaken);
+        tablePut(tableForMovesDone(movesDone), key, book[i].value, 1, 1);
     }
 }
 
-// ---------------------------------------------------------------- exports
-
-EXPORT("init") void init(void)
+static void clearTables(void)
 {
-    computeRegWinMasks();
-    computeCellWinMasks();
-    computeRotMasks();
-    computeLosePropVarCells();
-    computeNotLosingSelects();
-
     for (uint16_t t = 0; t < NUM_TTS; ++t)
     {
         for (uint64_t i = 0; i < TT_SIZE; ++i)
@@ -608,9 +613,30 @@ EXPORT("init") void init(void)
             transTables[t][i] = empty;
         }
     }
+}
 
+// ---------------------------------------------------------------- exports
+
+EXPORT("init") void init(void)
+{
+    computeRotMasks();
+    computeNotLosingSelects();
+    set_rules(1);
+}
+
+// Switches win conditions. Transposition tables are rules-specific, so they are cleared
+// and reseeded from the matching opening book; the game restarts.
+EXPORT("set_rules") void set_rules(int32_t squares)
+{
+    rulesSquares = squares != 0;
+    computeWinMasks(rulesSquares);
+    computeCellWinMasks();
+    computeLosePropVarCells();
+    clearTables();
     reset();
 }
+
+EXPORT("rules_squares") int32_t rules_squares(void) { return rulesSquares; }
 
 EXPORT("reset") void reset(void)
 {
@@ -813,5 +839,5 @@ EXPORT("best_move") int32_t best_move(void)
 EXPORT("key_low") uint64_t key_low(void) { return (uint64_t) getKey(&state); }
 EXPORT("key_high") uint64_t key_high(void) { return (uint64_t) (getKey(&state) >> 64); }
 
-EXPORT("book_entries") int32_t book_entries(void) { return BOOK_ENTRIES; }
-EXPORT("book_depth") int32_t book_depth(void) { return BOOK_DEPTH; }
+EXPORT("book_entries") int32_t book_entries(void) { return (int32_t) activeBookEntries(); }
+EXPORT("book_depth") int32_t book_depth(void) { return activeBookDepth(); }

@@ -102,16 +102,20 @@ static void replay(const BookEntry* entry)
 
 int main(int argc, char** argv)
 {
-    if (argc < 2) { fprintf(stderr, "usage: bookgen <depth> [--count-only | --shard <index>/<count>]\n"); return 1; }
+    if (argc < 3) { fprintf(stderr, "usage: bookgen <depth> <lines|squares> [--count-only | --shard <index>/<count>]\n"); return 1; }
     int maxDepth = atoi(argv[1]);
-    int countOnly = argc > 2 && strcmp(argv[2], "--count-only") == 0;
+    int squares;
+    if (strcmp(argv[2], "squares") == 0) squares = 1;
+    else if (strcmp(argv[2], "lines") == 0) squares = 0;
+    else { fprintf(stderr, "rules must be lines or squares, got %s\n", argv[2]); return 1; }
+    int countOnly = argc > 3 && strcmp(argv[3], "--count-only") == 0;
     int shardIndex = 0;
     int shardCount = 1;
-    if (argc > 3 && strcmp(argv[2], "--shard") == 0)
+    if (argc > 4 && strcmp(argv[3], "--shard") == 0)
     {
-        if (sscanf(argv[3], "%d/%d", &shardIndex, &shardCount) != 2 || shardIndex < 0 || shardIndex >= shardCount)
+        if (sscanf(argv[4], "%d/%d", &shardIndex, &shardCount) != 2 || shardIndex < 0 || shardIndex >= shardCount)
         {
-            fprintf(stderr, "bad shard spec %s\n", argv[3]);
+            fprintf(stderr, "bad shard spec %s\n", argv[4]);
             return 1;
         }
     }
@@ -120,6 +124,7 @@ int main(int argc, char** argv)
     if (!seen) { fprintf(stderr, "out of memory\n"); return 1; }
 
     init();
+    set_rules(squares);
     enumerate(maxDepth);
 
     if (countOnly)
