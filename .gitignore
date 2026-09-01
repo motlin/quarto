@@ -1,0 +1,7 @@
+dist/
+web/solver.wasm
+solver/quarto_native
+solver/bookgen
+reference/quarto_reference
+node_modules/
+.playwright-mcp/

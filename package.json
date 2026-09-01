@@ -1,0 +1,10 @@
+{
+  "name": "quarto-solver-wasm",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "pretest": "solver/build.sh",
+    "test": "node --test \"test/**/*.test.mjs\"",
+    "build": "solver/build.sh && node web/build.mjs"
+  }
+}

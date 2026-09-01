@@ -1,0 +1,735 @@
+<title>Quarto Oracle</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #E4E6E1;
+    --ground-deep: #D6D9D2;
+    --ink: #1E2622;
+    --ink-muted: #5F6B65;
+    --line: #C3C8C1;
+    --panel: #F3F4F0;
+    --felt: #2E4A3D;
+    --felt-deep: #223829;
+    --felt-line: #3B5C4C;
+    --felt-glow: #4E7A63;
+    --amber: #D9A441;
+    --amber-ink: #7A5313;
+    --win: #2F8F5B;
+    --loss: #C8503A;
+    --draw: #7C867F;
+    --maple: #E3C48F;
+    --maple-edge: #B8925A;
+    --walnut: #5A3A22;
+    --walnut-edge: #33200F;
+    --focus: #2C6FD6;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #17201C;
+      --ground-deep: #101613;
+      --ink: #E8EBE6;
+      --ink-muted: #98A59D;
+      --line: #2C3A33;
+      --panel: #1E2A25;
+      --felt: #294538;
+      --felt-deep: #1B3026;
+      --felt-line: #355646;
+      --felt-glow: #4A7A60;
+      --amber: #E4B458;
+      --amber-ink: #F1D08A;
+      --win: #5DBE85;
+      --loss: #E0705C;
+      --draw: #8E9A93;
+      --focus: #7FB0FF;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #17201C;
+    --ground-deep: #101613;
+    --ink: #E8EBE6;
+    --ink-muted: #98A59D;
+    --line: #2C3A33;
+    --panel: #1E2A25;
+    --felt: #294538;
+    --felt-deep: #1B3026;
+    --felt-line: #355646;
+    --felt-glow: #4A7A60;
+    --amber: #E4B458;
+    --amber-ink: #F1D08A;
+    --win: #5DBE85;
+    --loss: #E0705C;
+    --draw: #8E9A93;
+    --focus: #7FB0FF;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 24px 48px;
+    display: grid;
+    gap: 24px;
+  }
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 14px;
+  }
+  h1 {
+    font-family: "Bricolage Grotesque", "Arial Narrow", sans-serif;
+    font-weight: 700;
+    font-size: clamp(28px, 4vw, 40px);
+    letter-spacing: -0.02em;
+    margin: 0;
+    line-height: 1;
+    text-wrap: balance;
+  }
+  h1 small {
+    display: block;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    letter-spacing: 0;
+    color: var(--ink-muted);
+    margin-top: 8px;
+  }
+  .status-line {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--ink-muted);
+    letter-spacing: 0.02em;
+  }
+
+  .table {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 800px) {
+    .table { grid-template-columns: 1fr; }
+  }
+
+  /* 🟩 Board */
+  .board-wrap { display: grid; gap: 12px; }
+  .board {
+    aspect-ratio: 1;
+    width: 100%;
+    max-width: 560px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    padding: 14px;
+    border-radius: 6px;
+    background:
+      radial-gradient(120% 90% at 50% 0%, var(--felt-glow) 0%, transparent 60%),
+      var(--felt);
+    box-shadow: inset 0 0 0 1px var(--felt-line), 0 18px 40px -22px #000;
+  }
+  .cell {
+    position: relative;
+    border: 0;
+    border-radius: 4px;
+    background: var(--felt-deep);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+    padding: 0;
+    min-height: 0;
+    cursor: default;
+  }
+  .cell.legal { cursor: pointer; }
+  .cell.legal:hover { background: var(--felt-line); }
+  .cell.legal::after {
+    content: "";
+    position: absolute;
+    left: 41%;
+    top: 41%;
+    width: 18%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--amber);
+    opacity: 0.55;
+  }
+  .cell.legal:hover::after { opacity: 0; }
+  .cell.winning { box-shadow: inset 0 0 0 3px var(--amber); }
+  .cell.last { box-shadow: inset 0 0 0 2px var(--amber-ink); }
+  .cell svg { position: absolute; inset: 8%; width: 84%; height: 84%; }
+  .hint {
+    position: absolute;
+    left: 6px;
+    top: 4px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    pointer-events: none;
+  }
+  .hint.win { color: #9CE8B8; }
+  .hint.loss { color: #FFB0A0; }
+  .hint.draw { color: #D8DDD9; }
+
+  /* 🔮 Oracle */
+  .oracle {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 6px;
+    padding: 16px 18px;
+    display: grid;
+    gap: 6px;
+  }
+  .oracle-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .lamp {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 25%, transparent);
+  }
+  .lamp.thinking { animation: pulse 0.9s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: 0.25; } }
+  @media (prefers-reduced-motion: reduce) { .lamp.thinking { animation: none; } }
+  .verdict {
+    font-family: "Bricolage Grotesque", "Arial Narrow", sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+  .verdict.win { color: var(--win); }
+  .verdict.loss { color: var(--loss); }
+  .verdict.draw { color: var(--ink); }
+  .verdict-detail {
+    color: var(--ink-muted);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .prompt {
+    font-size: 15px;
+    font-weight: 500;
+    min-height: 1.5em;
+  }
+
+  /* 🪵 Tray */
+  .tray-wrap { display: grid; gap: 14px; }
+  .tray {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 12px;
+    border-radius: 6px;
+    background: var(--ground-deep);
+    border: 1px solid var(--line);
+  }
+  .slot {
+    position: relative;
+    aspect-ratio: 1;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    display: grid;
+    place-items: center;
+    padding: 10%;
+    cursor: default;
+  }
+  .slot.legal { cursor: pointer; }
+  .slot.legal:hover { background: var(--panel); }
+  .slot.taken { opacity: 0; pointer-events: none; }
+  .slot svg { width: 100%; height: 100%; }
+  .slot .hint { left: 2px; top: 2px; }
+
+  .hand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 10px 12px;
+    min-height: 74px;
+  }
+  .hand .hand-piece { width: 48px; height: 56px; flex: none; }
+  .hand .hand-piece svg { width: 100%; height: 100%; }
+  .hand-text { color: var(--ink-muted); font-size: 13px; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .btn {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 4px;
+    padding: 7px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .btn:hover { border-color: var(--ink-muted); }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .btn.primary { background: var(--amber); border-color: var(--amber); color: #2B1D06; }
+  .toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+  .toggle input { accent-color: var(--amber); }
+
+  .log {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--ink-muted);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 4px 12px;
+    max-height: 140px;
+    overflow-y: auto;
+  }
+  .log-entry { display: flex; gap: 8px; align-items: center; white-space: nowrap; }
+  .log-entry svg { width: 14px; height: 18px; }
+  .log-entry .who { width: 2.2em; }
+
+  .legend {
+    font-size: 12px;
+    color: var(--ink-muted);
+    max-width: 62ch;
+  }
+  .legend b { color: var(--ink); font-weight: 600; }
+
+  .overlay {
+    position: fixed; inset: 0;
+    display: grid; place-items: center;
+    background: var(--ground);
+    font-family: "IBM Plex Mono", monospace;
+    color: var(--ink-muted);
+    z-index: 10;
+  }
+</style>
+
+<div class="overlay" id="overlay">loading solver…</div>
+
+<div class="page">
+  <header>
+    <h1>Quarto Oracle<small>Play against a perfect solver that reports the exact outcome of every position.</small></h1>
+    <div class="status-line" id="statusLine"></div>
+  </header>
+
+  <div class="table">
+    <div class="board-wrap">
+      <div class="board" id="board" role="grid" aria-label="Quarto board"></div>
+      <div class="legend">
+        Four in a line or a 2×2 square sharing any trait wins: <b>light / dark</b>, <b>round / square</b>, <b>tall / short</b>, <b>solid / hollow</b>.
+        You hand your opponent the piece they must place.
+      </div>
+    </div>
+
+    <div class="tray-wrap">
+      <div class="oracle">
+        <div class="oracle-label"><span class="lamp" id="lamp"></span><span id="oracleLabel">Oracle</span></div>
+        <div class="verdict draw" id="verdict">—</div>
+        <div class="verdict-detail" id="verdictDetail"></div>
+      </div>
+
+      <div class="prompt" id="prompt"></div>
+
+      <div class="hand" id="hand">
+        <div class="hand-piece" id="handPiece"></div>
+        <div class="hand-text" id="handText"></div>
+      </div>
+
+      <div class="tray" id="tray" role="group" aria-label="Pieces remaining"></div>
+
+      <div class="controls">
+        <button class="btn primary" id="newGameButton">New game</button>
+        <button class="btn" id="swapButton">Let engine start</button>
+        <button class="btn" id="undoButton">Undo</button>
+        <label class="toggle"><input type="checkbox" id="hintsToggle"> Show move values</label>
+      </div>
+
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(async () => {
+  const WASM_BASE64 = "__WASM_BASE64__";
+
+  function base64ToBytes(text) {
+    const binary = atob(text);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+
+  const { instance } = await WebAssembly.instantiate(base64ToBytes(WASM_BASE64), {});
+  const solver = instance.exports;
+  solver.init();
+
+  solver.set_seed((Math.random() * 2 ** 32) >>> 0);
+
+  const NO_PIECE = 16;
+  const NUM_MOVES = 16;
+
+  // 🪵 Piece traits: bit0 dark, bit1 square, bit2 tall, bit3 hollow
+  function pieceSvg(piece, { size = "100%" } = {}) {
+    const dark = piece & 1;
+    const square = piece & 2;
+    const tall = piece & 4;
+    const hollow = piece & 8;
+    const fill = dark ? "var(--walnut)" : "var(--maple)";
+    const edge = dark ? "var(--walnut-edge)" : "var(--maple-edge)";
+    const top = tall ? 10 : 26;
+    const bottom = 52;
+    const rx = square ? 3 : 15;
+    const width = 30;
+    const x = 5;
+    const capHeight = square ? 10 : 9;
+    const body = square
+      ? `<rect x="${x}" y="${top}" width="${width}" height="${bottom - top}" rx="${rx}" fill="${edge}"/>
+         <rect x="${x}" y="${top}" width="${width}" height="${bottom - top - 4}" rx="${rx}" fill="${fill}"/>
+         <rect x="${x}" y="${top}" width="${width}" height="${capHeight}" rx="${rx}" fill="${fill}" stroke="${edge}" stroke-width="1"/>`
+      : `<rect x="${x}" y="${top + 4}" width="${width}" height="${bottom - top - 8}" fill="${edge}"/>
+         <ellipse cx="20" cy="${bottom - 4}" rx="15" ry="4.5" fill="${edge}"/>
+         <rect x="${x}" y="${top + 4}" width="${width}" height="${bottom - top - 10}" fill="${fill}"/>
+         <ellipse cx="20" cy="${top + 4}" rx="15" ry="4.5" fill="${fill}" stroke="${edge}" stroke-width="1"/>`;
+    const hole = hollow
+      ? (square
+        ? `<rect x="13" y="${top + 2}" width="14" height="5" rx="1.5" fill="${edge}"/>`
+        : `<ellipse cx="20" cy="${top + 4}" rx="7" ry="2.2" fill="${edge}"/>`)
+      : "";
+    return `<svg viewBox="0 0 40 60" width="${size}" height="${size}" aria-hidden="true">${body}${hole}</svg>`;
+  }
+
+  const pieceNames = [];
+  for (let piece = 0; piece < 16; piece++) {
+    pieceNames.push([piece & 1 ? "dark" : "light", piece & 2 ? "square" : "round", piece & 4 ? "tall" : "short", piece & 8 ? "hollow" : "solid"].join(" "));
+  }
+  function cellName(cell) {
+    return String.fromCharCode(97 + (cell % 4)) + (Math.floor(cell / 4) + 1);
+  }
+
+  // 🎮 Game state outside the solver: who is who, and a log for display
+  const game = { humanFirst: true, thinking: false, log: [], lastCell: -1, over: false };
+
+  function movesDone() { return NUM_MOVES - solver.moves_left(); }
+  // Player 0 selects first. Select at k placements done → player k%2; place → player (k+1)%2.
+  function playerToMove() {
+    const k = movesDone();
+    return solver.is_to_place() ? (k + 1) % 2 : k % 2;
+  }
+  function isHumanTurn() { return (playerToMove() === 0) === game.humanFirst; }
+  function playerName(playerIndex) { return (playerIndex === 0) === game.humanFirst ? "You" : "Engine"; }
+
+  function legalMoves() {
+    const moves = [];
+    if (solver.is_to_place()) {
+      const taken = solver.cells_taken();
+      for (let cell = 0; cell < 16; cell++) if (!((taken >> cell) & 1)) moves.push(cell);
+    } else {
+      const taken = solver.pieces_taken();
+      for (let piece = 0; piece < 16; piece++) if (!((taken >> piece) & 1)) moves.push(piece);
+    }
+    return moves;
+  }
+
+  function distanceOf(value, movesLeft) { return movesLeft + 1 - Math.abs(value); }
+
+  function describeValue(value, movesLeft, moverIsHuman) {
+    if (value === 0) return { kind: "draw", text: "Draw" };
+    const distance = distanceOf(value, movesLeft);
+    const moverWins = value > 0;
+    const humanWins = moverWins === moverIsHuman;
+    return { kind: humanWins ? "win" : "loss", text: `${humanWins ? "You win" : "Engine wins"} in ${distance}`, distance };
+  }
+
+  function shortValue(value, movesLeft, moverIsHuman) {
+    if (value === 0) return { kind: "draw", text: "=" };
+    const described = describeValue(value, movesLeft, moverIsHuman);
+    return { kind: described.kind, text: `${described.kind === "win" ? "W" : "L"}${described.distance}` };
+  }
+
+  const nextPaint = () => new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
+
+  function evaluateMove(move) {
+    return solver.is_to_place() ? solver.evaluate_place(move) : solver.evaluate_select(move);
+  }
+
+  // 🧠 Runs a synchronous solver task after letting the "thinking" state paint.
+  async function search(task) {
+    game.thinking = true;
+    render();
+    await nextPaint();
+    const started = performance.now();
+    const nodesBefore = solver.node_count();
+    const result = task();
+    result.milliseconds = performance.now() - started;
+    result.nodes = Number(solver.node_count() - nodesBefore);
+    game.thinking = false;
+    return result;
+  }
+
+  function exactMoveValues() {
+    const values = new Map();
+    for (const move of legalMoves()) values.set(move, evaluateMove(move));
+    return values;
+  }
+
+  let lastVerdict = null;
+  let hintValues = null;
+
+  async function refreshOracle() {
+    if (solver.is_won() || solver.is_done()) {
+      lastVerdict = null;
+      hintValues = null;
+      render();
+      return;
+    }
+    const wantHints = hintsToggle.checked && isHumanTurn();
+    const result = await search(() => ({ value: solver.evaluate(), moves: wantHints ? exactMoveValues() : null }));
+    lastVerdict = { value: result.value, movesLeft: solver.moves_left(), moverIsHuman: isHumanTurn(), milliseconds: result.milliseconds, nodes: result.nodes };
+    hintValues = result.moves;
+    render();
+  }
+
+  function applyMove(move) {
+    const isPlace = solver.is_to_place();
+    const who = playerName(playerToMove());
+    const piece = isPlace ? solver.current_piece() : move;
+    const ok = isPlace ? solver.apply_place(move) : solver.apply_select(move);
+    if (ok !== 1) throw new Error(`illegal move ${move}`);
+    if (isPlace) game.lastCell = move;
+    game.log.push({ who, isPlace, piece, cell: isPlace ? move : null });
+  }
+
+  async function engineTurn() {
+    while (!game.over && !isHumanTurn() && !solver.is_won() && !solver.is_done()) {
+      const result = await search(() => ({ value: solver.evaluate(), move: solver.best_move() }));
+      lastVerdict = { value: result.value, movesLeft: solver.moves_left(), moverIsHuman: false, milliseconds: result.milliseconds, nodes: result.nodes };
+      render();
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      applyMove(result.move);
+      render();
+    }
+    await refreshOracle();
+  }
+
+  async function humanMove(move) {
+    if (game.thinking || game.over || !isHumanTurn()) return;
+    applyMove(move);
+    hintValues = null;
+    render();
+    await engineTurn();
+  }
+
+  // 🖼️ Rendering
+  const board = document.getElementById("board");
+  const tray = document.getElementById("tray");
+  const verdict = document.getElementById("verdict");
+  const verdictDetail = document.getElementById("verdictDetail");
+  const oracleLabel = document.getElementById("oracleLabel");
+  const lamp = document.getElementById("lamp");
+  const prompt = document.getElementById("prompt");
+  const hand = document.getElementById("hand");
+  const handPiece = document.getElementById("handPiece");
+  const handText = document.getElementById("handText");
+  const log = document.getElementById("log");
+  const statusLine = document.getElementById("statusLine");
+  const hintsToggle = document.getElementById("hintsToggle");
+  const undoButton = document.getElementById("undoButton");
+  const swapButton = document.getElementById("swapButton");
+
+  const cellButtons = [];
+  for (let cell = 0; cell < 16; cell++) {
+    const button = document.createElement("button");
+    button.className = "cell";
+    button.setAttribute("aria-label", `cell ${cellName(cell)}`);
+    button.addEventListener("click", () => { if (solver.is_to_place() && button.classList.contains("legal")) humanMove(cell); });
+    board.appendChild(button);
+    cellButtons.push(button);
+  }
+  const slotButtons = [];
+  for (let piece = 0; piece < 16; piece++) {
+    const button = document.createElement("button");
+    button.className = "slot";
+    button.setAttribute("aria-label", pieceNames[piece]);
+    button.title = pieceNames[piece];
+    button.innerHTML = pieceSvg(piece);
+    button.addEventListener("click", () => { if (!solver.is_to_place() && button.classList.contains("legal")) humanMove(piece); });
+    tray.appendChild(button);
+    slotButtons.push(button);
+  }
+
+  function winningCells() {
+    const lines = [];
+    for (let r = 0; r < 4; r++) lines.push([0, 1, 2, 3].map((c) => r * 4 + c));
+    for (let c = 0; c < 4; c++) lines.push([0, 1, 2, 3].map((r) => r * 4 + c));
+    lines.push([0, 5, 10, 15], [3, 6, 9, 12]);
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) lines.push([r * 4 + c, r * 4 + c + 1, r * 4 + c + 4, r * 4 + c + 5]);
+    const winning = new Set();
+    for (const line of lines) {
+      const pieces = line.map((cell) => solver.piece_at(cell));
+      if (pieces.includes(NO_PIECE)) continue;
+      for (let bit = 0; bit < 4; bit++) {
+        const values = pieces.map((piece) => (piece >> bit) & 1);
+        if (values.every((v) => v === values[0])) line.forEach((cell) => winning.add(cell));
+      }
+    }
+    return winning;
+  }
+
+  function render() {
+    const toPlace = solver.is_to_place();
+    const won = solver.is_won();
+    const done = solver.is_done();
+    game.over = won || done;
+    const humanTurn = isHumanTurn() && !game.over && !game.thinking;
+    const winning = won ? winningCells() : new Set();
+    const cellsTaken = solver.cells_taken();
+    const piecesTaken = solver.pieces_taken();
+    const movesLeft = solver.moves_left();
+
+    for (let cell = 0; cell < 16; cell++) {
+      const button = cellButtons[cell];
+      const piece = solver.piece_at(cell);
+      const legal = humanTurn && toPlace && !((cellsTaken >> cell) & 1);
+      button.classList.toggle("legal", legal);
+      button.classList.toggle("winning", winning.has(cell));
+      button.classList.toggle("last", !won && cell === game.lastCell);
+      let html = piece === NO_PIECE ? "" : pieceSvg(piece);
+      if (legal && hintValues && hintValues.has(cell)) {
+        const short = shortValue(hintValues.get(cell), movesLeft, true);
+        html += `<span class="hint ${short.kind}">${short.text}</span>`;
+      }
+      button.innerHTML = html;
+      button.disabled = !legal;
+    }
+
+    for (let piece = 0; piece < 16; piece++) {
+      const button = slotButtons[piece];
+      const taken = (piecesTaken >> piece) & 1;
+      const legal = humanTurn && !toPlace && !taken;
+      button.classList.toggle("taken", Boolean(taken));
+      button.classList.toggle("legal", legal);
+      button.disabled = !legal;
+      const existing = button.querySelector(".hint");
+      if (existing) existing.remove();
+      if (legal && hintValues && hintValues.has(piece)) {
+        const short = shortValue(hintValues.get(piece), movesLeft, true);
+        button.insertAdjacentHTML("beforeend", `<span class="hint ${short.kind}">${short.text}</span>`);
+      }
+    }
+
+    const current = solver.current_piece();
+    hand.hidden = game.over;
+    handPiece.innerHTML = current === NO_PIECE ? "" : pieceSvg(current);
+    if (current === NO_PIECE) {
+      handText.textContent = game.over ? "" : (isHumanTurn() ? "Pick a piece from the tray to hand to the engine." : "Engine is choosing a piece for you.");
+    } else {
+      handText.textContent = `${pieceNames[current]} — ${isHumanTurn() ? "place it on the board." : "engine is placing it."}`;
+    }
+
+    if (won) {
+      const winner = game.log[game.log.length - 1].who;
+      prompt.textContent = winner === "You" ? "Quarto! You win." : "Quarto. The engine wins.";
+    } else if (done) {
+      prompt.textContent = "Board full. Drawn game.";
+    } else if (game.thinking) {
+      prompt.textContent = isHumanTurn() ? "Evaluating…" : "Engine is thinking…";
+    } else if (humanTurn) {
+      prompt.textContent = toPlace ? "Your move: place the piece." : "Your move: choose a piece for the engine.";
+    } else {
+      prompt.textContent = "";
+    }
+
+    lamp.classList.toggle("thinking", game.thinking);
+    if (game.over) {
+      oracleLabel.textContent = "Final";
+      verdict.className = "verdict draw";
+      verdict.textContent = won ? (game.log[game.log.length - 1].who === "You" ? "You won" : "Engine won") : "Draw";
+      verdictDetail.textContent = "";
+    } else if (lastVerdict) {
+      const described = describeValue(lastVerdict.value, lastVerdict.movesLeft, lastVerdict.moverIsHuman);
+      oracleLabel.textContent = "Oracle · perfect play";
+      verdict.className = `verdict ${described.kind}`;
+      verdict.textContent = described.kind === "draw" ? "Draw with perfect play" : described.text;
+      verdictDetail.textContent = `${lastVerdict.nodes.toLocaleString()} nodes · ${Math.round(lastVerdict.milliseconds)} ms`;
+    } else {
+      oracleLabel.textContent = "Oracle";
+      verdict.className = "verdict draw";
+      verdict.textContent = game.thinking ? "…" : "—";
+      verdictDetail.textContent = "";
+    }
+
+    log.innerHTML = game.log.map((entry, index) => {
+      const number = Math.floor(index / 2) + 1;
+      const action = entry.isPlace ? `→ ${cellName(entry.cell)}` : "gives";
+      return `<div class="log-entry"><span>${index % 2 === 0 ? number + "." : ""}</span><span class="who">${entry.who === "You" ? "you" : "eng"}</span>${pieceSvg(entry.piece)}<span>${action}</span></div>`;
+    }).join("");
+    log.scrollTop = log.scrollHeight;
+
+    undoButton.disabled = game.thinking || game.log.length === 0;
+    swapButton.disabled = game.thinking || game.log.length > 0;
+    swapButton.textContent = game.humanFirst ? "Let engine start" : "Let me start";
+    statusLine.textContent = `book depth ${solver.book_depth()} · ${solver.book_entries().toLocaleString()} positions · move ${Math.min(movesDone() + 1, NUM_MOVES)} of ${NUM_MOVES}`;
+  }
+
+  async function newGame() {
+    if (game.thinking) return;
+    solver.reset();
+    game.log = [];
+    game.lastCell = -1;
+    game.over = false;
+    lastVerdict = null;
+    hintValues = null;
+    render();
+    await engineTurn();
+  }
+
+  document.getElementById("newGameButton").addEventListener("click", newGame);
+  swapButton.addEventListener("click", async () => {
+    if (game.thinking || game.log.length > 0) return;
+    game.humanFirst = !game.humanFirst;
+    await newGame();
+  });
+  undoButton.addEventListener("click", async () => {
+    if (game.thinking || game.log.length === 0) return;
+    // Rewind to the human's previous decision point
+    do {
+      if (solver.undo() !== 1) break;
+      game.log.pop();
+    } while (game.log.length > 0 && !isHumanTurn());
+    game.lastCell = -1;
+    for (let i = game.log.length - 1; i >= 0; i--) if (game.log[i].isPlace) { game.lastCell = game.log[i].cell; break; }
+    hintValues = null;
+    lastVerdict = null;
+    await refreshOracle();
+  });
+  hintsToggle.addEventListener("change", async () => {
+    if (game.thinking) return;
+    await refreshOracle();
+  });
+
+  document.getElementById("overlay").remove();
+  await newGame();
+})();
+</script>
