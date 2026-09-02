@@ -1,0 +1,42 @@
+[package]
+name = "quarto-solver"
+version = "0.1.0"
+edition = "2024"
+description = "Exact Quarto solver: alpha-beta search with transposition tables and an opening book."
+license = "Apache-2.0"
+repository = "https://github.com/motlin/quarto"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "play"
+path = "src/bin/play.rs"
+
+[[bin]]
+name = "book"
+path = "src/bin/book.rs"
+
+[features]
+wasm = ["dep:wasm-bindgen"]
+
+[dependencies]
+wasm-bindgen = { version = "0.2", optional = true }
+
+[dev-dependencies]
+
+[profile.release]
+lto = "thin"
+strip = true
+
+# Lints are configured here rather than in a separate clippy.toml so the policy
+# travels with the manifest. Override or extend per project as needed.
+[lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+rust_2024_compatibility = { level = "warn", priority = -1 }
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
