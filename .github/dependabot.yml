@@ -1,0 +1,74 @@
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/solver"
+    schedule:
+      interval: "daily"
+      time: "07:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 25
+    cooldown:
+      default-days: 1
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "dependabot"
+      include: "scope"
+
+  - package-ecosystem: "npm"
+    directory: "/web"
+    schedule:
+      interval: "daily"
+      time: "07:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 25
+    cooldown:
+      default-days: 7
+    labels:
+      - "dependencies"
+    # Only group dependencies that must move in lockstep.
+    groups:
+      vite-ecosystem:
+        patterns:
+          - "vite"
+          - "@vitejs/*"
+      testing:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+          - "@testing-library/*"
+          - "playwright"
+      # Storybook ships its core, addons and eslint plugin on one release train,
+      # so they have to move together. @chromatic-com/storybook is deliberately
+      # excluded: different vendor, independent versioning.
+      storybook:
+        patterns:
+          - "storybook"
+          - "@storybook/*"
+          - "eslint-plugin-storybook"
+      react-ecosystem:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react*"
+      tanstack:
+        patterns:
+          - "@tanstack/*"
+    commit-message:
+      prefix: "dependabot"
+      include: "scope"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "07:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 25
+    cooldown:
+      default-days: 7
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "dependabot"
+      include: "scope"

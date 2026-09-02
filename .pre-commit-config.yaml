@@ -1,0 +1,71 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+        args: ["--allow-multiple-documents"]
+      - id: check-json
+        # TypeScript, markdownlint and fallow config files allow comments.
+        exclude: "tsconfig.*\\.json|\\.markdownlint.*\\.jsonc|\\.fallowrc\\.jsonc"
+      - id: check-toml
+      - id: check-xml
+      - id: end-of-file-fixer
+        exclude: "pnpm-lock\\.yaml"
+      - id: trailing-whitespace
+        exclude: "pnpm-lock\\.yaml"
+      - id: check-added-large-files
+        args: ["--maxkb=1000"]
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        exclude: "^(\\.llm/|\\.claude/|web/(node_modules|dist|storybook-static)/|web/pnpm-lock\\.yaml)"
+
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: cargo fmt --manifest-path solver/Cargo.toml --
+        language: system
+        types: [rust]
+        files: "^solver/"
+        pass_filenames: true
+      - id: cargo-clippy
+        name: cargo clippy
+        entry: cargo clippy --manifest-path solver/Cargo.toml --all-targets -- -D warnings
+        language: system
+        types: [rust]
+        files: "^solver/"
+        pass_filenames: false
+      - id: oxfmt
+        name: vp fmt
+        # Runs on all changed files outside web/ and the legacy prototype, which
+        # is kept verbatim as an oracle; the flag makes oxfmt skip file types it
+        # does not format instead of erroring when none in the batch match
+        entry: vp fmt --no-error-on-unmatched-pattern
+        language: system
+        exclude: "^(web|prototype)/"
+      - id: oxfmt-web
+        name: vp fmt (web)
+        # Runs from web/ so the app's own vite.config.ts applies; the web/ prefix
+        # is stripped from each filename pre-commit passes
+        entry: bash -c 'cd web && vp fmt --no-error-on-unmatched-pattern "${@#web/}"' --
+        language: system
+        files: "^web/"
+      - id: markdownlint-cli2
+        name: markdownlint-cli2
+        entry: markdownlint-cli2
+        language: system
+        types: [markdown]
+      - id: fallow
+        name: fallow
+        entry: bash -c "cd web && vp exec fallow fix --base HEAD --yes --no-create-config"
+        language: system
+        pass_filenames: false
+        files: "^web/(src/|tests/|package\\.json$)"

@@ -1,26 +1,30 @@
+set dotenv-filename := ".envrc"
+
+mod solver
+mod web
+
 # `just --list --unsorted`
 [group('default')]
 default:
     @just --list --unsorted
 
-# Build the solver wasm and serve prototype/web/index.html with vite at http://localhost:3002/
-[working-directory('prototype')]
-dev:
-    npm run dev
+# Install the toolchain via mise
+[group('setup')]
+install:
+    mise install --quiet
+    mise current
 
-# Build the solver wasm and run the prototype tests
-[working-directory('prototype')]
-test:
-    npm test
-
-# Build the solver wasm and the inlined dist/quarto.html
-[working-directory('prototype')]
-build:
-    npm run build
-
-# Run all pre-commit checks
-verify: test build
+# Check every module, then run all pre-commit hooks
+verify:
+    just solver::check
+    just web::verify
+    pre-commit run --all-files
     @echo "All pre-commit checks passed!"
+
+# set up `git-test`
+[group('setup')]
+setup-git-test:
+    git test add --test default 'just --global-justfile _check-local-modifications && (should-skip-commit || just verify) && just --global-justfile _check-local-modifications' --forget
 
 # Deprecated alias for `verify`
 precommit: verify

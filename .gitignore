@@ -1,8 +1,36 @@
-dist/
+# Build output
+/target
+/solver/target
+/web/dist
+/web/storybook-static
+/dist
+
+# Dependencies
+node_modules/
+
+# Generated sources
+web/src/routeTree.gen.*
+web/src/solver/pkg/
+.fallow/
+
+# Prototype and reference binaries
 prototype/web/solver.wasm
 prototype/solver/quarto_native
 prototype/solver/bookgen
 reference/quarto_reference
-node_modules/
+
+# Local environment overrides
+.envrc
+
+# macOS
+.DS_Store
+
+# Local documentation and Claude state
+.llm/
+/.claude/*
+!/.claude/commands/
+!/.claude/includes/
 .playwright-mcp/
+
+# Local-only branch marker
 JUSTFILE_BRANCH

@@ -1,0 +1,8 @@
+# `just --list --unsorted`
+[group('default')]
+default:
+    @just --list --unsorted
+
+# Placeholder until the web app exists
+verify:
+    @echo "web: nothing to verify yet"

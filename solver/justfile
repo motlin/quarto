@@ -1,0 +1,8 @@
+# `just --list --unsorted`
+[group('default')]
+default:
+    @just --list --unsorted
+
+# Placeholder until the Rust crate exists
+check:
+    @echo "solver: nothing to check yet"

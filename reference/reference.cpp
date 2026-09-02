@@ -11,7 +11,7 @@
 #include <ctime>
 
 #define FOR_PROPS(i) for (uint16_t i = 0; i < NUM_PROPS; ++i)
-#define FOR_PROPS_VARS(i, j) for (uint16_t i = 0; i < NUM_PROPS; ++i) for (uint16_t j = 0; j < NUM_VARS; ++j) 
+#define FOR_PROPS_VARS(i, j) for (uint16_t i = 0; i < NUM_PROPS; ++i) for (uint16_t j = 0; j < NUM_VARS; ++j)
 #define FOR_PIECES(i) for (uint16_t i = 0; i < NUM_PIECES; ++i)
 #define FOR_CELLS(i) for (uint16_t i = 0; i < NUM_CELLS; ++i)
 #define FOR_WIN_LEN(i) for (uint16_t i = 0; i < WIN_LEN; ++i)
@@ -363,7 +363,7 @@ struct State
     uint16_t getPiece(uint16_t cell) const
     {
         if (!getBit(cellsTaken, cell)) return NO_PIECE;
-    
+
         uint16_t piece = 0;
         FOR_PROPS(i)
         {
@@ -376,7 +376,7 @@ struct State
     uint128_t getKey() const
     {
         uint128_t minKey = -1;
-    
+
         uint16_t minCellsTaken = -1;
 
         for (uint16_t rot = 0; rot < NUM_ROTS; ++rot)
@@ -402,7 +402,7 @@ struct State
             {
                 key = ((key << 16) | otherCellsProps[i]);
             }
-    
+
             minKey = std::min<uint128_t>(minKey, key);
         }
 
@@ -827,7 +827,7 @@ void initTransTable()
 
         State state;
         recInitTransTable(state, depth);
-    
+
         std::ofstream outFile(fileName, std::ios::out | std::ios::binary);
         outFile.write((char*) transTables[0].data.data(), sizeof(TransTable::Entry) * transTables[0].data.size());
     }
