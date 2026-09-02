@@ -3,6 +3,10 @@
 default:
     @just --list --unsorted
 
+# Build the solver wasm and serve web/index.html with vite at http://localhost:3002/
+dev:
+    npm run dev
+
 # Build the solver wasm and run the tests
 test:
     npm test

@@ -3,8 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "solver/build.sh && vite",
     "pretest": "solver/build.sh",
     "test": "node --test \"test/**/*.test.mjs\"",
     "build": "solver/build.sh && node web/build.mjs"
+  },
+  "devDependencies": {
+    "vite": "^7.3.6"
   }
 }
