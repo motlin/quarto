@@ -163,6 +163,18 @@
   .segment button + button { border-left: 1px solid var(--line); }
   .segment button[aria-checked="true"] { background: var(--amber); color: #2B1D06; font-weight: 500; }
   .segment button:disabled { cursor: default; opacity: 0.6; }
+  .names { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .names input {
+    font: inherit;
+    color: var(--ink);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 12px;
+    min-height: 44px;
+    min-width: 0;
+  }
+  .names input:focus { border-color: var(--amber); outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--amber) 35%, transparent); }
   .setup-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 6px; }
   .setup-actions .btn.primary { padding: 12px 22px; font-size: 15px; }
   .status-line {
@@ -333,7 +345,7 @@
   }
   .log-entry { display: flex; gap: 8px; align-items: center; white-space: nowrap; }
   .log-entry svg { width: 14px; height: 18px; }
-  .log-entry .who { width: 2.6em; }
+  .log-entry .who { width: 4.5em; overflow: hidden; text-overflow: ellipsis; }
   .play-status {
     font-family: "IBM Plex Mono", monospace;
     font-size: 11px;
@@ -395,6 +407,14 @@
           <button type="button" role="radio" data-value="engine">Engine</button>
           <button type="button" role="radio" data-value="human">Another person</button>
         </div>
+      </div>
+      <div class="field" id="namesField" hidden>
+        <span class="field-label">Players</span>
+        <div class="names">
+          <input type="text" id="name1" maxlength="16" autocomplete="off" placeholder="Player 1" aria-label="First player's name">
+          <input type="text" id="name2" maxlength="16" autocomplete="off" placeholder="Player 2" aria-label="Second player's name">
+        </div>
+        <p class="field-help">The first player hands over a piece; the second player places it.</p>
       </div>
       <div class="field" id="firstField">
         <span class="field-label">First move</span>
@@ -554,7 +574,7 @@
   }
 
   // ⚙️ Setup choices, remembered per browser
-  const defaults = { opponent: "engine", first: "you", rules: "squares", annotations: "outcome" };
+  const defaults = { opponent: "engine", first: "you", rules: "squares", annotations: "outcome", name1: "", name2: "" };
   const config = { ...defaults };
   try {
     const saved = JSON.parse(localStorage.getItem("quarto-oracle-setup") || "{}");
@@ -567,6 +587,7 @@
   // 🎮 Game state outside the solver
   const game = {
     opponent: "engine",
+    names: ["Player 1", "Player 2"],
     humanFirst: true,
     annotationLevel: "outcome",
     annotationsOn: true,
@@ -586,7 +607,7 @@
   function isEngine(playerIndex) { return game.opponent === "engine" && (playerIndex === 0) !== game.humanFirst; }
   function isHumanTurn() { return !isEngine(playerToMove()); }
   function playerName(playerIndex) {
-    if (game.opponent === "human") return playerIndex === 0 ? "Player 1" : "Player 2";
+    if (game.opponent === "human") return game.names[playerIndex];
     return isEngine(playerIndex) ? "Engine" : "You";
   }
   function winsPhrase(playerIndex) {
@@ -719,6 +740,8 @@
   const playScreen = byId("playScreen");
   const helpScreen = byId("helpScreen");
   const firstField = byId("firstField");
+  const namesField = byId("namesField");
+  const nameInputs = [byId("name1"), byId("name2")];
   const rulesHelp = byId("rulesHelp");
   const annotationsHelp = byId("annotationsHelp");
   const resumeButton = byId("resumeButton");
@@ -797,6 +820,9 @@
       }
     }
     firstField.hidden = config.opponent !== "engine";
+    namesField.hidden = config.opponent !== "human";
+    if (nameInputs[0].value !== config.name1) nameInputs[0].value = config.name1;
+    if (nameInputs[1].value !== config.name2) nameInputs[1].value = config.name2;
     rulesHelp.textContent = config.rules === "squares"
       ? "Four in a row, column, diagonal or any 2×2 block sharing a trait wins. Sharper, with more forced wins."
       : "Four in a row, column or diagonal sharing a trait wins. The classic rules; perfect play is very drawish.";
@@ -892,7 +918,7 @@
     log.innerHTML = game.log.map((entry, index) => {
       const number = Math.floor(index / 2) + 1;
       const action = entry.isPlace ? `→ ${cellName(entry.cell)}` : "gives";
-      const who = game.opponent === "human" ? `P${entry.player + 1}` : (isEngine(entry.player) ? "eng" : "you");
+      const who = game.opponent === "human" ? game.names[entry.player] : (isEngine(entry.player) ? "eng" : "you");
       return `<div class="log-entry"><span>${index % 2 === 0 ? number + "." : ""}</span><span class="who">${who}</span>${pieceSvg(entry.piece)}<span>${action}</span></div>`;
     }).join("");
     log.scrollTop = log.scrollHeight;
@@ -900,7 +926,7 @@
     annotationsToggle.checked = game.annotationsOn;
     annotationsToggle.disabled = game.thinking;
     undoButton.disabled = game.thinking || game.log.length === 0;
-    playTitle.textContent = game.opponent === "human" ? "Two players" : (game.humanFirst ? "You vs engine" : "Engine vs you");
+    playTitle.textContent = game.opponent === "human" ? `${game.names[0]} vs ${game.names[1]}` : (game.humanFirst ? "You vs engine" : "Engine vs you");
     const detail = lastVerdict ? ` · ${lastVerdict.nodes.toLocaleString()} nodes · ${Math.round(lastVerdict.milliseconds)} ms` : "";
     playStatus.textContent = `${solver.rules_squares() ? "lines + squares" : "lines only"} · move ${Math.min(movesDone() + 1, NUM_MOVES)} of ${NUM_MOVES}${detail}`;
   }
@@ -911,6 +937,7 @@
     solver.set_rules(config.rules === "squares" ? 1 : 0);
     solver.reset();
     game.opponent = config.opponent;
+    game.names = [config.name1.trim() || "Player 1", config.name2.trim() || "Player 2"];
     game.humanFirst = config.opponent === "human" || config.first === "you";
     game.annotationLevel = config.annotations === "off" ? "outcome" : config.annotations;
     game.annotationsOn = config.annotations !== "off";
@@ -933,6 +960,7 @@
       });
     }
   }
+  nameInputs.forEach((input, index) => input.addEventListener("input", () => { config[index === 0 ? "name1" : "name2"] = input.value; }));
   byId("startButton").addEventListener("click", startGame);
   resumeButton.addEventListener("click", () => showScreen(playScreen));
   for (const id of ["newGameButton", "setupButton"]) {
