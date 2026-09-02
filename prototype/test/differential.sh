@@ -7,13 +7,13 @@ cd "$(dirname "$0")/.."
 games="${1:-20}"
 skip="${2:-10}"
 rules="${3:-squares}"
-mkdir -p ".llm/differential-$rules"
-work=".llm/differential-$rules"
+work="../.llm/differential-$rules"
+mkdir -p "$work"
 
 for seed in $(seq 1 "$games"); do
   moves="$work/moves-$seed.txt"
   node test/random-game.mjs "$seed" > "$moves"
-  ./reference/quarto_reference "$skip" "$rules" < "$moves" > "$work/reference-$seed.txt"
+  ../reference/quarto_reference "$skip" "$rules" < "$moves" > "$work/reference-$seed.txt"
   ./solver/quarto_native "$skip" "$rules" < "$moves" > "$work/native-$seed.txt" 2>/dev/null
   if ! diff -q "$work/reference-$seed.txt" "$work/native-$seed.txt" > /dev/null; then
     echo "MISMATCH seed=$seed"

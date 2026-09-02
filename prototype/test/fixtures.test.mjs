@@ -5,7 +5,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { parseFixture, pieceFromString, cellFromString, pieceToString, cellToString } from "./parse-fixture.mjs";
 import { loadSolver, evaluationToString, legalMoves, applyMove } from "./solver.mjs";
 
-const fixturesDirectory = new URL("../.llm/upstream/games_reg/", import.meta.url);
+const fixturesDirectory = new URL("../../.llm/upstream/games_reg/", import.meta.url);
 const fixtureNames = (await readdir(fixturesDirectory)).filter((name) => name.endsWith(".txt")).sort();
 const solver = await loadSolver();
 

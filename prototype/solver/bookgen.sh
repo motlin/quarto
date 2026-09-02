@@ -11,7 +11,7 @@ case "$rules" in
   lines) identifier="Lines"; macro="LINES" ;;
   *) echo "rules must be lines or squares" >&2; exit 1 ;;
 esac
-work="../.llm/book-$rules"
+work="../../.llm/book-$rules"
 mkdir -p "$work"
 
 clang -std=c11 -O2 -Wall -Wextra -DTT_SIZE=16782823 -DBOOK_EMPTY -o bookgen quarto.c bookgen.c

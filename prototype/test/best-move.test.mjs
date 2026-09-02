@@ -14,7 +14,7 @@ function replayFixture(plies, count) {
   }
 }
 
-const { plies } = parseFixture(await readFile(new URL("../.llm/upstream/games_reg/1.txt", import.meta.url), "utf8"));
+const { plies } = parseFixture(await readFile(new URL("../../.llm/upstream/games_reg/1.txt", import.meta.url), "utf8"));
 
 test("book is embedded", () => {
   assert.ok(solver.book_entries() > 0);
