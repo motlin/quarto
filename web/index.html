@@ -22,6 +22,10 @@
     --walnut: #5A3A22;
     --walnut-edge: #33200F;
     --focus: #2C6FD6;
+    /* Value labels always sit on a dark badge, so they read the same in both themes. */
+    --label-win: #9CE8B8;
+    --label-loss: #FFB0A0;
+    --label-draw: #D8DDD9;
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
@@ -74,63 +78,158 @@
     font-size: 15px;
     line-height: 1.5;
     min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
   }
-  button { font: inherit; color: inherit; }
+  button { font: inherit; color: inherit; touch-action: manipulation; }
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  [hidden] { display: none !important; }
 
-  .page {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 28px 24px 48px;
-    display: grid;
-    gap: 24px;
-  }
-  header {
+  .screen { max-width: 1040px; margin: 0 auto; padding: 16px 16px 40px; }
+  @media (min-width: 800px) { .screen { padding: 28px 24px 48px; } }
+
+  /* 🧭 Top bar shared by play + help screens */
+  .topbar {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    border-bottom: 1px solid var(--line);
-    padding-bottom: 14px;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    margin-bottom: 12px;
   }
+  .topbar-title {
+    font-family: "Bricolage Grotesque", "Arial Narrow", sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.01em;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  @media (max-width: 479px) { #playTitle { visibility: hidden; } }
+  .btn {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 6px;
+    padding: 8px 14px;
+    min-height: 40px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:hover { border-color: var(--ink-muted); }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .btn.primary { background: var(--amber); border-color: var(--amber); color: #2B1D06; }
+  .btn.quiet { border-color: transparent; background: transparent; color: var(--ink-muted); }
+  .btn.quiet:hover { color: var(--ink); background: var(--panel); }
+  .btn.round { width: 40px; padding: 0; justify-content: center; border-radius: 50%; font-weight: 600; }
+  .toggle { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; cursor: pointer; min-height: 40px; }
+  .toggle input { accent-color: var(--amber); width: 18px; height: 18px; margin: 0; }
+
+  /* 🧩 Setup screen */
+  .masthead { margin-bottom: 24px; }
   h1 {
     font-family: "Bricolage Grotesque", "Arial Narrow", sans-serif;
     font-weight: 700;
-    font-size: clamp(28px, 4vw, 40px);
+    font-size: clamp(32px, 6vw, 44px);
     letter-spacing: -0.02em;
     margin: 0;
     line-height: 1;
     text-wrap: balance;
   }
-  h1 small {
-    display: block;
-    font-family: "IBM Plex Sans", sans-serif;
-    font-weight: 400;
-    font-size: 14px;
-    letter-spacing: 0;
+  .masthead p { margin: 10px 0 0; color: var(--ink-muted); max-width: 48ch; }
+  .setup { display: grid; gap: 22px; max-width: 520px; }
+  .field { display: grid; gap: 8px; }
+  .field-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
     color: var(--ink-muted);
-    margin-top: 8px;
   }
+  .field-help { font-size: 13px; color: var(--ink-muted); margin: 0; }
+  .segment { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--panel); }
+  .segment button {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    padding: 10px 12px;
+    min-height: 44px;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--ink-muted);
+  }
+  .segment button + button { border-left: 1px solid var(--line); }
+  .segment button[aria-checked="true"] { background: var(--amber); color: #2B1D06; font-weight: 500; }
+  .segment button:disabled { cursor: default; opacity: 0.6; }
+  .setup-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 6px; }
+  .setup-actions .btn.primary { padding: 12px 22px; font-size: 15px; }
   .status-line {
     font-family: "IBM Plex Mono", monospace;
     font-size: 12px;
     color: var(--ink-muted);
     letter-spacing: 0.02em;
+    margin-top: 28px;
   }
 
-  .table {
+  /* 🎮 Play screen */
+  .table { display: grid; gap: 14px; }
+  @media (min-width: 800px) {
+    .table { grid-template-columns: minmax(0, 1fr) minmax(280px, 360px); gap: 28px; align-items: start; }
+  }
+  .board-col { display: grid; gap: 12px; }
+  .side { display: grid; gap: 14px; }
+
+  .strip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 60px;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+  }
+  .hand-piece {
+    width: 40px;
+    height: 48px;
+    flex: none;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
-    gap: 28px;
-    align-items: start;
+    place-items: center;
+    border-radius: 6px;
+    background: var(--ground-deep);
   }
-  @media (max-width: 800px) {
-    .table { grid-template-columns: 1fr; }
+  .hand-piece.empty { border: 1px dashed var(--line); background: transparent; }
+  .hand-piece svg { width: 100%; height: 100%; }
+  .prompt { flex: 1; min-width: 0; font-size: 15px; font-weight: 500; line-height: 1.3; }
+  .prompt small { display: block; font-weight: 400; font-size: 12px; color: var(--ink-muted); }
+  .verdict {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "Bricolage Grotesque", "Arial Narrow", sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    text-align: right;
+    max-width: 40%;
   }
+  .verdict.win { color: var(--win); }
+  .verdict.loss { color: var(--loss); }
+  .verdict.decisive { color: var(--amber-ink); }
+  .verdict.draw { color: var(--ink-muted); }
+  .lamp {
+    width: 9px; height: 9px; border-radius: 50%; flex: none;
+    background: var(--amber);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 25%, transparent);
+  }
+  .lamp.thinking { animation: pulse 0.9s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: 0.25; } }
+  @media (prefers-reduced-motion: reduce) { .lamp.thinking { animation: none; } }
 
-  /* 🟩 Board */
-  .board-wrap { display: grid; gap: 12px; }
   .board {
     aspect-ratio: 1;
     width: 100%;
@@ -138,14 +237,15 @@
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     grid-template-rows: repeat(4, minmax(0, 1fr));
-    gap: 6px;
-    padding: 14px;
-    border-radius: 6px;
+    gap: 5px;
+    padding: 10px;
+    border-radius: 8px;
     background:
       radial-gradient(120% 90% at 50% 0%, var(--felt-glow) 0%, transparent 60%),
       var(--felt);
     box-shadow: inset 0 0 0 1px var(--felt-line), 0 18px 40px -22px #000;
   }
+  @media (min-width: 800px) { .board { gap: 6px; padding: 14px; } }
   .cell {
     position: relative;
     border: 0;
@@ -175,79 +275,31 @@
   .cell svg { position: absolute; inset: 8%; width: 84%; height: 84%; }
   .hint {
     position: absolute;
-    left: 6px;
-    top: 4px;
+    left: 4px;
+    top: 3px;
     font-family: "IBM Plex Mono", monospace;
     font-size: 11px;
     font-weight: 500;
-    padding: 1px 5px;
+    padding: 1px 4px;
     border-radius: 3px;
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(0, 0, 0, 0.6);
     color: #fff;
     pointer-events: none;
   }
-  .hint.win { color: #9CE8B8; }
-  .hint.loss { color: #FFB0A0; }
-  .hint.draw { color: #D8DDD9; }
+  .hint.win { color: var(--label-win); }
+  .hint.loss { color: var(--label-loss); }
+  .hint.draw { color: var(--label-draw); }
 
-  /* 🔮 Oracle */
-  .oracle {
-    border: 1px solid var(--line);
-    background: var(--panel);
-    border-radius: 6px;
-    padding: 16px 18px;
-    display: grid;
-    gap: 6px;
-  }
-  .oracle-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--ink-muted);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .lamp {
-    width: 9px; height: 9px; border-radius: 50%;
-    background: var(--amber);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 25%, transparent);
-  }
-  .lamp.thinking { animation: pulse 0.9s ease-in-out infinite; }
-  @keyframes pulse { 50% { opacity: 0.25; } }
-  @media (prefers-reduced-motion: reduce) { .lamp.thinking { animation: none; } }
-  .verdict {
-    font-family: "Bricolage Grotesque", "Arial Narrow", sans-serif;
-    font-weight: 700;
-    font-size: 26px;
-    line-height: 1.1;
-    letter-spacing: -0.01em;
-  }
-  .verdict.win { color: var(--win); }
-  .verdict.loss { color: var(--loss); }
-  .verdict.draw { color: var(--ink); }
-  .verdict-detail {
-    color: var(--ink-muted);
-    font-size: 13px;
-    font-variant-numeric: tabular-nums;
-  }
-  .prompt {
-    font-size: 15px;
-    font-weight: 500;
-    min-height: 1.5em;
-  }
-
-  /* 🪵 Tray */
-  .tray-wrap { display: grid; gap: 14px; }
   .tray {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    padding: 12px;
-    border-radius: 6px;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    padding: 8px;
+    border-radius: 8px;
     background: var(--ground-deep);
     border: 1px solid var(--line);
   }
+  @media (min-width: 800px) { .tray { grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 12px; } }
   .slot {
     position: relative;
     aspect-ratio: 1;
@@ -256,84 +308,66 @@
     background: transparent;
     display: grid;
     place-items: center;
-    padding: 10%;
+    padding: 2%;
     cursor: default;
   }
+  @media (min-width: 800px) { .slot { padding: 8%; } }
   .slot.legal { cursor: pointer; }
   .slot.legal:hover { background: var(--panel); }
   .slot.taken { opacity: 0; pointer-events: none; }
   .slot svg { width: 100%; height: 100%; }
-  .slot .hint { left: 2px; top: 2px; }
-
-  .hand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border: 1px dashed var(--line);
-    border-radius: 6px;
-    padding: 10px 12px;
-    min-height: 74px;
-  }
-  .hand .hand-piece { width: 48px; height: 56px; flex: none; }
-  .hand .hand-piece svg { width: 100%; height: 100%; }
-  .hand-text { color: var(--ink-muted); font-size: 13px; }
+  .slot .hint { left: 0; top: 0; font-size: 10px; }
 
   .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  .btn {
-    border: 1px solid var(--line);
-    background: var(--panel);
-    border-radius: 4px;
-    padding: 7px 12px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-  }
-  .btn:hover { border-color: var(--ink-muted); }
-  .btn:disabled { opacity: 0.45; cursor: default; }
-  .btn.primary { background: var(--amber); border-color: var(--amber); color: #2B1D06; }
-  .toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
-  .toggle input { accent-color: var(--amber); }
-
-  .rules { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .rules-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--ink-muted);
-  }
-  .segment { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
-  .segment button {
-    border: 0;
-    background: var(--panel);
-    padding: 6px 12px;
-    font-size: 13px;
-    cursor: pointer;
-    color: var(--ink-muted);
-  }
-  .segment button + button { border-left: 1px solid var(--line); }
-  .segment button[aria-checked="true"] { background: var(--amber); color: #2B1D06; font-weight: 500; }
-  .segment button:disabled { cursor: default; opacity: 0.6; }
-
+  .moves summary { cursor: pointer; font-size: 13px; color: var(--ink-muted); }
   .log {
+    margin-top: 8px;
     font-family: "IBM Plex Mono", monospace;
     font-size: 12px;
     color: var(--ink-muted);
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 4px 12px;
-    max-height: 140px;
+    max-height: 160px;
     overflow-y: auto;
   }
   .log-entry { display: flex; gap: 8px; align-items: center; white-space: nowrap; }
   .log-entry svg { width: 14px; height: 18px; }
-  .log-entry .who { width: 2.2em; }
-
-  .legend {
-    font-size: 12px;
+  .log-entry .who { width: 2.6em; }
+  .play-status {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
     color: var(--ink-muted);
-    max-width: 62ch;
+    margin-top: 12px;
   }
-  .legend b { color: var(--ink); font-weight: 600; }
+
+  /* 📖 Help screen */
+  .prose { max-width: 62ch; }
+  .prose h2 {
+    font-family: "Bricolage Grotesque", "Arial Narrow", sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    margin: 28px 0 8px;
+  }
+  .prose h2:first-child { margin-top: 4px; }
+  .prose p, .prose li { margin: 0 0 10px; }
+  .prose ul { padding-left: 20px; }
+  .prose b { font-weight: 600; }
+  .trait-row { display: grid; grid-template-columns: repeat(4, 56px); gap: 10px 14px; margin: 6px 0 14px; }
+  .trait { display: grid; justify-items: center; gap: 2px; font-size: 12px; color: var(--ink-muted); }
+  .trait svg { width: 36px; height: 50px; }
+  .chip {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+  }
+  .chip.win { color: var(--label-win); }
+  .chip.loss { color: var(--label-loss); }
+  .chip.draw { color: var(--label-draw); }
 
   .overlay {
     position: fixed; inset: 0;
@@ -347,57 +381,113 @@
 
 <div class="overlay" id="overlay">loading solver…</div>
 
-<div class="page">
-  <header>
-    <h1>Quarto Oracle<small>Play against a perfect solver that reports the exact outcome of every position.</small></h1>
-    <div class="status-line" id="statusLine"></div>
-  </header>
-
-  <div class="table">
-    <div class="board-wrap">
-      <div class="board" id="board" role="grid" aria-label="Quarto board"></div>
-      <div class="legend">
-        <span id="legendSquares">Four in a line or a 2×2 square sharing any trait wins:</span><span id="legendLines" hidden>Four in a row, column or diagonal sharing any trait wins:</span>
-        <b>light / dark</b>, <b>round / square</b>, <b>tall / short</b>, <b>solid / hollow</b>.
-        You hand your opponent the piece they must place.
-      </div>
-    </div>
-
-    <div class="tray-wrap">
-      <div class="oracle">
-        <div class="oracle-label"><span class="lamp" id="lamp"></span><span id="oracleLabel">Oracle</span></div>
-        <div class="verdict draw" id="verdict">—</div>
-        <div class="verdict-detail" id="verdictDetail"></div>
-      </div>
-
-      <div class="prompt" id="prompt"></div>
-
-      <div class="hand" id="hand">
-        <div class="hand-piece" id="handPiece"></div>
-        <div class="hand-text" id="handText"></div>
-      </div>
-
-      <div class="tray" id="tray" role="group" aria-label="Pieces remaining"></div>
-
-      <div class="rules">
-        <span class="rules-label">Rules</span>
-        <div class="segment" role="radiogroup" aria-label="Win conditions" id="rulesGroup">
-          <button type="button" role="radio" aria-checked="false" data-squares="0">Lines only</button>
-          <button type="button" role="radio" aria-checked="true" data-squares="1">Lines + 2×2 squares</button>
+<main>
+  <!-- 🧩 Setup -->
+  <section class="screen" id="setupScreen">
+    <header class="masthead">
+      <h1>Quarto Oracle</h1>
+      <p>Play Quarto against a perfect solver or another person, with the exact outcome of every position on tap.</p>
+    </header>
+    <div class="setup">
+      <div class="field">
+        <span class="field-label">Opponent</span>
+        <div class="segment" role="radiogroup" data-field="opponent">
+          <button type="button" role="radio" data-value="engine">Engine</button>
+          <button type="button" role="radio" data-value="human">Another person</button>
         </div>
       </div>
-
-      <div class="controls">
-        <button class="btn primary" id="newGameButton">New game</button>
-        <button class="btn" id="swapButton">Let engine start</button>
-        <button class="btn" id="undoButton">Undo</button>
-        <label class="toggle"><input type="checkbox" id="hintsToggle"> Show move values</label>
+      <div class="field" id="firstField">
+        <span class="field-label">First move</span>
+        <div class="segment" role="radiogroup" data-field="first">
+          <button type="button" role="radio" data-value="you">You</button>
+          <button type="button" role="radio" data-value="engine">Engine</button>
+        </div>
+        <p class="field-help">The first player hands over a piece; the second player places it.</p>
       </div>
-
-      <div class="log" id="log"></div>
+      <div class="field">
+        <span class="field-label">Rules</span>
+        <div class="segment" role="radiogroup" data-field="rules">
+          <button type="button" role="radio" data-value="lines">Lines only</button>
+          <button type="button" role="radio" data-value="squares">Lines + 2×2 squares</button>
+        </div>
+        <p class="field-help" id="rulesHelp"></p>
+      </div>
+      <div class="field">
+        <span class="field-label">Annotations</span>
+        <div class="segment" role="radiogroup" data-field="annotations">
+          <button type="button" role="radio" data-value="off">Off</button>
+          <button type="button" role="radio" data-value="outcome">Outcome</button>
+          <button type="button" role="radio" data-value="values">Outcome + move values</button>
+        </div>
+        <p class="field-help" id="annotationsHelp"></p>
+      </div>
+      <div class="setup-actions">
+        <button class="btn primary" id="startButton">Start game</button>
+        <button class="btn" id="resumeButton" hidden>Resume game</button>
+        <button class="btn quiet" id="setupHelpButton">How to play</button>
+      </div>
     </div>
-  </div>
-</div>
+    <div class="status-line" id="statusLine"></div>
+  </section>
+
+  <!-- 🎮 Play -->
+  <section class="screen" id="playScreen" hidden>
+    <div class="topbar">
+      <button class="btn quiet" id="setupButton">‹ Setup</button>
+      <span class="topbar-title" id="playTitle"></span>
+      <label class="toggle"><input type="checkbox" id="annotationsToggle"> Annotations</label>
+      <button class="btn round" id="playHelpButton" aria-label="How to play">?</button>
+    </div>
+    <div class="table">
+      <div class="board-col">
+        <div class="strip">
+          <div class="hand-piece" id="handPiece"></div>
+          <div class="prompt" id="prompt"></div>
+          <div class="verdict draw" id="verdict" hidden><span class="lamp" id="lamp"></span><span id="verdictText"></span></div>
+        </div>
+        <div class="board" id="board" role="grid" aria-label="Quarto board"></div>
+      </div>
+      <div class="side">
+        <div class="tray" id="tray" role="group" aria-label="Pieces remaining"></div>
+        <div class="controls">
+          <button class="btn" id="undoButton">Undo</button>
+          <button class="btn" id="newGameButton">New game</button>
+        </div>
+        <details class="moves"><summary>Move list</summary><div class="log" id="log"></div></details>
+        <div class="play-status" id="playStatus"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 📖 How to play -->
+  <section class="screen" id="helpScreen" hidden>
+    <div class="topbar">
+      <button class="btn quiet" id="helpBackButton">‹ Back</button>
+      <span class="topbar-title">How to play</span>
+    </div>
+    <article class="prose">
+      <h2>The pieces</h2>
+      <p>Sixteen pieces, each a unique mix of four traits:</p>
+      <div class="trait-row" id="traitRow"></div>
+      <h2>A turn</h2>
+      <p>You never place your own piece. On your turn you <b>choose any piece from the tray and hand it to your opponent</b>; they must place it on an empty cell, then choose the next piece for you.</p>
+      <p>The first player only chooses; the second player makes the first placement.</p>
+      <h2>Winning</h2>
+      <p>Whoever places the fourth piece of a <b>row, column or diagonal</b> in which all four pieces share a trait — all tall, all dark, all round, all hollow, and so on — wins immediately. The board highlights the winning set.</p>
+      <p><b>Lines + 2×2 squares</b> is the common advanced variant: any 2×2 block of four cells sharing a trait also wins. It makes the game much sharper; with lines only, perfect play is very drawish.</p>
+      <p>If the board fills without a win, the game is drawn.</p>
+      <h2>Annotations</h2>
+      <p>The oracle is a solver that searches the whole game tree, so its verdict is exact, not an estimate.</p>
+      <ul>
+        <li><b>Outcome</b> shows who wins with perfect play from both sides and in how many moves — a "move" is one placement. <b>Draw</b> means neither side can force a win.</li>
+        <li><b>Move values</b> label every legal choice from the point of view of the player to move: <span class="chip win">W3</span> wins in 3 moves, <span class="chip loss">L2</span> loses in 2 against best play, <span class="chip draw">=</span> holds the draw.</li>
+      </ul>
+      <p>Annotations can be switched on and off during a game with the toggle in the top bar. In a two-person game they are off by default so nobody sees the answer unless you both want to.</p>
+      <h2>Playing the engine</h2>
+      <p>The engine plays perfectly from the first move. When the verdict is <b>Draw</b> you are still holding — one slip and it becomes a countdown. <b>Undo</b> takes back your last decision.</p>
+    </article>
+  </section>
+</main>
 
 <script>
 (async () => {
@@ -413,14 +503,14 @@
   const { instance } = await WebAssembly.instantiate(base64ToBytes(WASM_BASE64), {});
   const solver = instance.exports;
   solver.init();
-
   solver.set_seed((Math.random() * 2 ** 32) >>> 0);
 
   const NO_PIECE = 16;
   const NUM_MOVES = 16;
 
-  // 🪵 Piece traits: bit0 dark, bit1 square, bit2 tall, bit3 hollow
-  function pieceSvg(piece, { size = "100%" } = {}) {
+  // 🪵 Piece traits: bit0 dark, bit1 square, bit2 tall, bit3 hollow.
+  // Every real piece has a groove turned into it at the same height above the base.
+  function pieceSvg(piece) {
     const dark = piece & 1;
     const square = piece & 2;
     const tall = piece & 4;
@@ -429,6 +519,7 @@
     const edge = dark ? "var(--walnut-edge)" : "var(--maple-edge)";
     const top = tall ? 10 : 26;
     const bottom = 52;
+    const grooveY = bottom - 18;
     const rx = square ? 3 : 15;
     const width = 30;
     const x = 5;
@@ -441,12 +532,17 @@
          <ellipse cx="20" cy="${bottom - 4}" rx="15" ry="4.5" fill="${edge}"/>
          <rect x="${x}" y="${top + 4}" width="${width}" height="${bottom - top - 10}" fill="${fill}"/>
          <ellipse cx="20" cy="${top + 4}" rx="15" ry="4.5" fill="${fill}" stroke="${edge}" stroke-width="1"/>`;
+    const groove = square
+      ? `<line x1="${x + 0.5}" y1="${grooveY}" x2="${x + width - 0.5}" y2="${grooveY}" stroke="${edge}" stroke-width="1.8"/>
+         <line x1="${x + 0.5}" y1="${grooveY + 1.6}" x2="${x + width - 0.5}" y2="${grooveY + 1.6}" stroke="#fff" stroke-opacity="0.28" stroke-width="0.8"/>`
+      : `<path d="M ${x} ${grooveY} A 15 4.5 0 0 0 ${x + width} ${grooveY}" fill="none" stroke="${edge}" stroke-width="1.8"/>
+         <path d="M ${x} ${grooveY + 1.6} A 15 4.5 0 0 0 ${x + width} ${grooveY + 1.6}" fill="none" stroke="#fff" stroke-opacity="0.28" stroke-width="0.8"/>`;
     const hole = hollow
       ? (square
         ? `<rect x="13" y="${top + 2}" width="14" height="5" rx="1.5" fill="${edge}"/>`
         : `<ellipse cx="20" cy="${top + 4}" rx="7" ry="2.2" fill="${edge}"/>`)
       : "";
-    return `<svg viewBox="0 0 40 60" width="${size}" height="${size}" aria-hidden="true">${body}${hole}</svg>`;
+    return `<svg viewBox="0 0 40 60" aria-hidden="true">${body}${groove}${hole}</svg>`;
   }
 
   const pieceNames = [];
@@ -457,8 +553,29 @@
     return String.fromCharCode(97 + (cell % 4)) + (Math.floor(cell / 4) + 1);
   }
 
-  // 🎮 Game state outside the solver: who is who, and a log for display
-  const game = { humanFirst: true, thinking: false, log: [], lastCell: -1, over: false };
+  // ⚙️ Setup choices, remembered per browser
+  const defaults = { opponent: "engine", first: "you", rules: "squares", annotations: "outcome" };
+  const config = { ...defaults };
+  try {
+    const saved = JSON.parse(localStorage.getItem("quarto-oracle-setup") || "{}");
+    for (const key of Object.keys(defaults)) if (typeof saved[key] === "string") config[key] = saved[key];
+  } catch (error) { /* storage unavailable: defaults stand */ }
+  function saveConfig() {
+    try { localStorage.setItem("quarto-oracle-setup", JSON.stringify(config)); } catch (error) { /* ignore */ }
+  }
+
+  // 🎮 Game state outside the solver
+  const game = {
+    opponent: "engine",
+    humanFirst: true,
+    annotationLevel: "outcome",
+    annotationsOn: true,
+    thinking: false,
+    log: [],
+    lastCell: -1,
+    over: false,
+    started: false,
+  };
 
   function movesDone() { return NUM_MOVES - solver.moves_left(); }
   // Player 0 selects first. Select at k placements done → player k%2; place → player (k+1)%2.
@@ -466,8 +583,22 @@
     const k = movesDone();
     return solver.is_to_place() ? (k + 1) % 2 : k % 2;
   }
-  function isHumanTurn() { return (playerToMove() === 0) === game.humanFirst; }
-  function playerName(playerIndex) { return (playerIndex === 0) === game.humanFirst ? "You" : "Engine"; }
+  function isEngine(playerIndex) { return game.opponent === "engine" && (playerIndex === 0) !== game.humanFirst; }
+  function isHumanTurn() { return !isEngine(playerToMove()); }
+  function playerName(playerIndex) {
+    if (game.opponent === "human") return playerIndex === 0 ? "Player 1" : "Player 2";
+    return isEngine(playerIndex) ? "Engine" : "You";
+  }
+  function winsPhrase(playerIndex) {
+    const name = playerName(playerIndex);
+    return name === "You" ? "You win" : `${name} wins`;
+  }
+  // Green when the local player wins, red when the engine does, neutral between two people.
+  function verdictKind(winnerIndex) {
+    if (game.opponent === "human") return "decisive";
+    return isEngine(winnerIndex) ? "loss" : "win";
+  }
+  function showValues() { return game.annotationsOn && game.annotationLevel === "values"; }
 
   function legalMoves() {
     const moves = [];
@@ -483,18 +614,18 @@
 
   function distanceOf(value, movesLeft) { return movesLeft + 1 - Math.abs(value); }
 
-  function describeValue(value, movesLeft, moverIsHuman) {
+  // Verdict from the mover's value: who wins, how soon, and how to colour it.
+  function describeValue(value, movesLeft, moverIndex) {
     if (value === 0) return { kind: "draw", text: "Draw" };
     const distance = distanceOf(value, movesLeft);
-    const moverWins = value > 0;
-    const humanWins = moverWins === moverIsHuman;
-    return { kind: humanWins ? "win" : "loss", text: `${humanWins ? "You win" : "Engine wins"} in ${distance}`, distance };
+    const winner = value > 0 ? moverIndex : 1 - moverIndex;
+    return { kind: verdictKind(winner), text: `${winsPhrase(winner)} in ${distance}` };
   }
 
-  function shortValue(value, movesLeft, moverIsHuman) {
+  function shortValue(value, movesLeft) {
     if (value === 0) return { kind: "draw", text: "=" };
-    const described = describeValue(value, movesLeft, moverIsHuman);
-    return { kind: described.kind, text: `${described.kind === "win" ? "W" : "L"}${described.distance}` };
+    const distance = distanceOf(value, movesLeft);
+    return value > 0 ? { kind: "win", text: `W${distance}` } : { kind: "loss", text: `L${distance}` };
   }
 
   const nextPaint = () => new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
@@ -526,34 +657,45 @@
   let lastVerdict = null;
   let hintValues = null;
 
+  // Call straight after a search, while the position it evaluated is still on the board.
+  function recordVerdict(result) {
+    lastVerdict = {
+      value: result.value,
+      movesLeft: solver.moves_left(),
+      moverIndex: playerToMove(),
+      milliseconds: result.milliseconds,
+      nodes: result.nodes,
+    };
+  }
+
   async function refreshOracle() {
-    if (solver.is_won() || solver.is_done()) {
+    if (solver.is_won() || solver.is_done() || !game.annotationsOn || !isHumanTurn()) {
       lastVerdict = null;
       hintValues = null;
       render();
       return;
     }
-    const wantHints = hintsToggle.checked && isHumanTurn();
-    const result = await search(() => ({ value: solver.evaluate(), moves: wantHints ? exactMoveValues() : null }));
-    lastVerdict = { value: result.value, movesLeft: solver.moves_left(), moverIsHuman: isHumanTurn(), milliseconds: result.milliseconds, nodes: result.nodes };
+    const wantValues = showValues();
+    const result = await search(() => ({ value: solver.evaluate(), moves: wantValues ? exactMoveValues() : null }));
+    recordVerdict(result);
     hintValues = result.moves;
     render();
   }
 
   function applyMove(move) {
     const isPlace = solver.is_to_place();
-    const who = playerName(playerToMove());
+    const player = playerToMove();
     const piece = isPlace ? solver.current_piece() : move;
     const ok = isPlace ? solver.apply_place(move) : solver.apply_select(move);
     if (ok !== 1) throw new Error(`illegal move ${move}`);
     if (isPlace) game.lastCell = move;
-    game.log.push({ who, isPlace, piece, cell: isPlace ? move : null });
+    game.log.push({ player, isPlace, piece, cell: isPlace ? move : null });
   }
 
   async function engineTurn() {
     while (!game.over && !isHumanTurn() && !solver.is_won() && !solver.is_done()) {
       const result = await search(() => ({ value: solver.evaluate(), move: solver.best_move() }));
-      lastVerdict = { value: result.value, movesLeft: solver.moves_left(), moverIsHuman: false, milliseconds: result.milliseconds, nodes: result.nodes };
+      recordVerdict(result);
       render();
       await new Promise((resolve) => setTimeout(resolve, 350));
       applyMove(result.move);
@@ -566,29 +708,33 @@
     if (game.thinking || game.over || !isHumanTurn()) return;
     applyMove(move);
     hintValues = null;
+    lastVerdict = null;
     render();
     await engineTurn();
   }
 
-  // 🖼️ Rendering
-  const board = document.getElementById("board");
-  const tray = document.getElementById("tray");
-  const verdict = document.getElementById("verdict");
-  const verdictDetail = document.getElementById("verdictDetail");
-  const oracleLabel = document.getElementById("oracleLabel");
-  const lamp = document.getElementById("lamp");
-  const prompt = document.getElementById("prompt");
-  const hand = document.getElementById("hand");
-  const handPiece = document.getElementById("handPiece");
-  const handText = document.getElementById("handText");
-  const log = document.getElementById("log");
-  const statusLine = document.getElementById("statusLine");
-  const hintsToggle = document.getElementById("hintsToggle");
-  const rulesButtons = [...document.getElementById("rulesGroup").querySelectorAll("button")];
-  const legendSquares = document.getElementById("legendSquares");
-  const legendLines = document.getElementById("legendLines");
-  const undoButton = document.getElementById("undoButton");
-  const swapButton = document.getElementById("swapButton");
+  // 🖼️ Elements
+  const byId = (id) => document.getElementById(id);
+  const setupScreen = byId("setupScreen");
+  const playScreen = byId("playScreen");
+  const helpScreen = byId("helpScreen");
+  const firstField = byId("firstField");
+  const rulesHelp = byId("rulesHelp");
+  const annotationsHelp = byId("annotationsHelp");
+  const resumeButton = byId("resumeButton");
+  const statusLine = byId("statusLine");
+  const board = byId("board");
+  const tray = byId("tray");
+  const verdict = byId("verdict");
+  const verdictText = byId("verdictText");
+  const lamp = byId("lamp");
+  const prompt = byId("prompt");
+  const handPiece = byId("handPiece");
+  const log = byId("log");
+  const playTitle = byId("playTitle");
+  const playStatus = byId("playStatus");
+  const annotationsToggle = byId("annotationsToggle");
+  const undoButton = byId("undoButton");
 
   const cellButtons = [];
   for (let cell = 0; cell < 16; cell++) {
@@ -610,6 +756,10 @@
     tray.appendChild(button);
     slotButtons.push(button);
   }
+  byId("traitRow").innerHTML = [
+    [0, "light"], [1, "dark"], [0, "round"], [2, "square"], [0, "short"], [4, "tall"], [0, "solid"], [8, "hollow"],
+  ].map(([piece, label]) => `<div class="trait">${pieceSvg(piece)}<span>${label}</span></div>`).join("");
+  statusLine.textContent = `opening book depth ${solver.book_depth()} · ${solver.book_entries().toLocaleString()} positions per rule set`;
 
   function winningCells() {
     const lines = [];
@@ -631,6 +781,33 @@
     return winning;
   }
 
+  // 🧭 Screens
+  let screenBeforeHelp = setupScreen;
+  function showScreen(screen) {
+    for (const candidate of [setupScreen, playScreen, helpScreen]) candidate.hidden = candidate !== screen;
+    window.scrollTo(0, 0);
+    if (screen === setupScreen) renderSetup();
+  }
+
+  function renderSetup() {
+    for (const group of setupScreen.querySelectorAll(".segment")) {
+      const field = group.dataset.field;
+      for (const button of group.querySelectorAll("button")) {
+        button.setAttribute("aria-checked", String(button.dataset.value === config[field]));
+      }
+    }
+    firstField.hidden = config.opponent !== "engine";
+    rulesHelp.textContent = config.rules === "squares"
+      ? "Four in a row, column, diagonal or any 2×2 block sharing a trait wins. Sharper, with more forced wins."
+      : "Four in a row, column or diagonal sharing a trait wins. The classic rules; perfect play is very drawish.";
+    annotationsHelp.textContent = {
+      off: "No solver readout. You can switch annotations on at any time during the game.",
+      outcome: "Shows who wins with perfect play and in how many moves, updated after every move.",
+      values: "Also labels every legal piece and cell with its exact result. Slower early in the game.",
+    }[config.annotations];
+    resumeButton.hidden = !(game.started && !game.over);
+  }
+
   function render() {
     const toPlace = solver.is_to_place();
     const won = solver.is_won();
@@ -641,6 +818,7 @@
     const cellsTaken = solver.cells_taken();
     const piecesTaken = solver.pieces_taken();
     const movesLeft = solver.moves_left();
+    const hints = showValues() ? hintValues : null;
 
     for (let cell = 0; cell < 16; cell++) {
       const button = cellButtons[cell];
@@ -650,8 +828,8 @@
       button.classList.toggle("winning", winning.has(cell));
       button.classList.toggle("last", !won && cell === game.lastCell);
       let html = piece === NO_PIECE ? "" : pieceSvg(piece);
-      if (legal && hintValues && hintValues.has(cell)) {
-        const short = shortValue(hintValues.get(cell), movesLeft, true);
+      if (legal && hints && hints.has(cell)) {
+        const short = shortValue(hints.get(cell), movesLeft);
         html += `<span class="hint ${short.kind}">${short.text}</span>`;
       }
       button.innerHTML = html;
@@ -667,95 +845,115 @@
       button.disabled = !legal;
       const existing = button.querySelector(".hint");
       if (existing) existing.remove();
-      if (legal && hintValues && hintValues.has(piece)) {
-        const short = shortValue(hintValues.get(piece), movesLeft, true);
+      if (legal && hints && hints.has(piece)) {
+        const short = shortValue(hints.get(piece), movesLeft);
         button.insertAdjacentHTML("beforeend", `<span class="hint ${short.kind}">${short.text}</span>`);
       }
     }
 
     const current = solver.current_piece();
-    hand.hidden = game.over;
+    const mover = playerToMove();
     handPiece.innerHTML = current === NO_PIECE ? "" : pieceSvg(current);
-    if (current === NO_PIECE) {
-      handText.textContent = game.over ? "" : (isHumanTurn() ? "Pick a piece from the tray to hand to the engine." : "Engine is choosing a piece for you.");
-    } else {
-      handText.textContent = `${pieceNames[current]} — ${isHumanTurn() ? "place it on the board." : "engine is placing it."}`;
-    }
+    handPiece.classList.toggle("empty", current === NO_PIECE);
 
     if (won) {
-      const winner = game.log[game.log.length - 1].who;
-      prompt.textContent = winner === "You" ? "Quarto! You win." : "Quarto. The engine wins.";
+      prompt.textContent = `Quarto! ${winsPhrase(game.log.at(-1).player)}.`;
     } else if (done) {
       prompt.textContent = "Board full. Drawn game.";
     } else if (game.thinking) {
       prompt.textContent = isHumanTurn() ? "Evaluating…" : "Engine is thinking…";
     } else if (humanTurn) {
-      prompt.textContent = toPlace ? "Your move: place the piece." : "Your move: choose a piece for the engine.";
+      const name = game.opponent === "human" ? playerName(mover) : "Your move";
+      prompt.innerHTML = toPlace
+        ? `${name}<small>Place the ${pieceNames[current]} piece.</small>`
+        : `${name}<small>Choose a piece for ${playerName(1 - mover)}.</small>`;
     } else {
       prompt.textContent = "";
     }
 
     lamp.classList.toggle("thinking", game.thinking);
-    if (game.over) {
-      oracleLabel.textContent = "Final";
+    verdict.hidden = !game.annotationsOn || (!lastVerdict && !game.thinking && !game.over);
+    if (won) {
+      const winner = game.log.at(-1).player;
+      verdict.className = `verdict ${verdictKind(winner)}`;
+      verdictText.textContent = winsPhrase(winner);
+    } else if (game.over) {
       verdict.className = "verdict draw";
-      verdict.textContent = won ? (game.log[game.log.length - 1].who === "You" ? "You won" : "Engine won") : "Draw";
-      verdictDetail.textContent = "";
+      verdictText.textContent = "Draw";
     } else if (lastVerdict) {
-      const described = describeValue(lastVerdict.value, lastVerdict.movesLeft, lastVerdict.moverIsHuman);
-      oracleLabel.textContent = "Oracle · perfect play";
+      const described = describeValue(lastVerdict.value, lastVerdict.movesLeft, lastVerdict.moverIndex);
       verdict.className = `verdict ${described.kind}`;
-      verdict.textContent = described.kind === "draw" ? "Draw with perfect play" : described.text;
-      verdictDetail.textContent = `${lastVerdict.nodes.toLocaleString()} nodes · ${Math.round(lastVerdict.milliseconds)} ms`;
+      verdictText.textContent = described.text;
     } else {
-      oracleLabel.textContent = "Oracle";
       verdict.className = "verdict draw";
-      verdict.textContent = game.thinking ? "…" : "—";
-      verdictDetail.textContent = "";
+      verdictText.textContent = "";
     }
 
     log.innerHTML = game.log.map((entry, index) => {
       const number = Math.floor(index / 2) + 1;
       const action = entry.isPlace ? `→ ${cellName(entry.cell)}` : "gives";
-      return `<div class="log-entry"><span>${index % 2 === 0 ? number + "." : ""}</span><span class="who">${entry.who === "You" ? "you" : "eng"}</span>${pieceSvg(entry.piece)}<span>${action}</span></div>`;
+      const who = game.opponent === "human" ? `P${entry.player + 1}` : (isEngine(entry.player) ? "eng" : "you");
+      return `<div class="log-entry"><span>${index % 2 === 0 ? number + "." : ""}</span><span class="who">${who}</span>${pieceSvg(entry.piece)}<span>${action}</span></div>`;
     }).join("");
     log.scrollTop = log.scrollHeight;
 
-    const squares = solver.rules_squares() === 1;
-    for (const button of rulesButtons) {
-      button.setAttribute("aria-checked", String((button.dataset.squares === "1") === squares));
-      button.disabled = game.thinking;
-    }
-    legendSquares.hidden = !squares;
-    legendLines.hidden = squares;
-
+    annotationsToggle.checked = game.annotationsOn;
+    annotationsToggle.disabled = game.thinking;
     undoButton.disabled = game.thinking || game.log.length === 0;
-    swapButton.disabled = game.thinking || game.log.length > 0;
-    swapButton.textContent = game.humanFirst ? "Let engine start" : "Let me start";
-    statusLine.textContent = `book depth ${solver.book_depth()} · ${solver.book_entries().toLocaleString()} positions · move ${Math.min(movesDone() + 1, NUM_MOVES)} of ${NUM_MOVES}`;
+    playTitle.textContent = game.opponent === "human" ? "Two players" : (game.humanFirst ? "You vs engine" : "Engine vs you");
+    const detail = lastVerdict ? ` · ${lastVerdict.nodes.toLocaleString()} nodes · ${Math.round(lastVerdict.milliseconds)} ms` : "";
+    playStatus.textContent = `${solver.rules_squares() ? "lines + squares" : "lines only"} · move ${Math.min(movesDone() + 1, NUM_MOVES)} of ${NUM_MOVES}${detail}`;
   }
 
-  async function newGame() {
+  async function startGame() {
     if (game.thinking) return;
+    saveConfig();
+    solver.set_rules(config.rules === "squares" ? 1 : 0);
     solver.reset();
+    game.opponent = config.opponent;
+    game.humanFirst = config.opponent === "human" || config.first === "you";
+    game.annotationLevel = config.annotations === "off" ? "outcome" : config.annotations;
+    game.annotationsOn = config.annotations !== "off";
     game.log = [];
     game.lastCell = -1;
     game.over = false;
+    game.started = true;
     lastVerdict = null;
     hintValues = null;
     render();
+    showScreen(playScreen);
     await engineTurn();
   }
 
-  document.getElementById("newGameButton").addEventListener("click", newGame);
-  swapButton.addEventListener("click", async () => {
-    if (game.thinking || game.log.length > 0) return;
-    game.humanFirst = !game.humanFirst;
-    await newGame();
+  for (const group of setupScreen.querySelectorAll(".segment")) {
+    for (const button of group.querySelectorAll("button")) {
+      button.addEventListener("click", () => {
+        config[group.dataset.field] = button.dataset.value;
+        renderSetup();
+      });
+    }
+  }
+  byId("startButton").addEventListener("click", startGame);
+  resumeButton.addEventListener("click", () => showScreen(playScreen));
+  for (const id of ["newGameButton", "setupButton"]) {
+    byId(id).addEventListener("click", () => { if (!game.thinking) showScreen(setupScreen); });
+  }
+  for (const id of ["setupHelpButton", "playHelpButton"]) {
+    byId(id).addEventListener("click", () => {
+      screenBeforeHelp = playScreen.hidden ? setupScreen : playScreen;
+      showScreen(helpScreen);
+    });
+  }
+  byId("helpBackButton").addEventListener("click", () => showScreen(screenBeforeHelp));
+
+  annotationsToggle.addEventListener("change", async () => {
+    if (game.thinking) { annotationsToggle.checked = game.annotationsOn; return; }
+    game.annotationsOn = annotationsToggle.checked;
+    await refreshOracle();
   });
   undoButton.addEventListener("click", async () => {
     if (game.thinking || game.log.length === 0) return;
-    // Rewind to the human's previous decision point
+    // Rewind to the previous human decision point (one ply between two people)
     do {
       if (solver.undo() !== 1) break;
       game.log.pop();
@@ -766,21 +964,8 @@
     lastVerdict = null;
     await refreshOracle();
   });
-  for (const button of rulesButtons) {
-    button.addEventListener("click", async () => {
-      if (game.thinking) return;
-      const squares = button.dataset.squares === "1";
-      if ((solver.rules_squares() === 1) === squares) return;
-      solver.set_rules(squares ? 1 : 0);
-      await newGame();
-    });
-  }
-  hintsToggle.addEventListener("change", async () => {
-    if (game.thinking) return;
-    await refreshOracle();
-  });
 
-  document.getElementById("overlay").remove();
-  await newGame();
+  byId("overlay").remove();
+  showScreen(setupScreen);
 })();
 </script>
