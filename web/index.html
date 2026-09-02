@@ -1,4 +1,4 @@
-<title>Quarto Oracle</title>
+<title>CordoBot</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   :root {
@@ -397,14 +397,14 @@
   <!-- 🧩 Setup -->
   <section class="screen" id="setupScreen">
     <header class="masthead">
-      <h1>Quarto Oracle</h1>
-      <p>Play Quarto against a perfect solver or another person, with the exact outcome of every position on tap.</p>
+      <h1>CordoBot</h1>
+      <p>Play Quarto against a bot that never errs, or against another person, with the exact outcome of every position on tap.</p>
     </header>
     <div class="setup">
       <div class="field">
         <span class="field-label">Opponent</span>
         <div class="segment" role="radiogroup" data-field="opponent">
-          <button type="button" role="radio" data-value="engine">Engine</button>
+          <button type="button" role="radio" data-value="engine">Bot</button>
           <button type="button" role="radio" data-value="human">Another person</button>
         </div>
       </div>
@@ -420,7 +420,7 @@
         <span class="field-label">First move</span>
         <div class="segment" role="radiogroup" data-field="first">
           <button type="button" role="radio" data-value="you">You</button>
-          <button type="button" role="radio" data-value="engine">Engine</button>
+          <button type="button" role="radio" data-value="engine">Bot</button>
         </div>
         <p class="field-help">The first player hands over a piece; the second player places it.</p>
       </div>
@@ -455,7 +455,6 @@
     <div class="topbar">
       <button class="btn quiet" id="setupButton">‹ Setup</button>
       <span class="topbar-title" id="playTitle"></span>
-      <label class="toggle"><input type="checkbox" id="annotationsToggle"> Annotations</label>
       <button class="btn round" id="playHelpButton" aria-label="How to play">?</button>
     </div>
     <div class="table">
@@ -497,14 +496,14 @@
       <p><b>Lines + 2×2 squares</b> is the common advanced variant: any 2×2 block of four cells sharing a trait also wins. It makes the game much sharper; with lines only, perfect play is very drawish.</p>
       <p>If the board fills without a win, the game is drawn.</p>
       <h2>Annotations</h2>
-      <p>The oracle is a solver that searches the whole game tree, so its verdict is exact, not an estimate.</p>
+      <p>CordoBot's annotations come from a solver that searches the whole game tree, so every verdict is exact, not an estimate.</p>
       <ul>
         <li><b>Outcome</b> shows who wins with perfect play from both sides and in how many moves — a "move" is one placement. <b>Draw</b> means neither side can force a win.</li>
         <li><b>Move values</b> label every legal choice from the point of view of the player to move: <span class="chip win">W3</span> wins in 3 moves, <span class="chip loss">L2</span> loses in 2 against best play, <span class="chip draw">=</span> holds the draw.</li>
       </ul>
-      <p>Annotations can be switched on and off during a game with the toggle in the top bar. In a two-person game they are off by default so nobody sees the answer unless you both want to.</p>
-      <h2>Playing the engine</h2>
-      <p>The engine plays perfectly from the first move. When the verdict is <b>Draw</b> you are still holding — one slip and it becomes a countdown. <b>Undo</b> takes back your last decision.</p>
+      <p>Annotations are chosen in the game setup. For a two-person game, leave them off unless you both want to see the answer.</p>
+      <h2>Playing the bot</h2>
+      <p>The bot plays perfectly from the first move. When the verdict is <b>Draw</b> you are still holding — one slip and it becomes a countdown. <b>Undo</b> takes back your last decision.</p>
     </article>
   </section>
 </main>
@@ -577,11 +576,11 @@
   const defaults = { opponent: "engine", first: "you", rules: "squares", annotations: "outcome", name1: "", name2: "" };
   const config = { ...defaults };
   try {
-    const saved = JSON.parse(localStorage.getItem("quarto-oracle-setup") || "{}");
+    const saved = JSON.parse(localStorage.getItem("cordobot-setup") || "{}");
     for (const key of Object.keys(defaults)) if (typeof saved[key] === "string") config[key] = saved[key];
   } catch (error) { /* storage unavailable: defaults stand */ }
   function saveConfig() {
-    try { localStorage.setItem("quarto-oracle-setup", JSON.stringify(config)); } catch (error) { /* ignore */ }
+    try { localStorage.setItem("cordobot-setup", JSON.stringify(config)); } catch (error) { /* ignore */ }
   }
 
   // 🎮 Game state outside the solver
@@ -608,13 +607,13 @@
   function isHumanTurn() { return !isEngine(playerToMove()); }
   function playerName(playerIndex) {
     if (game.opponent === "human") return game.names[playerIndex];
-    return isEngine(playerIndex) ? "Engine" : "You";
+    return isEngine(playerIndex) ? "Bot" : "You";
   }
   function winsPhrase(playerIndex) {
     const name = playerName(playerIndex);
     return name === "You" ? "You win" : `${name} wins`;
   }
-  // Green when the local player wins, red when the engine does, neutral between two people.
+  // Green when the local player wins, red when the bot does, neutral between two people.
   function verdictKind(winnerIndex) {
     if (game.opponent === "human") return "decisive";
     return isEngine(winnerIndex) ? "loss" : "win";
@@ -756,7 +755,6 @@
   const log = byId("log");
   const playTitle = byId("playTitle");
   const playStatus = byId("playStatus");
-  const annotationsToggle = byId("annotationsToggle");
   const undoButton = byId("undoButton");
 
   const cellButtons = [];
@@ -827,7 +825,7 @@
       ? "Four in a row, column, diagonal or any 2×2 block sharing a trait wins. Sharper, with more forced wins."
       : "Four in a row, column or diagonal sharing a trait wins. The classic rules; perfect play is very drawish.";
     annotationsHelp.textContent = {
-      off: "No solver readout. You can switch annotations on at any time during the game.",
+      off: "No solver readout. Play blind.",
       outcome: "Shows who wins with perfect play and in how many moves, updated after every move.",
       values: "Also labels every legal piece and cell with its exact result. Slower early in the game.",
     }[config.annotations];
@@ -887,7 +885,7 @@
     } else if (done) {
       prompt.textContent = "Board full. Drawn game.";
     } else if (game.thinking) {
-      prompt.textContent = isHumanTurn() ? "Evaluating…" : "Engine is thinking…";
+      prompt.textContent = isHumanTurn() ? "Evaluating…" : "Bot is thinking…";
     } else if (humanTurn) {
       const name = game.opponent === "human" ? playerName(mover) : "Your move";
       prompt.innerHTML = toPlace
@@ -918,15 +916,13 @@
     log.innerHTML = game.log.map((entry, index) => {
       const number = Math.floor(index / 2) + 1;
       const action = entry.isPlace ? `→ ${cellName(entry.cell)}` : "gives";
-      const who = game.opponent === "human" ? game.names[entry.player] : (isEngine(entry.player) ? "eng" : "you");
+      const who = game.opponent === "human" ? game.names[entry.player] : (isEngine(entry.player) ? "bot" : "you");
       return `<div class="log-entry"><span>${index % 2 === 0 ? number + "." : ""}</span><span class="who">${who}</span>${pieceSvg(entry.piece)}<span>${action}</span></div>`;
     }).join("");
     log.scrollTop = log.scrollHeight;
 
-    annotationsToggle.checked = game.annotationsOn;
-    annotationsToggle.disabled = game.thinking;
     undoButton.disabled = game.thinking || game.log.length === 0;
-    playTitle.textContent = game.opponent === "human" ? `${game.names[0]} vs ${game.names[1]}` : (game.humanFirst ? "You vs engine" : "Engine vs you");
+    playTitle.textContent = game.opponent === "human" ? `${game.names[0]} vs ${game.names[1]}` : (game.humanFirst ? "You vs bot" : "Bot vs you");
     const detail = lastVerdict ? ` · ${lastVerdict.nodes.toLocaleString()} nodes · ${Math.round(lastVerdict.milliseconds)} ms` : "";
     playStatus.textContent = `${solver.rules_squares() ? "lines + squares" : "lines only"} · move ${Math.min(movesDone() + 1, NUM_MOVES)} of ${NUM_MOVES}${detail}`;
   }
@@ -974,11 +970,6 @@
   }
   byId("helpBackButton").addEventListener("click", () => showScreen(screenBeforeHelp));
 
-  annotationsToggle.addEventListener("change", async () => {
-    if (game.thinking) { annotationsToggle.checked = game.annotationsOn; return; }
-    game.annotationsOn = annotationsToggle.checked;
-    await refreshOracle();
-  });
   undoButton.addEventListener("click", async () => {
     if (game.thinking || game.log.length === 0) return;
     // Rewind to the previous human decision point (one ply between two people)
