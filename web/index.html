@@ -1,4 +1,4 @@
-<title>CordoBot</title>
+<title>QuartoBot</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   :root {
@@ -397,7 +397,7 @@
   <!-- 🧩 Setup -->
   <section class="screen" id="setupScreen">
     <header class="masthead">
-      <h1>CordoBot</h1>
+      <h1>QuartoBot</h1>
       <p>Play Quarto against a bot that never errs, or against another person, with the exact outcome of every position on tap.</p>
     </header>
     <div class="setup">
@@ -496,7 +496,7 @@
       <p><b>Lines + 2×2 squares</b> is the common advanced variant: any 2×2 block of four cells sharing a trait also wins. It makes the game much sharper; with lines only, perfect play is very drawish.</p>
       <p>If the board fills without a win, the game is drawn.</p>
       <h2>Annotations</h2>
-      <p>CordoBot's annotations come from a solver that searches the whole game tree, so every verdict is exact, not an estimate.</p>
+      <p>QuartoBot's annotations come from a solver that searches the whole game tree, so every verdict is exact, not an estimate.</p>
       <ul>
         <li><b>Outcome</b> shows who wins with perfect play from both sides and in how many moves — a "move" is one placement. <b>Draw</b> means neither side can force a win.</li>
         <li><b>Move values</b> label every legal choice from the point of view of the player to move: <span class="chip win">W3</span> wins in 3 moves, <span class="chip loss">L2</span> loses in 2 against best play, <span class="chip draw">=</span> holds the draw.</li>
@@ -576,11 +576,11 @@
   const defaults = { opponent: "engine", first: "you", rules: "squares", annotations: "outcome", name1: "", name2: "" };
   const config = { ...defaults };
   try {
-    const saved = JSON.parse(localStorage.getItem("cordobot-setup") || "{}");
+    const saved = JSON.parse(localStorage.getItem("quartobot-setup") || "{}");
     for (const key of Object.keys(defaults)) if (typeof saved[key] === "string") config[key] = saved[key];
   } catch (error) { /* storage unavailable: defaults stand */ }
   function saveConfig() {
-    try { localStorage.setItem("cordobot-setup", JSON.stringify(config)); } catch (error) { /* ignore */ }
+    try { localStorage.setItem("quartobot-setup", JSON.stringify(config)); } catch (error) { /* ignore */ }
   }
 
   // 🎮 Game state outside the solver
