@@ -5,3 +5,4 @@ solver/bookgen
 reference/quarto_reference
 node_modules/
 .playwright-mcp/
+JUSTFILE_BRANCH
