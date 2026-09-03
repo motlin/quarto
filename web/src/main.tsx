@@ -3,8 +3,9 @@ import {createRoot} from "react-dom/client";
 import {createRouter, RouterProvider} from "@tanstack/react-router";
 import {Agentation} from "agentation";
 import {routeTree} from "./routeTree.gen.js";
+import {browserStore} from "./setup/storage.js";
 
-const router = createRouter({routeTree});
+const router = createRouter({routeTree, context: {store: browserStore}});
 
 declare module "@tanstack/react-router" {
 	interface Register {

@@ -1,4 +1,5 @@
 /* 🧭 Page furniture: buttons, the top bar, the setup form, and the help prose. */
+/* Links dressed as buttons (the setup screen's Play is a real link) share the rule with <button>. */
 .btn {
 	border: 1px solid var(--line);
 	background: var(--panel);
@@ -10,7 +11,10 @@
 	font-weight: 500;
 	display: inline-flex;
 	align-items: center;
+	justify-content: center;
 	gap: 6px;
+	color: var(--ink);
+	text-decoration: none;
 }
 .btn:hover {
 	border-color: var(--ink-muted);
@@ -110,9 +114,10 @@ h1 {
 	flex: 1;
 	border: 0;
 	background: transparent;
-	padding: 10px 12px;
+	padding: 10px 8px;
 	min-height: 44px;
 	font-size: 14px;
+	line-height: 1.25;
 	cursor: pointer;
 	color: var(--ink-muted);
 }
@@ -150,6 +155,26 @@ h1 {
 	gap: 10px;
 	align-items: center;
 	margin-top: 6px;
+}
+/*
+ * On a phone the form runs past the fold, so Play rides along the bottom edge within thumb reach, on a fade of the
+ * page ground so the fields scrolling under it stay legible. The help links tuck in beside it.
+ */
+@media (max-width: 720px) {
+	.actions.pinned {
+		position: sticky;
+		bottom: 0;
+		margin: 0 calc(-1 * var(--screen-padding));
+		padding: 12px var(--screen-padding) max(12px, env(safe-area-inset-bottom));
+		background: linear-gradient(to top, var(--ground) 75%, transparent);
+	}
+	.actions.pinned .primary {
+		flex: 1 0 100%;
+		min-height: 48px;
+	}
+	.actions.pinned .quiet {
+		flex: 1;
+	}
 }
 .status-line {
 	font-family: var(--mono);

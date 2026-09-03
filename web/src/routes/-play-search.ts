@@ -1,9 +1,16 @@
 import {z} from "zod";
 
+export const opponentSchema = z.enum(["bot", "human"]);
+export const rulesSchema = z.enum(["lines", "squares"]);
+export const firstSchema = z.enum(["you", "bot"]);
+export const annotationsSchema = z.enum(["off", "outcome", "values"]);
+
 // The whole game configuration lives in the URL so reload and back keep it.
 export const playSearchSchema = z.object({
-	opponent: z.enum(["bot", "human"]).default("bot"),
-	rules: z.enum(["lines", "squares"]).default("squares"),
-	first: z.enum(["you", "bot"]).default("you"),
-	annotations: z.enum(["off", "outcome", "values"]).default("off"),
+	opponent: opponentSchema.default("bot"),
+	rules: rulesSchema.default("squares"),
+	first: firstSchema.default("you"),
+	annotations: annotationsSchema.default("off"),
 });
+
+export type PlaySearch = z.infer<typeof playSearchSchema>;
