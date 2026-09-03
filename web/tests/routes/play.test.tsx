@@ -19,6 +19,7 @@ const youFirst: GameSetup = {
 	first: "you",
 	difficulty: "impossible",
 	hints: "outcome",
+	undo: "allowed",
 	names: ["", ""],
 };
 const botFirst: GameSetup = {...youFirst, first: "bot"};
@@ -354,6 +355,181 @@ describe("PlayScreen between two people", () => {
 	});
 });
 
+describe("PlayScreen with undo off", () => {
+	const noUndo: GameSetup = {...youFirst, hints: "off", undo: "off"};
+	const CONFIRM_PROMPT = "Confirm your turn, or take it back.";
+
+	function control(name: string): HTMLElement {
+		return screen.getByRole("button", {name});
+	}
+
+	it("holds the human's choice back from the solver until Confirm, then lets the bot reply", async () => {
+		const solver = renderPlay(noUndo, {bestMoves: [cellFromName("b2"), 7]});
+		await screen.findByText("Choose a piece for the bot.");
+		expect(screen.queryByRole("button", {name: "Undo"})).toBeNull();
+		expect(control("Confirm").hasAttribute("disabled")).toBe(true);
+		expect(control("Confirm").className).toBe("btn primary");
+		expect(control("Take back").hasAttribute("disabled")).toBe(true);
+
+		fireEvent.click(tray("dark square short solid"));
+
+		await screen.findByText(CONFIRM_PROMPT);
+		expect(tray("dark square short solid").className).toContain("pending");
+		expect(handPiece().className).toBe("hand-piece");
+		expect(enabledSlots()).toBe(0);
+		expect(solver.kinds()).toStrictEqual(["init", "setSeed"]);
+		expect(control("Take back").hasAttribute("disabled")).toBe(false);
+
+		fireEvent.click(control("Confirm"));
+
+		await screen.findByText("Place the dark square tall solid piece.");
+		expect(solver.kinds()).toStrictEqual([
+			"init",
+			"setSeed",
+			"applySelect",
+			"bestMove",
+			"applyPlace",
+			"bestMove",
+			"applySelect",
+		]);
+		expect(solver.requests[2]).toStrictEqual({kind: "applySelect", payload: {piece: 3}});
+		expect(screen.getByText("Move list · 1 placements")).toBeDefined();
+	});
+
+	it("shows the provisional placement on the board and sends both plies only on Confirm", async () => {
+		const solver = renderPlay({...noUndo, first: "bot"}, {bestMoves: [7, cellFromName("b2"), 9]});
+		await screen.findByText("Place the dark square tall solid piece.");
+		const requestsBefore = solver.requests.length;
+
+		fireEvent.click(cell("c3"));
+
+		await screen.findByText("Choose a piece for the bot.");
+		expect(screen.getByRole("button", {name: "cell c3, dark square tall solid, unconfirmed"}).className).toBe(
+			"cell pending",
+		);
+		expect(enabledCells()).toBe(0);
+		expect(enabledSlots()).toBe(15);
+		expect(handPiece().className).toBe("hand-piece empty");
+		expect(control("Confirm").hasAttribute("disabled")).toBe(true);
+		expect(screen.getByText("Move list · 0 placements")).toBeDefined();
+
+		fireEvent.click(tray("light round short hollow"));
+
+		await screen.findByText(CONFIRM_PROMPT);
+		expect(control("Confirm").hasAttribute("disabled")).toBe(false);
+		expect(solver.requests).toHaveLength(requestsBefore);
+
+		fireEvent.click(control("Confirm"));
+
+		await screen.findByText("Place the dark round short hollow piece.");
+		expect(solver.requests.slice(requestsBefore)).toStrictEqual([
+			{kind: "applyPlace", payload: {cell: cellFromName("c3")}},
+			{kind: "applySelect", payload: {piece: 8}},
+			{kind: "bestMove", payload: undefined},
+			{kind: "applyPlace", payload: {cell: cellFromName("b2")}},
+			{kind: "bestMove", payload: undefined},
+			{kind: "applySelect", payload: {piece: 9}},
+		]);
+		expect(cell("c3").className).toBe("cell");
+		expect(cell("b2").className).toBe("cell last");
+		expect(solver.position.log).toHaveLength(5);
+	});
+
+	it("takes back the selection first, then the placement, restoring each earlier provisional state", async () => {
+		const solver = renderPlay({...noUndo, first: "bot"}, {bestMoves: [7]});
+		await screen.findByText("Place the dark square tall solid piece.");
+		fireEvent.click(cell("c3"));
+		await screen.findByText("Choose a piece for the bot.");
+		fireEvent.click(tray("light round short hollow"));
+		await screen.findByText(CONFIRM_PROMPT);
+
+		fireEvent.click(control("Take back"));
+
+		await screen.findByText("Choose a piece for the bot.");
+		expect(tray("light round short hollow").className).not.toContain("pending");
+		expect(cell("c3").className).toBe("cell pending");
+		expect(enabledSlots()).toBe(15);
+
+		fireEvent.click(control("Take back"));
+
+		await screen.findByText("Place the dark square tall solid piece.");
+		expect(cell("c3").className).toBe("cell legal");
+		expect(enabledCells()).toBe(16);
+		expect(handPiece().className).toBe("hand-piece draggable");
+		expect(control("Take back").hasAttribute("disabled")).toBe(true);
+		expect(solver.kinds()).toStrictEqual(["init", "setSeed", "bestMove", "applySelect"]);
+	});
+
+	it("keeps the committed position's verdict and asks the oracle nothing about the provisional one", async () => {
+		const solver = renderPlay({...noUndo, hints: "outcome"}, {value: 14});
+		await screen.findByText("You win in 3");
+		fireEvent.click(tray("dark square short solid"));
+		await screen.findByText(CONFIRM_PROMPT);
+		expect(screen.getByText("You win in 3")).toBeDefined();
+		expect(solver.kinds()).toStrictEqual(["init", "setSeed", "evaluate"]);
+	});
+
+	it("makes each person's turn provisional and never shows Undo between two people", async () => {
+		const solver = renderPlay({...twoPeople, undo: "off"});
+		await screen.findByText("Choose a piece for Grace.");
+		expect(screen.queryByRole("button", {name: "Undo"})).toBeNull();
+		fireEvent.click(tray("dark round short hollow"));
+		await screen.findByText(CONFIRM_PROMPT);
+		expect(screen.getByText("Ada", {selector: ".prompt"})).toBeDefined();
+		fireEvent.click(control("Confirm"));
+
+		await screen.findByText("Place the dark round short hollow piece.");
+		expect(screen.getByText("Grace", {selector: ".prompt"})).toBeDefined();
+		fireEvent.click(cell("c3"));
+		await screen.findByText("Choose a piece for Ada.");
+		fireEvent.click(tray("light round short hollow"));
+		await screen.findByText(CONFIRM_PROMPT);
+		expect(solver.kinds()).toStrictEqual(["init", "setSeed", "applySelect"]);
+		fireEvent.click(control("Confirm"));
+
+		await screen.findByText("Place the light round short hollow piece.");
+		expect(screen.getByText("Ada", {selector: ".prompt"})).toBeDefined();
+		expect(solver.kinds()).toStrictEqual(["init", "setSeed", "applySelect", "applyPlace", "applySelect"]);
+	});
+
+	it("waits for Confirm before declaring a winning placement", async () => {
+		renderPlay({...twoPeople, undo: "off"});
+		await screen.findByText("Choose a piece for Grace.");
+		const handovers: readonly [string, string | null][] = [
+			["light round tall solid", null],
+			["dark round tall solid", "a1"],
+			["light square tall solid", "b1"],
+			["dark square tall solid", "c1"],
+		];
+		for (const [piece, target] of handovers) {
+			if (target !== null) {
+				fireEvent.click(cell(target));
+			}
+			fireEvent.click(tray(piece));
+			await screen.findByText(CONFIRM_PROMPT);
+			fireEvent.click(control("Confirm"));
+			await screen.findByText(`Place the ${piece} piece.`);
+		}
+
+		fireEvent.click(cell("d1"));
+
+		await screen.findByText(CONFIRM_PROMPT);
+		expect(screen.queryByText("Quarto! Ada wins.")).toBeNull();
+		expect(cell("d1").className).toBe("cell pending");
+		expect(enabledSlots()).toBe(0);
+		expect(enabledCells()).toBe(0);
+		expect(document.querySelector(".cell.winning")).toBeNull();
+
+		fireEvent.click(control("Confirm"));
+
+		await screen.findByText("Quarto! Ada wins.");
+		for (const name of ["a1", "b1", "c1", "d1"]) {
+			expect(cell(name).className).toContain("winning");
+		}
+		expect(control("Confirm").hasAttribute("disabled")).toBe(true);
+	});
+});
+
 describe("the same setup search starts the same game", () => {
 	it("gives the same initial state for the same URL", () => {
 		const search = playSearchSchema.parse({opponent: "human", rules: "lines", annotations: "values", name1: "Ada"});
@@ -364,6 +540,7 @@ describe("the same setup search starts the same game", () => {
 			first: "you",
 			difficulty: "impossible",
 			hints: "values",
+			undo: "allowed",
 			names: ["Ada", "Player 2"],
 		});
 	});

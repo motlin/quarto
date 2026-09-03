@@ -11,7 +11,16 @@ import {
 	winsPhrase,
 } from "../../src/game/narration.js";
 import type {GameSetup} from "../../src/game/setup.js";
-import {applyPlace, applySelect, type GameState, newGame, type Verdict, withVerdict} from "../../src/game/state.js";
+import {
+	applyPlace,
+	applySelect,
+	type GameState,
+	newGame,
+	provisionalPlace,
+	provisionalSelect,
+	type Verdict,
+	withVerdict,
+} from "../../src/game/state.js";
 
 const botGame: GameSetup = {
 	opponent: "bot",
@@ -19,6 +28,7 @@ const botGame: GameSetup = {
 	first: "you",
 	difficulty: "impossible",
 	hints: "outcome",
+	undo: "allowed",
 	names: ["", ""],
 };
 const botFirst: GameSetup = {...botGame, first: "bot"};
@@ -112,6 +122,20 @@ describe("promptFor", () => {
 		expect(promptFor(botFirst, applySelect(newGame(botFirst), asPiece(0)))).toStrictEqual({
 			title: "Your move",
 			detail: "Place the light round short solid piece.",
+		});
+	});
+
+	it("walks a provisional turn: choose once the piece is placed, then confirm or take back", () => {
+		const noUndo: GameSetup = {...twoPeople, undo: "off"};
+		const placed = provisionalPlace(applySelect(newGame(noUndo), asPiece(9)), cellFromName("b2"));
+		expect(promptFor(noUndo, placed)).toStrictEqual({title: "Grace", detail: "Choose a piece for Ada."});
+		expect(promptFor(noUndo, provisionalSelect(placed, asPiece(3)))).toStrictEqual({
+			title: "Grace",
+			detail: "Confirm your turn, or take it back.",
+		});
+		expect(promptFor(noUndo, provisionalSelect(newGame(noUndo), asPiece(9)))).toStrictEqual({
+			title: "Ada",
+			detail: "Confirm your turn, or take it back.",
 		});
 	});
 

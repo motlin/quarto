@@ -8,7 +8,15 @@
 import {describeValue, distanceOf} from "./evaluation.js";
 import {pieceName} from "./pieces.js";
 import type {GameSetup} from "./setup.js";
-import {currentPlayer, type GameState, isHumanToMove, movesDone, type Verdict} from "./state.js";
+import {
+	awaitsPlacement,
+	currentPlayer,
+	type GameState,
+	isHumanToMove,
+	isTurnComplete,
+	movesDone,
+	type Verdict,
+} from "./state.js";
 import {isBot, otherPlayer, type Player} from "./turns.js";
 
 /** "decisive" is a win between two people, where neither side is the bot. */
@@ -106,11 +114,18 @@ export function promptFor(setup: GameSetup, state: GameState): Prompt {
 	}
 	const mover = currentPlayer(state);
 	const title = setup.opponent === "human" ? playerName(setup, mover) : "Your move";
-	const detail =
-		state.hand === null
-			? `Choose a piece for ${receiverName(setup, mover)}.`
-			: `Place the ${pieceName(state.hand)} piece.`;
-	return {title, detail};
+	return {title, detail: turnDetail(setup, state, mover)};
+}
+
+/** The step the mover is on: placing, choosing, or (with undo off) confirming the whole turn. */
+function turnDetail(setup: GameSetup, state: GameState, mover: Player): string {
+	if (isTurnComplete(state)) {
+		return "Confirm your turn, or take it back.";
+	}
+	if (awaitsPlacement(state) && state.hand !== null) {
+		return `Place the ${pieceName(state.hand)} piece.`;
+	}
+	return `Choose a piece for ${receiverName(setup, mover)}.`;
 }
 
 /** The one-line mono footer: rules, the placement under way, and what the last search cost. */

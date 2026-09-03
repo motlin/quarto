@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import {describe, expect, it, vi} from "vitest";
-import {fireEvent, render, screen} from "@testing-library/react";
+import {fireEvent, render, screen, within} from "@testing-library/react";
 import {DEFAULT_SETUP, type Setup} from "../../src/setup/setup.js";
 import {SetupForm} from "../../src/ui/SetupForm.js";
 
@@ -14,7 +14,7 @@ describe("SetupForm", () => {
 	it("renders every choice as a radiogroup of real buttons with the current value checked", () => {
 		renderForm(DEFAULT_SETUP);
 		const groups = screen.getAllByRole("radiogroup");
-		expect(groups.map((group) => group.getAttribute("aria-labelledby"))).toHaveLength(5);
+		expect(groups.map((group) => group.getAttribute("aria-labelledby"))).toHaveLength(6);
 		const squares = screen.getByRole("radio", {name: "Lines + 2×2 squares"});
 		expect(squares.tagName).toBe("BUTTON");
 		expect(squares.getAttribute("aria-checked")).toBe("true");
@@ -64,6 +64,19 @@ describe("SetupForm", () => {
 			opponent: "human",
 			names: ["Ada", "Grace"],
 		});
+	});
+
+	it("offers undo, allowed by default, and turns it off on request", () => {
+		const onChange = renderForm(DEFAULT_SETUP);
+		const undo = within(screen.getByRole("radiogroup", {name: "Undo"}));
+		expect(undo.getByRole("radio", {name: "Allowed"}).getAttribute("aria-checked")).toBe("true");
+		fireEvent.click(undo.getByRole("radio", {name: "Off"}));
+		expect(onChange).toHaveBeenCalledExactlyOnceWith({...DEFAULT_SETUP, undo: "off"});
+	});
+
+	it("explains that turning undo off means confirming each turn", () => {
+		renderForm({...DEFAULT_SETUP, undo: "off"});
+		expect(screen.getByText("Confirm each turn; no take-backs after that.")).toBeDefined();
 	});
 
 	it("describes the selected option under each group", () => {

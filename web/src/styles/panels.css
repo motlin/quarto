@@ -90,6 +90,10 @@
 	gap: 8px;
 	align-items: center;
 }
+/* Confirm commits a whole turn, so it gets the full tap target. */
+.controls .primary {
+	min-height: 44px;
+}
 .moves summary {
 	cursor: pointer;
 	font-size: 13px;

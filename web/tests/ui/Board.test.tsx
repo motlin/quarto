@@ -25,6 +25,7 @@ describe("Board", () => {
 				legalCells={new Set([a1, b2])}
 				onPlace={onPlace}
 				lastCell={null}
+				pendingCell={null}
 				winningCells={new Set()}
 				hints={new Map()}
 				dropCell={null}
@@ -41,6 +42,7 @@ describe("Board", () => {
 				legalCells={new Set([b2, d4])}
 				onPlace={vi.fn<(cell: Cell) => void>()}
 				lastCell={a1}
+				pendingCell={null}
 				winningCells={new Set()}
 				hints={new Map()}
 				dropCell={b2}
@@ -61,6 +63,7 @@ describe("Board", () => {
 				legalCells={new Set([b2])}
 				onPlace={onPlace}
 				lastCell={a1}
+				pendingCell={null}
 				winningCells={new Set()}
 				hints={new Map()}
 				dropCell={null}
@@ -84,6 +87,7 @@ describe("Board", () => {
 				legalCells={new Set()}
 				onPlace={vi.fn<(cell: Cell) => void>()}
 				lastCell={cellFromName("d1")}
+				pendingCell={null}
 				winningCells={new Set(["a1", "b1", "c1", "d1"].map(cellFromName))}
 				hints={new Map()}
 				dropCell={null}
@@ -101,6 +105,7 @@ describe("Board", () => {
 				legalCells={new Set([a1, b2, d4])}
 				onPlace={vi.fn<(cell: Cell) => void>()}
 				lastCell={null}
+				pendingCell={null}
 				winningCells={new Set()}
 				hints={
 					new Map([

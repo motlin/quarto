@@ -1,5 +1,5 @@
 /**
- * ⚙️ The setup screen's choices: five segmented controls, plus two name inputs when two people share the device.
+ * ⚙️ The setup screen's choices: six segmented controls, plus two name inputs when two people share the device.
  * State flows down and comes back whole through onChange; the Play link and the help links arrive through `actions`
  * so the form knows nothing about the router.
  */
@@ -103,6 +103,11 @@ const ANNOTATIONS: readonly SegmentOption<Setup["annotations"]>[] = [
 	},
 ];
 
+const UNDO: readonly SegmentOption<Setup["undo"]>[] = [
+	{value: "allowed", label: "Allowed", help: "Undo takes back the last move at any time."},
+	{value: "off", label: "Off", help: "Confirm each turn; no take-backs after that."},
+];
+
 export function SetupForm({value, onChange, actions}: SetupFormProps) {
 	const namesLabelId = useId();
 	const setName = (index: 0 | 1, name: string) => {
@@ -185,6 +190,14 @@ export function SetupForm({value, onChange, actions}: SetupFormProps) {
 				value={value.annotations}
 				onChange={(annotations) => {
 					onChange({...value, annotations});
+				}}
+			/>
+			<Segment
+				label="Undo"
+				options={UNDO}
+				value={value.undo}
+				onChange={(undo) => {
+					onChange({...value, undo});
 				}}
 			/>
 			<div className="actions pinned">{actions}</div>

@@ -5,12 +5,22 @@ import type {GameSetup} from "../../src/game/setup.js";
 import {
 	applyPlace,
 	applySelect,
+	awaitsPlacement,
+	awaitsSelection,
+	boardWithPending,
+	confirmTurn,
 	type GameState,
+	handWithPending,
+	hasPending,
 	isHumanToMove,
 	isToPlace,
+	isTurnComplete,
 	movesDone,
 	movesLeft,
 	newGame,
+	provisionalPlace,
+	provisionalSelect,
+	takeBack,
 	undoToHumanDecision,
 	type Verdict,
 	withHints,
@@ -23,6 +33,7 @@ const setup: GameSetup = {
 	first: "you",
 	difficulty: "impossible",
 	hints: "values",
+	undo: "allowed",
 	names: ["Player 1", "Player 2"],
 };
 
@@ -49,6 +60,7 @@ describe("newGame", () => {
 			status: "playing",
 			verdict: null,
 			hintValues: null,
+			pending: {placedCell: null, selectedPiece: null},
 		});
 		expect(movesDone(newGame(setup))).toBe(0);
 		expect(movesLeft(newGame(setup))).toBe(16);
@@ -243,5 +255,144 @@ describe("withVerdict and withHints", () => {
 		]);
 		expect(withVerdict(state, verdict)).toBe(state);
 		expect(withHints(state, new Map())).toBe(state);
+	});
+});
+
+describe("a provisional turn", () => {
+	// Two people, undo off: seat 0 hands over piece 5, seat 1 places it and is to hand a piece back.
+	const twoPeople = newGame({...setup, opponent: "human", undo: "off"});
+	const midTurn = applySelect(twoPeople, asPiece(5));
+
+	it("starts with nothing pending and the piece in hand awaiting placement", () => {
+		expect(hasPending(midTurn)).toBe(false);
+		expect(awaitsPlacement(midTurn)).toBe(true);
+		expect(awaitsSelection(midTurn)).toBe(false);
+		expect(isTurnComplete(midTurn)).toBe(false);
+		expect(boardWithPending(midTurn)).toStrictEqual(midTurn.board);
+		expect(handWithPending(midTurn)).toBe(5);
+	});
+
+	it("places provisionally without touching the board, the log or the hand", () => {
+		const placed = provisionalPlace(midTurn, cellFromName("b2"));
+		expect(placed.pending).toStrictEqual({placedCell: cellFromName("b2"), selectedPiece: null});
+		expect(placed.board).toStrictEqual(midTurn.board);
+		expect(placed.log).toStrictEqual(midTurn.log);
+		expect(placed.hand).toBe(5);
+		expect(hasPending(placed)).toBe(true);
+		expect(awaitsPlacement(placed)).toBe(false);
+		expect(awaitsSelection(placed)).toBe(true);
+		expect(isTurnComplete(placed)).toBe(false);
+		expect(boardWithPending(placed)[cellFromName("b2")]).toBe(5);
+		expect(handWithPending(placed)).toBeNull();
+		expect(movesDone(placed)).toBe(0);
+		expect(isHumanToMove(placed)).toBe(true);
+	});
+
+	it("refuses a second provisional placement, an occupied cell and a placement with nothing in hand", () => {
+		const placed = provisionalPlace(midTurn, cellFromName("b2"));
+		expect(provisionalPlace(placed, cellFromName("c3"))).toBe(placed);
+		const occupied = applySelect(play(twoPeople, [[6, "a1"]]), asPiece(7));
+		expect(provisionalPlace(occupied, cellFromName("a1"))).toBe(occupied);
+		expect(provisionalPlace(twoPeople, cellFromName("a1"))).toBe(twoPeople);
+	});
+
+	it("refuses to select before the piece in hand is placed", () => {
+		expect(provisionalSelect(midTurn, asPiece(6))).toBe(midTurn);
+	});
+
+	it("selects provisionally after the placement, showing the piece in hand and leaving the tray alone", () => {
+		const placed = provisionalPlace(midTurn, cellFromName("b2"));
+		const selected = provisionalSelect(placed, asPiece(6));
+		expect(selected.pending).toStrictEqual({placedCell: cellFromName("b2"), selectedPiece: 6});
+		expect(selected.remaining).toStrictEqual(placed.remaining);
+		expect(selected.log).toStrictEqual(placed.log);
+		expect(handWithPending(selected)).toBe(6);
+		expect(awaitsSelection(selected)).toBe(false);
+		expect(isTurnComplete(selected)).toBe(true);
+		expect(provisionalSelect(selected, asPiece(7))).toBe(selected);
+	});
+
+	it("refuses a piece that is not in the tray", () => {
+		const placed = provisionalPlace(midTurn, cellFromName("b2"));
+		expect(provisionalSelect(placed, asPiece(5))).toBe(placed);
+	});
+
+	it("takes back the selection first, then the placement, then nothing", () => {
+		const placed = provisionalPlace(midTurn, cellFromName("b2"));
+		const selected = provisionalSelect(placed, asPiece(6));
+		const backOne = takeBack(selected);
+		expect(backOne).toStrictEqual(placed);
+		const backTwo = takeBack(backOne);
+		expect(backTwo).toStrictEqual(midTurn);
+		expect(takeBack(backTwo)).toBe(backTwo);
+	});
+
+	it("confirms both plies in order and clears the pending turn", () => {
+		const selected = provisionalSelect(provisionalPlace(midTurn, cellFromName("b2")), asPiece(6));
+		const committed = confirmTurn(selected);
+		expect(committed).toStrictEqual(applySelect(applyPlace(midTurn, cellFromName("b2")), asPiece(6)));
+		expect(committed.pending).toStrictEqual({placedCell: null, selectedPiece: null});
+		expect(committed.log).toHaveLength(3);
+		expect(committed.hand).toBe(6);
+	});
+
+	it("does not confirm an incomplete turn", () => {
+		expect(confirmTurn(midTurn)).toBe(midTurn);
+		const placed = provisionalPlace(midTurn, cellFromName("b2"));
+		expect(confirmTurn(placed)).toBe(placed);
+	});
+
+	it("needs only a selection on the first turn of the game", () => {
+		expect(awaitsPlacement(twoPeople)).toBe(false);
+		expect(awaitsSelection(twoPeople)).toBe(true);
+		const selected = provisionalSelect(twoPeople, asPiece(5));
+		expect(handWithPending(selected)).toBe(5);
+		expect(isTurnComplete(selected)).toBe(true);
+		expect(confirmTurn(selected)).toStrictEqual(midTurn);
+	});
+
+	it("needs only a placement on the last turn of the game", () => {
+		const order = [15, 3, 9, 10, 13, 2, 5, 12, 0, 8, 4, 11, 6, 7, 14];
+		let state = twoPeople;
+		for (const [cell, piece] of order.entries()) {
+			state = applyPlace(applySelect(state, asPiece(piece)), asCell(cell));
+		}
+		const lastInHand = applySelect(state, asPiece(1));
+		const placed = provisionalPlace(lastInHand, asCell(15));
+		expect(awaitsSelection(placed)).toBe(false);
+		expect(isTurnComplete(placed)).toBe(true);
+		expect(provisionalSelect(placed, asPiece(1))).toBe(placed);
+		expect(confirmTurn(placed).status).toBe("drawn");
+	});
+
+	it("needs only a placement when the placement wins, and the win waits for the confirmation", () => {
+		const threeTall = play(twoPeople, [
+			[1, "a1"],
+			[3, "b1"],
+			[5, "c1"],
+		]);
+		const placed = provisionalPlace(applySelect(threeTall, asPiece(7)), cellFromName("d1"));
+		expect(placed.status).toBe("playing");
+		expect(awaitsSelection(placed)).toBe(false);
+		expect(isTurnComplete(placed)).toBe(true);
+		expect(provisionalSelect(placed, asPiece(9))).toBe(placed);
+		const won = confirmTurn(placed);
+		expect(won.status).toBe("won");
+		expect(won.pending).toStrictEqual({placedCell: null, selectedPiece: null});
+	});
+
+	it("keeps the committed position's verdict and hints while the turn is unconfirmed", () => {
+		const annotated = withHints(withVerdict(midTurn, verdict), new Map([[5, 0]]));
+		const placed = provisionalPlace(annotated, cellFromName("b2"));
+		expect(placed.verdict).toStrictEqual(verdict);
+		expect(placed.hintValues).toStrictEqual(new Map([[5, 0]]));
+		expect(confirmTurn(provisionalSelect(placed, asPiece(6))).verdict).toBeNull();
+	});
+
+	it("refuses committed moves while a turn is pending", () => {
+		const placed = provisionalPlace(midTurn, cellFromName("b2"));
+		expect(applyPlace(placed, cellFromName("c3"))).toBe(placed);
+		const selected = provisionalSelect(twoPeople, asPiece(5));
+		expect(applySelect(selected, asPiece(6))).toBe(selected);
 	});
 });

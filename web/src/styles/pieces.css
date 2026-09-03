@@ -82,6 +82,14 @@
 	opacity: 0;
 	pointer-events: none;
 }
+/* The piece chosen for the opponent but not yet confirmed keeps its slot, inside a dashed ring. */
+.slot.pending {
+	outline: 2px dashed var(--amber);
+	outline-offset: -3px;
+}
+.slot.pending .piece {
+	opacity: 0.6;
+}
 .slot .hint {
 	left: 0;
 	top: 0;

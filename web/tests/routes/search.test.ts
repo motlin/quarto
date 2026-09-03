@@ -9,6 +9,7 @@ describe("playSearchSchema", () => {
 			first: "you",
 			difficulty: "impossible",
 			annotations: "off",
+			undo: "allowed",
 		});
 	});
 
@@ -20,6 +21,7 @@ describe("playSearchSchema", () => {
 				first: "bot",
 				difficulty: "medium",
 				annotations: "values",
+				undo: "off",
 			}),
 		).toStrictEqual({
 			opponent: "human",
@@ -27,6 +29,7 @@ describe("playSearchSchema", () => {
 			first: "bot",
 			difficulty: "medium",
 			annotations: "values",
+			undo: "off",
 		});
 	});
 
@@ -37,6 +40,7 @@ describe("playSearchSchema", () => {
 			first: "you",
 			difficulty: "impossible",
 			annotations: "off",
+			undo: "allowed",
 			name1: "Ada",
 			name2: "Grace",
 		});
@@ -65,5 +69,9 @@ describe("playSearchSchema", () => {
 
 	it("rejects an unknown annotations level", () => {
 		expect(() => playSearchSchema.parse({annotations: "on"})).toThrow("Invalid option");
+	});
+
+	it("rejects an unknown undo setting", () => {
+		expect(() => playSearchSchema.parse({undo: "sometimes"})).toThrow("Invalid option");
 	});
 });

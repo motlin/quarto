@@ -2,10 +2,14 @@
  * 🎛️ The game loop behind the play screen: the reducer's state on this side, the wasm position in the worker, and
  * the promise chain that keeps the two in step.
  *
- * Every move goes to the reducer and the worker in the same tick, so the worker's queue always mirrors the log.
- * Search results arrive later and may be stale by then: each human action starts a new turn and takes a token,
- * and a result is dropped when its token is no longer the current one. That is what lets the player move, undo
- * or restart while the oracle is still evaluating, without blocking or racing.
+ * Every committed move goes to the reducer and the worker in the same tick, so the worker's queue always mirrors
+ * the log. Search results arrive later and may be stale by then: each committed human action starts a new turn and
+ * takes a token, and a result is dropped when its token is no longer the current one. That is what lets the player
+ * move, undo or restart while the oracle is still evaluating, without blocking or racing.
+ *
+ * With undo off, a human's place and select are provisional: they change only the reducer's `pending` and leave
+ * the worker alone, so the oracle's answer about the committed position still lands. Confirm commits the turn and
+ * mirrors its one or two plies to the worker in one go.
  */
 
 import {useCallback, useEffect, useRef, useState} from "react";
@@ -17,12 +21,16 @@ import type {GameSetup} from "../game/setup.js";
 import {
 	applyPlace,
 	applySelect,
+	confirmTurn,
 	currentPlayer,
 	type GameState,
 	isHumanToMove,
 	isToPlace,
 	movesLeft,
 	newGame,
+	provisionalPlace,
+	provisionalSelect,
+	takeBack,
 	undoToHumanDecision,
 	withHints,
 	withVerdict,
@@ -36,6 +44,11 @@ export interface PlayGame {
 	readonly thinking: boolean;
 	readonly select: (piece: Piece) => void;
 	readonly place: (cell: Cell) => void;
+	/** Commits the pending turn; does nothing until it is complete, and nothing at all when undo is allowed. */
+	readonly confirm: () => void;
+	/** Retracts the most recent provisional step; does nothing when undo is allowed. */
+	readonly takeBack: () => void;
+	/** Rewinds committed plies; not offered when undo is off. */
 	readonly undo: () => void;
 	readonly restart: () => void;
 }
@@ -74,16 +87,21 @@ function assertInSync(snapshot: Snapshot, state: GameState): void {
 	}
 }
 
-/** Plays the move that ends `next`'s log in the worker and checks the two sides agree. */
-async function mirror(solver: Solver, next: GameState): Promise<void> {
-	const move = next.log.at(-1);
-	if (move === undefined) {
-		throw new Error("Nothing to mirror");
+/** Plays the last `plies` moves of `next`'s log in the worker and checks the two sides agree at the end. */
+async function mirror(solver: Solver, next: GameState, plies: number): Promise<void> {
+	if (plies < 1 || plies > next.log.length) {
+		throw new Error(`Cannot mirror ${plies} of ${next.log.length} plies`);
 	}
-	const snapshot =
-		move.kind === "select"
-			? await solver.request("applySelect", {piece: move.piece})
-			: await solver.request("applyPlace", {cell: move.cell});
+	let snapshot: Snapshot | null = null;
+	for (const move of next.log.slice(-plies)) {
+		snapshot =
+			move.kind === "select"
+				? await solver.request("applySelect", {piece: move.piece})
+				: await solver.request("applyPlace", {cell: move.cell});
+	}
+	if (snapshot === null) {
+		throw new Error("Nothing was mirrored");
+	}
 	assertInSync(snapshot, next);
 }
 
@@ -107,7 +125,7 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 	const [failure, setFailure] = useState<Error | null>(null);
 	const stateRef = useRef(state);
 	const session = useRef<Session | null>(null);
-	/** Bumped by every human action; a loop whose token is behind stops at its next check. */
+	/** Bumped by every committed human action; a loop whose token is behind stops at its next check. */
 	const turn = useRef(0);
 
 	if (failure !== null) {
@@ -141,7 +159,7 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 				if (next === before) {
 					throw new Error(`The bot chose an illegal move: ${chosen.move}`);
 				}
-				const mirrored = mirror(solver, next);
+				const mirrored = mirror(solver, next, 1);
 				if (evaluation !== null) {
 					next = withVerdict(next, {
 						value: evaluation.value,
@@ -176,7 +194,9 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 				if (turn.current !== token) {
 					return;
 				}
-				let next = withVerdict(before, {
+				// The token guarantees the committed position is still `before`'s; only a provisional step, which the
+				// verdict must not disturb, can have changed the state meanwhile.
+				let next = withVerdict(stateRef.current, {
 					value: evaluation.value,
 					movesLeft: movesLeft(before),
 					mover: currentPlayer(before),
@@ -244,6 +264,7 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 		};
 	}, [createSolver, setup.rules, startTurn]);
 
+	/** Applies a human transition and, when it committed plies, mirrors them to the worker and starts a new turn. */
 	const act = useCallback(
 		(transition: (state: GameState) => GameState) => {
 			const before = stateRef.current;
@@ -255,23 +276,34 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 				return;
 			}
 			commit(next);
-			startTurn(async (solver) => mirror(solver, next));
+			const plies = next.log.length - before.log.length;
+			if (plies > 0) {
+				startTurn(async (solver) => mirror(solver, next, plies));
+			}
 		},
 		[commit, startTurn],
 	);
 
+	const confirming = setup.undo === "off";
+
 	const select = useCallback(
 		(piece: Piece) => {
-			act((before) => applySelect(before, piece));
+			act((before) => (confirming ? provisionalSelect(before, piece) : applySelect(before, piece)));
 		},
-		[act],
+		[act, confirming],
 	);
 	const place = useCallback(
 		(cell: Cell) => {
-			act((before) => applyPlace(before, cell));
+			act((before) => (confirming ? provisionalPlace(before, cell) : applyPlace(before, cell)));
 		},
-		[act],
+		[act, confirming],
 	);
+	const confirm = useCallback(() => {
+		act(confirmTurn);
+	}, [act]);
+	const retract = useCallback(() => {
+		act(takeBack);
+	}, [act]);
 
 	const undo = useCallback(() => {
 		const before = stateRef.current;
@@ -300,5 +332,5 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 		});
 	}, [setup, commit, startTurn]);
 
-	return {state, thinking, select, place, undo, restart};
+	return {state, thinking, select, place, confirm, takeBack: retract, undo, restart};
 }

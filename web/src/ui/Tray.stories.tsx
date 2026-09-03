@@ -18,7 +18,7 @@ const meta: Meta<typeof Tray> = {
 			</div>
 		),
 	],
-	args: {onSelect: fn(), hints: new Map()},
+	args: {onSelect: fn(), pendingPiece: null, hints: new Map()},
 };
 
 export default meta;

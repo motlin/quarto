@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import {describe, expect, it} from "vitest";
-import {fireEvent, render, screen} from "@testing-library/react";
+import {fireEvent, render, screen, within} from "@testing-library/react";
 import {createMemoryHistory, createRouter, RouterProvider} from "@tanstack/react-router";
 import {routeTree} from "../../src/routeTree.gen.js";
 import {SETUP_KEY} from "../../src/setup/setup.js";
@@ -28,7 +28,9 @@ function playHref(): string {
 describe("setup route", () => {
 	it("links Play to /play with the default setup", async () => {
 		await renderSetupRoute();
-		expect(playHref()).toBe("/play?opponent=bot&rules=squares&first=you&difficulty=impossible&annotations=outcome");
+		expect(playHref()).toBe(
+			"/play?opponent=bot&rules=squares&first=you&difficulty=impossible&annotations=outcome&undo=allowed",
+		);
 	});
 
 	it("updates the Play link and remembers the choice after selecting Lines only", async () => {
@@ -45,6 +47,7 @@ describe("setup route", () => {
 			first: "bot",
 			difficulty: "medium",
 			annotations: "off",
+			undo: "off",
 			names: ["", ""],
 		};
 		await renderSetupRoute(memoryStore({[SETUP_KEY]: JSON.stringify(remembered)}));
@@ -53,6 +56,9 @@ describe("setup route", () => {
 		expect(playHref()).toContain("difficulty=medium");
 		expect(playHref()).toContain("annotations=off");
 		expect(screen.getByRole("radio", {name: "Medium"}).getAttribute("aria-checked")).toBe("true");
+		expect(playHref()).toContain("undo=off");
+		const undo = within(screen.getByRole("radiogroup", {name: "Undo"}));
+		expect(undo.getByRole("radio", {name: "Off"}).getAttribute("aria-checked")).toBe("true");
 	});
 
 	it("hides the first-move and difficulty controls when the opponent is another person", async () => {

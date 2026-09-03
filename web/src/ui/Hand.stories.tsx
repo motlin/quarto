@@ -96,6 +96,7 @@ function DragOntoBoardDemo() {
 				legalCells={legal}
 				onPlace={place}
 				lastCell={cellFromName("d4")}
+				pendingCell={null}
 				winningCells={new Set()}
 				hints={new Map()}
 				dropCell={drag.dropCell}

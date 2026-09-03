@@ -17,6 +17,7 @@ const setup: GameSetup = {
 	first: "you",
 	difficulty: "impossible",
 	hints: "off",
+	undo: "allowed",
 	names: ["Player 1", "Player 2"],
 };
 

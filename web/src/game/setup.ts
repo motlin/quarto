@@ -12,6 +12,9 @@ export type Difficulty = "medium" | "impossible";
 /** How much the solver reveals: nothing, the game's outcome, or the outcome plus a value on every legal move. */
 export type Hints = "off" | "outcome" | "values";
 
+/** Whether a committed move can be taken back; when off, every human turn is confirmed before it commits. */
+export type Undo = "allowed" | "off";
+
 export interface GameSetup {
 	readonly opponent: Opponent;
 	readonly rules: Rules;
@@ -19,6 +22,7 @@ export interface GameSetup {
 	/** Meaningless between two people. */
 	readonly difficulty: Difficulty;
 	readonly hints: Hints;
+	readonly undo: Undo;
 	/** Who sits in seat 0 and seat 1 when two people play; a bot game says "You" and "Bot" instead. */
 	readonly names: readonly [string, string];
 }

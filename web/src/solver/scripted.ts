@@ -101,6 +101,7 @@ export class ScriptedSolver implements Solver {
 			first: "you",
 			difficulty: "impossible",
 			hints: "off",
+			undo: "allowed",
 			names: ["", ""],
 		});
 	}

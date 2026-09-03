@@ -2,6 +2,9 @@
  * 🎲 The game screen: the top bar, the strip with the piece in hand and the verdict, the board, the tray, the
  * controls, the move log and the status line. One column on a phone in that order, board beside the rest on a
  * desktop. The router's links arrive as props so the screen renders in Storybook and in tests without a router.
+ *
+ * The controls row holds Undo when undo is allowed, and Confirm with Take back when it is off: then the board and
+ * the tray show the turn's provisional steps, and the committed position's readout stays until Confirm.
  */
 
 import {type ReactNode, useMemo} from "react";
@@ -11,7 +14,18 @@ import {describeVerdict, gameTitle, outcomeView, playerName, promptFor, statusLi
 import {asPiece, type Piece} from "../game/pieces.js";
 import {winningCells} from "../game/rules.js";
 import type {GameSetup} from "../game/setup.js";
-import {type GameState, isHumanToMove, isToPlace, movesLeft} from "../game/state.js";
+import {
+	awaitsPlacement,
+	awaitsSelection,
+	boardWithPending,
+	type GameState,
+	handWithPending,
+	hasPending,
+	isHumanToMove,
+	isToPlace,
+	isTurnComplete,
+	movesLeft,
+} from "../game/state.js";
 import type {Solver} from "../solver/client.js";
 import {Board} from "./Board.js";
 import {Hand} from "./Hand.js";
@@ -40,14 +54,14 @@ const NO_CELLS: ReadonlySet<Cell> = new Set();
 const NO_PIECES: ReadonlySet<Piece> = new Set();
 
 function legalCells(state: GameState): ReadonlySet<Cell> {
-	if (state.status !== "playing" || !isHumanToMove(state) || !isToPlace(state)) {
+	if (!isHumanToMove(state) || !awaitsPlacement(state)) {
 		return NO_CELLS;
 	}
 	return new Set(ALL_CELLS.filter((cell) => state.board[cell] === null));
 }
 
 function legalPieces(state: GameState): ReadonlySet<Piece> {
-	if (state.status !== "playing" || !isHumanToMove(state) || isToPlace(state)) {
+	if (!isHumanToMove(state) || !awaitsSelection(state)) {
 		return NO_PIECES;
 	}
 	return new Set(state.remaining);
@@ -73,7 +87,11 @@ export function PlayScreen({
 	backLink,
 	helpLink,
 }: PlayScreenProps) {
-	const {state, thinking, select, place, undo, restart} = usePlayGame(setup, createSolver, engineDelayMilliseconds);
+	const {state, thinking, select, place, confirm, takeBack, undo, restart} = usePlayGame(
+		setup,
+		createSolver,
+		engineDelayMilliseconds,
+	);
 	const cells = useMemo(() => legalCells(state), [state]);
 	const drag = useDragToPlace(cells, place);
 	const prompt = promptFor(setup, state);
@@ -91,14 +109,15 @@ export function PlayScreen({
 			<div className="table">
 				<div className="board-col">
 					<div className="strip">
-						<Hand piece={state.hand} title={prompt.title} detail={prompt.detail} drag={drag} />
+						<Hand piece={handWithPending(state)} title={prompt.title} detail={prompt.detail} drag={drag} />
 						{setup.hints !== "off" && <OracleBar verdict={verdict} thinking={thinking} />}
 					</div>
 					<Board
-						board={state.board}
+						board={boardWithPending(state)}
 						legalCells={cells}
 						onPlace={place}
 						lastCell={state.lastCell}
+						pendingCell={state.pending.placedCell}
 						winningCells={state.status === "won" ? winningCells(state.board, setup.rules) : NO_CELLS}
 						hints={cellHints}
 						dropCell={drag.dropCell}
@@ -109,12 +128,29 @@ export function PlayScreen({
 						remaining={state.remaining}
 						legalPieces={legalPieces(state)}
 						onSelect={select}
+						pendingPiece={state.pending.selectedPiece}
 						hints={pieceHints}
 					/>
 					<div className="controls">
-						<button type="button" className="btn" onClick={undo} disabled={state.log.length === 0}>
-							Undo
-						</button>
+						{setup.undo === "allowed" ? (
+							<button type="button" className="btn" onClick={undo} disabled={state.log.length === 0}>
+								Undo
+							</button>
+						) : (
+							<>
+								<button
+									type="button"
+									className="btn primary"
+									onClick={confirm}
+									disabled={!isTurnComplete(state)}
+								>
+									Confirm
+								</button>
+								<button type="button" className="btn" onClick={takeBack} disabled={!hasPending(state)}>
+									Take back
+								</button>
+							</>
+						)}
 						<button type="button" className="btn" onClick={restart}>
 							New game
 						</button>

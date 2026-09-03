@@ -18,6 +18,7 @@ describe("setup persistence", () => {
 			first: "you",
 			difficulty: "impossible",
 			annotations: "outcome",
+			undo: "allowed",
 			names: ["", ""],
 		});
 		expect(DEFAULT_SETUP).toStrictEqual(loadSetup(memoryStore()));
@@ -31,6 +32,7 @@ describe("setup persistence", () => {
 			first: "bot",
 			difficulty: "medium",
 			annotations: "off",
+			undo: "off",
 			names: ["Ada", "Grace"],
 		};
 		saveSetup(store, setup);
@@ -52,15 +54,17 @@ describe("setup persistence", () => {
 		expect(loadSetup(store)).toStrictEqual({...DEFAULT_SETUP, rules: "lines"});
 	});
 
-	it("reduces a bot game to the five search params the play route reads", () => {
+	it("reduces a bot game to the six search params the play route reads", () => {
 		expect(toPlaySearch({...DEFAULT_SETUP, rules: "lines", names: ["Ada", "Grace"]})).toStrictEqual({
 			opponent: "bot",
 			rules: "lines",
 			first: "you",
 			difficulty: "impossible",
 			annotations: "outcome",
+			undo: "allowed",
 		});
 		expect(toPlaySearch({...DEFAULT_SETUP, difficulty: "medium"}).difficulty).toBe("medium");
+		expect(toPlaySearch({...DEFAULT_SETUP, undo: "off"}).undo).toBe("off");
 	});
 
 	it("adds the trimmed names to a two-person game and leaves a blank name out", () => {
@@ -70,6 +74,7 @@ describe("setup persistence", () => {
 			first: "you",
 			difficulty: "impossible",
 			annotations: "outcome",
+			undo: "allowed",
 			name1: "Ada",
 		});
 	});
@@ -78,13 +83,21 @@ describe("setup persistence", () => {
 describe("toGameSetup", () => {
 	it("maps the search params onto the game's setup with the default names", () => {
 		expect(
-			toGameSetup({opponent: "bot", rules: "lines", first: "bot", difficulty: "medium", annotations: "values"}),
+			toGameSetup({
+				opponent: "bot",
+				rules: "lines",
+				first: "bot",
+				difficulty: "medium",
+				annotations: "values",
+				undo: "off",
+			}),
 		).toStrictEqual({
 			opponent: "bot",
 			rules: "lines",
 			first: "bot",
 			difficulty: "medium",
 			hints: "values",
+			undo: "off",
 			names: ["Player 1", "Player 2"],
 		});
 	});
@@ -96,6 +109,7 @@ describe("toGameSetup", () => {
 			first: "you",
 			difficulty: "impossible",
 			annotations: "off",
+			undo: "allowed",
 			name2: "Grace",
 		} as const;
 		expect(toGameSetup(search).names).toStrictEqual(["Player 1", "Grace"]);
@@ -108,6 +122,7 @@ describe("toGameSetup", () => {
 			first: "you",
 			difficulty: "impossible",
 			annotations: "off",
+			undo: "allowed",
 			name1: "",
 			name2: "  ",
 		} as const;
@@ -121,6 +136,7 @@ describe("toGameSetup", () => {
 			first: "you",
 			difficulty: "impossible",
 			annotations: "off",
+			undo: "allowed",
 			name1: " Ada ",
 		} as const;
 		expect(toGameSetup(search).names).toStrictEqual(["Ada", "Player 2"]);
@@ -133,6 +149,7 @@ describe("toGameSetup", () => {
 			first: "you",
 			difficulty: "impossible",
 			annotations: "off",
+			undo: "allowed",
 			name1: "Ada",
 		} as const;
 		expect(toGameSetup(search)).toStrictEqual(toGameSetup({...search}));

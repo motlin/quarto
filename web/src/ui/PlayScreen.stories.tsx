@@ -1,5 +1,6 @@
 import type {Meta, StoryObj} from "@storybook/react-vite";
 import {useCallback} from "react";
+import {userEvent, within} from "storybook/test";
 import {cellFromName} from "../game/cells.js";
 import type {GameSetup} from "../game/setup.js";
 import {type Script, ScriptedSolver} from "../solver/scripted.js";
@@ -13,6 +14,7 @@ const botGame: GameSetup = {
 	first: "you",
 	difficulty: "impossible",
 	hints: "outcome",
+	undo: "allowed",
 	names: ["", ""],
 };
 
@@ -70,6 +72,18 @@ export const MoveValues: Story = {
 /** Two people on one device, no oracle at all. */
 export const TwoPeople: Story = {
 	args: {setup: {...botGame, opponent: "human", rules: "lines", hints: "off", names: ["Ada", "Grace"]}},
+};
+
+/** Undo off: the placement and the choice sit on the board and in the tray, unconfirmed, until Confirm commits them. */
+export const AwaitingConfirmation: Story = {
+	args: {setup: {...botGame, first: "bot", undo: "off"}},
+	play: async ({canvasElement}) => {
+		const canvas = within(canvasElement);
+		await canvas.findByText(/^Place the .* piece\.$/);
+		await userEvent.click(canvas.getByRole("button", {name: "cell c3"}));
+		await userEvent.click(canvas.getByRole("button", {name: "light round short hollow piece"}));
+		await canvas.findByText("Confirm your turn, or take it back.");
+	},
 };
 
 export const YouVsBotDark: Story = {

@@ -62,7 +62,7 @@ describe("rules page", () => {
 		);
 		expect(screen.getByRole("link", {name: "Setup"}).getAttribute("href")).toBe("/");
 		expect(screen.getByRole("link", {name: "Play"}).getAttribute("href")).toBe(
-			"/play?opponent=bot&rules=lines&first=bot&difficulty=impossible&annotations=off",
+			"/play?opponent=bot&rules=lines&first=bot&difficulty=impossible&annotations=off&undo=allowed",
 		);
 		expect(screen.getByRole("link", {name: "How to play"}).getAttribute("href")).toBe("/how-to-play");
 	});
@@ -98,7 +98,7 @@ describe("how-to-play page", () => {
 		);
 		expect(screen.getByRole("link", {name: "Setup"}).getAttribute("href")).toBe("/");
 		expect(screen.getByRole("link", {name: "Play"}).getAttribute("href")).toBe(
-			"/play?opponent=bot&rules=squares&first=you&difficulty=impossible&annotations=outcome",
+			"/play?opponent=bot&rules=squares&first=you&difficulty=impossible&annotations=outcome&undo=allowed",
 		);
 		expect(screen.getByRole("link", {name: "Rules"}).getAttribute("href")).toBe("/rules");
 	});

@@ -13,6 +13,7 @@ const botFirst: GameSetup = {
 	first: "bot",
 	difficulty: "medium",
 	hints: "off",
+	undo: "allowed",
 	names: ["", ""],
 };
 
