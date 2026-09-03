@@ -12,7 +12,7 @@ install:
     vp fmt CLAUDE.md
 
 # Run dev server on port 3002
-dev *args: install
+dev *args: install wasm
     vp dev {{ args }}
 
 # Run linter
@@ -23,29 +23,29 @@ lint: install
 format: install
     vp fmt {{ if ci != "" { "--check" } else { "" } }}
 
-# Run checks (format + lint + typecheck)
-check *args: install
+# Run checks (format + lint + typecheck); the solver worker imports the wasm package
+check *args: install wasm
     vp run --cache check {{ if ci != "" { "" } else { "--fix" } }} {{ args }}
 
 # Run tests
-test *args: install
+test *args: install wasm
     vp run --cache test:run {{ args }}
 
 # Type-check the project
-typecheck: install
+typecheck: install wasm
     vp run --cache typecheck
 
 # Build the project
-build: install
+build: install wasm
     vp run --cache build
 
 # Apply safe Fallow fixes locally, then reject remaining dead code
-fallow: install
+fallow: install wasm
     {{ if ci == "" { "vp run fallow" } else { "true" } }}
     vp run fallow:ci
 
 # vp run fallow:ci
-fallow-check: install
+fallow-check: install wasm
     vp run fallow:ci
 
 # Run Storybook
