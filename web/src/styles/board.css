@@ -1,0 +1,97 @@
+/* 🟩 The felt board inside its walnut rail, and the sixteen cells on it. */
+.board {
+	aspect-ratio: 1;
+	width: 100%;
+	max-width: 560px;
+	display: grid;
+	/*
+	 * Rows are bounded on purpose: a piece SVG at height 100% in a plain 1fr row grows the row it sits in,
+	 * and the board came out with unequal rows in the prototype. The piece is absolutely positioned
+	 * inside the cell so it cannot push on the grid at all.
+	 */
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	grid-template-rows: repeat(4, minmax(0, 1fr));
+	gap: 5px;
+	padding: 10px;
+	border: 7px solid var(--rail);
+	border-radius: var(--radius-panel);
+	background: radial-gradient(120% 90% at 50% 0%, var(--felt-glow) 0%, transparent 60%), var(--felt);
+	box-shadow:
+		inset 0 0 0 1px var(--felt-line),
+		0 0 0 1px var(--rail-edge),
+		0 18px 40px -22px #000;
+	touch-action: manipulation;
+}
+@media (min-width: 800px) {
+	.board {
+		gap: 6px;
+		padding: 14px;
+	}
+}
+
+.cell {
+	position: relative;
+	border: 0;
+	border-radius: var(--radius-cell);
+	background: var(--felt-deep);
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+	padding: 0;
+	min-height: 0;
+	cursor: default;
+}
+.cell .piece {
+	position: absolute;
+	inset: 8%;
+	width: 84%;
+	height: 84%;
+}
+.cell.legal {
+	cursor: pointer;
+}
+/* Hover recolours the cell and leaves its box where it is, so the pointer never loses it. */
+.cell.legal:hover {
+	background: var(--felt-line);
+}
+.cell.legal::after {
+	content: "";
+	position: absolute;
+	left: 41%;
+	top: 41%;
+	width: 18%;
+	aspect-ratio: 1;
+	border-radius: 50%;
+	background: var(--amber);
+	opacity: 0.55;
+}
+.cell.legal:hover::after {
+	opacity: 0;
+}
+.cell.last {
+	box-shadow: inset 0 0 0 2px var(--amber-ink);
+}
+.cell.winning {
+	box-shadow: inset 0 0 0 3px var(--amber);
+}
+
+.hint {
+	position: absolute;
+	left: 4px;
+	top: 3px;
+	font-family: var(--mono);
+	font-size: 11px;
+	font-weight: 500;
+	padding: 1px 4px;
+	border-radius: 3px;
+	background: var(--chip-ground);
+	color: #fff;
+	pointer-events: none;
+}
+.hint.win {
+	color: var(--label-win);
+}
+.hint.loss {
+	color: var(--label-loss);
+}
+.hint.draw {
+	color: var(--label-draw);
+}

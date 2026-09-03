@@ -1,0 +1,119 @@
+/*
+ * 🪙 Colour, type and shape tokens. The full light palette lives on :root; the dark blocks redefine
+ * only what changes, so no colour exists solely inside a media or [data-theme] block. Pieces keep the
+ * same wood in both themes.
+ */
+:root {
+	--ground: #e4e6e1;
+	--ground-deep: #d6d9d2;
+	--panel: #f3f4f0;
+	--ink: #1e2622;
+	--ink-muted: #5f6b65;
+	--line: #c3c8c1;
+	--felt: #2e4a3d;
+	--felt-deep: #223829;
+	--felt-line: #3b5c4c;
+	--felt-glow: #4e7a63;
+	--rail: #7a5533;
+	--rail-edge: #4e341c;
+	--amber: #d9a441;
+	--amber-ink: #7a5313;
+	--on-amber: #2b1d06;
+	--win: #2f8f5b;
+	--loss: #c8503a;
+	--draw: #7c867f;
+	--focus: #2c6fd6;
+	--maple: #e3c48f;
+	--maple-edge: #b8925a;
+	--walnut: #5a3a22;
+	--walnut-edge: #33200f;
+	/* Move-value chips always sit on a dark badge, so they read the same on felt in both themes. */
+	--label-win: #9ce8b8;
+	--label-loss: #ffb0a0;
+	--label-draw: #d8ddd9;
+	--chip-ground: rgba(0, 0, 0, 0.6);
+
+	--display: "Bricolage Grotesque", "Arial Narrow", sans-serif;
+	--body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+	--mono: "IBM Plex Mono", monospace;
+
+	--radius-cell: 4px;
+	--radius-control: 6px;
+	--radius-panel: 8px;
+	--screen-padding: 16px;
+
+	color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		--ground: #17201c;
+		--ground-deep: #101613;
+		--panel: #1e2a25;
+		--ink: #e8ebe6;
+		--ink-muted: #98a59d;
+		--line: #2c3a33;
+		--felt: #294538;
+		--felt-deep: #1b3026;
+		--felt-line: #355646;
+		--felt-glow: #4a7a60;
+		--rail: #5e4027;
+		--rail-edge: #3a2513;
+		--amber: #e4b458;
+		--amber-ink: #f1d08a;
+		--win: #5dbe85;
+		--loss: #e0705c;
+		--draw: #8e9a93;
+		--focus: #7fb0ff;
+		color-scheme: dark;
+	}
+}
+:root[data-theme="dark"] {
+	--ground: #17201c;
+	--ground-deep: #101613;
+	--panel: #1e2a25;
+	--ink: #e8ebe6;
+	--ink-muted: #98a59d;
+	--line: #2c3a33;
+	--felt: #294538;
+	--felt-deep: #1b3026;
+	--felt-line: #355646;
+	--felt-glow: #4a7a60;
+	--rail: #5e4027;
+	--rail-edge: #3a2513;
+	--amber: #e4b458;
+	--amber-ink: #f1d08a;
+	--win: #5dbe85;
+	--loss: #e0705c;
+	--draw: #8e9a93;
+	--focus: #7fb0ff;
+	color-scheme: dark;
+}
+
+* {
+	box-sizing: border-box;
+}
+html,
+body {
+	margin: 0;
+}
+body {
+	background: var(--ground);
+	color: var(--ink);
+	font-family: var(--body);
+	font-size: 15px;
+	line-height: 1.5;
+	min-height: 100vh;
+	-webkit-tap-highlight-color: transparent;
+}
+button {
+	font: inherit;
+	color: inherit;
+	touch-action: manipulation;
+}
+:focus-visible {
+	outline: 2px solid var(--focus);
+	outline-offset: 2px;
+}
+[hidden] {
+	display: none !important;
+}

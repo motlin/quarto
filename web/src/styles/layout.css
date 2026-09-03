@@ -1,0 +1,44 @@
+/* 📐 Screens and the play table: one column on a phone, board beside tray from 800px up. */
+.screen {
+	max-width: 1040px;
+	margin: 0 auto;
+	padding: var(--screen-padding) var(--screen-padding) 40px;
+}
+/* The play screen runs edge to edge on a phone, so it keeps clear of the notch and the home bar. */
+.screen.play {
+	padding-top: max(var(--screen-padding), env(safe-area-inset-top));
+	padding-right: max(var(--screen-padding), env(safe-area-inset-right));
+	padding-bottom: max(var(--screen-padding), env(safe-area-inset-bottom));
+	padding-left: max(var(--screen-padding), env(safe-area-inset-left));
+}
+@media (min-width: 800px) {
+	.screen {
+		padding: 28px 24px 48px;
+	}
+	.screen.play {
+		padding-top: max(28px, env(safe-area-inset-top));
+		padding-right: max(24px, env(safe-area-inset-right));
+		padding-bottom: max(48px, env(safe-area-inset-bottom));
+		padding-left: max(24px, env(safe-area-inset-left));
+	}
+}
+
+.table {
+	display: grid;
+	gap: 12px;
+}
+.board-col {
+	display: grid;
+	gap: 12px;
+}
+.side {
+	display: grid;
+	gap: 14px;
+}
+@media (min-width: 800px) {
+	.table {
+		grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+		gap: 28px;
+		align-items: start;
+	}
+}

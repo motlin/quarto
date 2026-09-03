@@ -1,0 +1,16 @@
+/*
+ * 🎨 The Felt Table skin (see .llm/plans/ui-style-decision.md), split by what each file dresses.
+ *
+ * The import order is load-bearing, as in neighbors. tokens.css comes first: it holds the custom
+ * properties everything else is written in terms of, and its element rules (body, button,
+ * :focus-visible) are the ground the class rules afterwards refine at equal or higher specificity.
+ * Every file states its phone rule before the 800px media query that widens it, and board.css states
+ * .cell.last before .cell.winning so a cell that is both keeps the winning ring. Keep the order when
+ * adding a file.
+ */
+@import "./tokens.css";
+@import "./layout.css";
+@import "./board.css";
+@import "./pieces.css";
+@import "./panels.css";
+@import "./chrome.css";
