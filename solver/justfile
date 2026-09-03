@@ -49,7 +49,7 @@ run *ARGS:
 wasm:
     @echo "solver: wasm build not wired up yet"
 
-# Placeholder until the play binary exists (random games diffed against the prototype)
+# Diff play transcripts of random games against the C++ reference (games, plies skipped, lines|squares)
 [group('test')]
-differential:
-    @echo "solver: differential test not wired up yet"
+differential games="20" skip="8" rules="squares":
+    ../scripts/differential.sh {{ games }} {{ skip }} {{ rules }}

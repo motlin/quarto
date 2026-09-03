@@ -41,6 +41,7 @@ pub const NUM_CELL_MASKS: usize = 1 << NUM_CELLS;
 pub const NUM_LOSE_MASKS: usize = 1 << (NUM_PROPS * NUM_VARIANTS);
 
 pub mod book;
+pub mod notation;
 pub mod position;
 pub mod rules;
 pub mod search;

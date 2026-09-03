@@ -25,6 +25,11 @@ wasm-bindgen = { version = "0.2", optional = true }
 
 [dev-dependencies]
 
+# The search is 30x slower unoptimised, which puts the fixture replays far
+# outside the test budget, so debug builds keep the checks but optimise.
+[profile.dev]
+opt-level = 3
+
 [profile.release]
 lto = "thin"
 strip = true

@@ -53,6 +53,11 @@ The repository has two modules, each with its own `justfile`:
 `reference/` holds the upstream C++ solver, kept for differential testing, and `prototype/` holds
 the freestanding C port and single-file page the rewrite grew out of.
 
+Two checks pin the solver to upstream. `just solver::test` replays the ten upstream game
+transcripts in `solver/tests/fixtures/games_reg/` and asserts the exact value of every legal move
+at every ply. `just solver::differential <games> <skip_plies> <lines|squares>` plays seeded random
+games through both the `play` binary and the C++ reference and diffs the transcripts byte for byte.
+
 ## Deploying
 
 The site is static, so it goes to Cloudflare Pages. Deployment details will follow once the web
