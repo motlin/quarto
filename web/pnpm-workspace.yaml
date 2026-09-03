@@ -1,0 +1,25 @@
+onlyBuiltDependencies:
+  - esbuild
+minimumReleaseAge: 1440
+minimumReleaseAgeStrict: true
+minimumReleaseAgeIgnoreMissingTime: false
+catalog:
+  vite: npm:@voidzero-dev/vite-plus-core@0.2.9
+  vitest: 4.1.10
+  vite-plus: 0.2.9
+overrides:
+  vite: "catalog:"
+  vitest: "catalog:"
+peerDependencyRules:
+  allowAny:
+    - vite
+    - vitest
+  allowedVersions:
+    vite: "*"
+    vitest: "*"
+allowBuilds:
+  "@swc/core": true
+  esbuild: true
+  fallow: true
+  unrs-resolver: true
+  workerd: true

@@ -1,0 +1,20 @@
+# Cloudflare Pages, not a Worker.
+#
+# QuartoBot runs entirely in the browser: the solver is a wasm module in a Web
+# Worker and the game lives in the tab. Nothing needs a server or a binding, so
+# the whole deployable is the static build in dist/. `pages_build_output_dir` is
+# the one line that makes this a Pages project; with it, `wrangler pages deploy`
+# reads dist/ and uploads it.
+#
+#   just web::build     writes dist/
+#   just web::deploy    uploads dist/ to the production Pages deployment
+#
+# A Pages project has no `main`, no `[assets]` block and no compatibility flags:
+# those are Worker settings, and wrangler rejects them once
+# `pages_build_output_dir` is set.
+
+# Placeholder until the Pages project is created; the name cannot be renamed
+# afterwards, so confirm availability with `wrangler pages project create`.
+name = "quartobot"
+compatibility_date = "2025-01-12"
+pages_build_output_dir = "dist"
