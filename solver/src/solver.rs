@@ -1,10 +1,12 @@
 //! The public solver: a game position with move history, the search that
-//! evaluates it, and the transposition tables that persist between games.
+//! evaluates it, and the transposition tables that persist between games and
+//! are seeded from the opening book.
 
+use crate::book;
 use crate::position::Position;
 use crate::rules::Rules;
 use crate::search::{INF, Search, lose_mask};
-use crate::table::{DEFAULT_TABLE_SIZE, NUM_TTS, TranspositionTable};
+use crate::table::{DEFAULT_TABLE_SIZE, Entry, NUM_TTS, TranspositionTable, table_for_moves_done};
 use crate::tables::{RotMasks, Tables, rot_masks};
 use crate::{NUM_CELLS, NUM_PIECES};
 
@@ -27,6 +29,8 @@ pub struct Solver {
 	history: Vec<u8>,
 	nodes: u64,
 	rng: u32,
+	book_entries: usize,
+	book_depth: u8,
 }
 
 impl Solver {
@@ -39,7 +43,7 @@ impl Solver {
 	/// A solver whose transposition shards each hold `table_size` slots.
 	#[must_use]
 	pub fn with_table_size(rules: Rules, table_size: usize) -> Self {
-		Self {
+		let mut solver = Self {
 			rules,
 			tables: Tables::new(rules),
 			rot: rot_masks(),
@@ -48,7 +52,11 @@ impl Solver {
 			history: Vec::new(),
 			nodes: 0,
 			rng: DEFAULT_SEED,
-		}
+			book_entries: 0,
+			book_depth: 0,
+		};
+		solver.reset();
+		solver
 	}
 
 	/// Switch win conditions. Transposition tables are rules-specific, so they
@@ -68,11 +76,44 @@ impl Solver {
 		self.rules
 	}
 
-	/// Start a new game, keeping the transposition tables.
+	/// Start a new game, keeping the transposition tables and reseeding them
+	/// from the opening book.
 	pub fn reset(&mut self) {
+		self.load_book();
 		self.position = Position::new();
 		self.history.clear();
 		self.nodes = 0;
+	}
+
+	/// Store every book position of the current rules as an exact value.
+	fn load_book(&mut self) {
+		self.book_entries = 0;
+		self.book_depth = 0;
+		for entry in book::entries(self.rules) {
+			let moves_done = entry.moves_done();
+			self.tts[table_for_moves_done(usize::from(moves_done))].put(
+				entry.key(),
+				Entry {
+					val: entry.value,
+					is_alpha: true,
+					is_beta: true,
+				},
+			);
+			self.book_entries += 1;
+			self.book_depth = self.book_depth.max(moves_done);
+		}
+	}
+
+	/// Positions in the opening book for the current rules.
+	#[must_use]
+	pub const fn book_entries(&self) -> usize {
+		self.book_entries
+	}
+
+	/// Placements covered by the opening book for the current rules.
+	#[must_use]
+	pub const fn book_depth(&self) -> u8 {
+		self.book_depth
 	}
 
 	/// Hand `piece` to the opponent; false when that is not a legal move now.
@@ -603,6 +644,40 @@ mod tests {
 		assert_eq!(solver.rules(), Rules::Lines);
 		assert_eq!(solver.moves_left(), 16);
 		assert!(!solver.undo());
+	}
+
+	#[test]
+	fn the_opening_book_answers_the_empty_board_without_searching() {
+		for rules in [Rules::Squares, Rules::Lines] {
+			let mut solver = Solver::new(rules);
+			assert!(solver.book_entries() > 40_000, "{rules:?}");
+			assert_eq!(solver.book_depth(), 4, "{rules:?}");
+			solver.reset();
+			assert_eq!(solver.evaluate(), 0, "{rules:?}");
+			assert!(
+				solver.node_count() < 100,
+				"{rules:?}: {}",
+				solver.node_count()
+			);
+		}
+	}
+
+	#[test]
+	fn set_rules_swaps_in_the_matching_book() {
+		let mut solver = Solver::new(Rules::Squares);
+		solver.set_rules(Rules::Lines);
+		assert_eq!(solver.book_entries(), 40_789);
+		replay(&mut solver, &[0, 0, 2, 1, 4, 4, 6, 5]);
+		assert!(!solver.is_won(), "a 2x2 square does not win under lines");
+		let _ = solver.evaluate();
+		assert!(
+			solver.node_count() < 100,
+			"the lines book covers four placements"
+		);
+		solver.set_rules(Rules::Squares);
+		assert_eq!(solver.book_entries(), 40_729);
+		replay(&mut solver, &[0, 0, 2, 1, 4, 4, 6, 5]);
+		assert!(solver.is_won());
 	}
 
 	#[test]
