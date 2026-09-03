@@ -112,15 +112,28 @@ function Hole({square, top, wood}: {square: boolean; top: number; wood: Wood}) {
 	return <ellipse data-part="hole" cx={CENTER} cy={top + ROUND_RY} rx={7} ry={2.2} fill={wood.edge} />;
 }
 
-export function PieceGlyph({piece}: {piece: Piece}) {
+/** The size of the drawing every piece is made in, for anything that places a PieceShape inside a larger SVG. */
+export const PIECE_VIEW_WIDTH = 40;
+export const PIECE_VIEW_HEIGHT = 60;
+
+/** The piece drawn in its 40x60 coordinate space, for a `<g transform>` inside another SVG. */
+export function PieceShape({piece}: {piece: Piece}) {
 	const wood = woodOf(piece);
 	const square = isSquare(piece);
 	const top = isTall(piece) ? TALL_TOP : SHORT_TOP;
 	return (
-		<svg className="piece" viewBox="0 0 40 60" aria-hidden="true">
+		<>
 			{square ? <SquareBody top={top} wood={wood} /> : <RoundBody top={top} wood={wood} />}
 			<Groove square={square} wood={wood} />
 			{isHollow(piece) && <Hole square={square} top={top} wood={wood} />}
+		</>
+	);
+}
+
+export function PieceGlyph({piece}: {piece: Piece}) {
+	return (
+		<svg className="piece" viewBox={`0 0 ${PIECE_VIEW_WIDTH} ${PIECE_VIEW_HEIGHT}`} aria-hidden="true">
+			<PieceShape piece={piece} />
 		</svg>
 	);
 }

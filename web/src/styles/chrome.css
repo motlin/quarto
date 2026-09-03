@@ -54,6 +54,10 @@
 	min-height: 40px;
 	margin-bottom: 12px;
 }
+/* A help page's top bar has no title in it: just the way back and the way into a game, pushed apart. */
+.topbar.help {
+	justify-content: space-between;
+}
 .topbar-title {
 	font-family: var(--display);
 	font-weight: 700;
@@ -201,15 +205,36 @@ h1 {
 .prose li {
 	margin: 0 0 10px;
 }
-.prose ul {
+.prose ul,
+.prose ol {
 	padding-left: 20px;
 }
 .prose b {
 	font-weight: 600;
 }
-.trait-row {
+.prose a {
+	color: inherit;
+	text-decoration-color: var(--amber-ink);
+	text-underline-offset: 2px;
+}
+/* The sixteen pieces on the tray's ground, four to a row in piece order, so each row shares a height and a top. */
+.piece-set {
 	display: grid;
 	grid-template-columns: repeat(4, 56px);
+	gap: 8px;
+	width: fit-content;
+	margin: 6px 0 14px;
+	padding: 12px;
+	border-radius: var(--radius-panel);
+	background: var(--ground-deep);
+	border: 1px solid var(--line);
+}
+.piece-set .slot {
+	padding: 8%;
+}
+.trait-row {
+	display: grid;
+	grid-template-columns: repeat(4, 64px);
 	gap: 10px 14px;
 	margin: 6px 0 14px;
 }
@@ -218,30 +243,83 @@ h1 {
 	justify-items: center;
 	gap: 2px;
 	font-size: 12px;
+	line-height: 1.3;
+	text-align: center;
 	color: var(--ink-muted);
 }
-.trait .piece {
-	width: 36px;
-	height: 50px;
-}
-.line-demo {
+.trait .pair {
 	display: flex;
-	align-items: center;
-	gap: 4px;
+	gap: 2px;
+}
+.trait .piece {
+	width: 28px;
+	height: 42px;
+}
+/* A won board as a picture: it keeps the board's shadow and never grows past a hand's width. */
+.diagram {
+	display: grid;
+	gap: 8px;
+	width: min(100%, 220px);
+	margin: 6px 0 16px;
+}
+.diagram svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	border-radius: var(--radius-panel);
+	box-shadow:
+		0 0 0 1px var(--rail-edge),
+		0 18px 40px -22px #000;
+}
+.diagram figcaption {
+	font-size: 13px;
+	color: var(--ink-muted);
+}
+/* The numbered steps of a turn. */
+.prose .flow {
+	list-style: none;
+	padding: 0;
+	display: grid;
+	gap: 10px;
 	margin: 6px 0 14px;
-	padding: 6px 8px;
-	border-radius: var(--radius-control);
-	background: var(--felt);
-	width: fit-content;
+}
+.prose .flow li {
+	display: grid;
+	grid-template-columns: 28px 1fr;
+	gap: 10px;
+	align-items: start;
+	margin: 0;
+}
+.step {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	border: 1px solid var(--line);
+	background: var(--panel);
+	display: grid;
+	place-items: center;
+	font-family: var(--mono);
 	font-size: 12px;
-	color: #d6e2da;
+	font-weight: 500;
 }
-.line-demo .piece {
-	width: 34px;
-	height: 48px;
+.prose .flow p {
+	margin: 2px 0 0;
+	font-size: 14px;
+	color: var(--ink-muted);
 }
-.line-demo span {
-	margin-left: 8px;
+/* The verdicts a game can show, each with what it means. */
+.verdicts {
+	display: grid;
+	gap: 12px;
+	margin: 6px 0 14px;
+}
+.verdicts dt .verdict {
+	text-align: left;
+}
+.verdicts dd {
+	margin: 2px 0 0;
+	font-size: 14px;
+	color: var(--ink-muted);
 }
 .chip {
 	font-family: var(--mono);

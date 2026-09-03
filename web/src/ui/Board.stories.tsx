@@ -1,17 +1,10 @@
 import type {Meta, StoryObj} from "@storybook/react-vite";
 import {fn} from "storybook/test";
-import {ALL_CELLS, asCell, type Cell, cellFromName} from "../game/cells.js";
-import type {Piece} from "../game/pieces.js";
-import {type Board as BoardValue, emptyBoard, winningCells} from "../game/rules.js";
+import {ALL_CELLS, type Cell, cellFromName} from "../game/cells.js";
+import {type Board as BoardValue, boardWith, emptyBoard, winningCells} from "../game/rules.js";
 import {Board} from "./Board.js";
 import {withTheme} from "./withTheme.js";
 import "../styles/index.css";
-
-/** A board described by which piece sits on which cell, such as `{a1: 5, b2: 10}`. */
-function boardWith(placed: Record<string, Piece>): BoardValue {
-	const byCell = new Map(Object.entries(placed).map(([name, piece]) => [cellFromName(name), piece]));
-	return emptyBoard().map((_, cell) => byCell.get(asCell(cell)) ?? null);
-}
 
 function emptyCells(board: BoardValue): Set<Cell> {
 	return new Set(ALL_CELLS.filter((cell) => board[cell] === null));

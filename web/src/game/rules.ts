@@ -5,7 +5,7 @@
  * variant, which also counts any 2x2 block.
  */
 
-import {ALL_CELLS, BOARD_SIZE, type Cell, cellAt} from "./cells.js";
+import {ALL_CELLS, BOARD_SIZE, type Cell, cellAt, cellFromName} from "./cells.js";
 import type {Piece} from "./pieces.js";
 
 export type Rules = "lines" | "squares";
@@ -15,6 +15,19 @@ export type Board = readonly (Piece | null)[];
 
 export function emptyBoard(): Board {
 	return ALL_CELLS.map(() => null);
+}
+
+/** A board described by which piece sits on which named cell, such as `{a1: 5, b2: 10}`. */
+export function boardWith(placed: Readonly<Record<string, Piece>>): Board {
+	const byCell = new Map<Cell, Piece>();
+	for (const [name, piece] of Object.entries(placed)) {
+		const cell = cellFromName(name);
+		if (byCell.has(cell)) {
+			throw new Error(`Cell ${name} is placed twice`);
+		}
+		byCell.set(cell, piece);
+	}
+	return ALL_CELLS.map((cell) => byCell.get(cell) ?? null);
 }
 
 const INDICES = [0, 1, 2, 3];
