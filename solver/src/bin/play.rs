@@ -1,17 +1,23 @@
 //! Plays a Quarto game from move tokens on stdin, printing the transcript in
 //! the format of the upstream solver's `play()` so the two can be diffed.
 //!
-//! Usage: `play [skip_plies] [lines|squares] < moves.txt`
+//! Usage: `play [skip_plies] [lines|squares] [book] < moves.txt`
 //!
 //! The first `skip_plies` plies are applied silently; from then on every ply
 //! prints the board, the player to move, the exact evaluation and the value of
 //! every legal move, then echoes the token read. Timings go to stderr.
+//!
+//! The opening book is read from `book`, a `.bin` of records or a `.qbk` as the
+//! web app fetches, defaulting to this crate's `books/<rules>.bin`.
 
 use std::error::Error;
 use std::io::{self, BufWriter, Read, Write};
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::time::Instant;
 
+use quarto_solver::book::Book;
+use quarto_solver::book_codec;
 use quarto_solver::notation::{
 	cell_from_string, cell_to_string, eval_to_string, piece_from_string, piece_to_string,
 };
@@ -45,6 +51,9 @@ fn run() -> Result<(), Box<dyn Error>> {
 		Some("lines") => Rules::Lines,
 		Some(other) => return Err(format!("rules must be lines or squares, got {other}").into()),
 	};
+	let book_path = args
+		.next()
+		.map_or_else(|| default_book_path(rules), PathBuf::from);
 
 	let mut input = String::new();
 	io::stdin().read_to_string(&mut input)?;
@@ -52,6 +61,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 
 	let mut out = BufWriter::new(io::stdout().lock());
 	let mut solver = Solver::new(rules);
+	solver.load_book(read_book(rules, &book_path)?)?;
 	let mut player = 0;
 
 	for ply in 0.. {
@@ -105,6 +115,28 @@ fn run() -> Result<(), Box<dyn Error>> {
 	out.flush()?;
 	eprintln!("nodes: {}", solver.node_count());
 	Ok(())
+}
+
+fn default_book_path(rules: Rules) -> PathBuf {
+	let name = match rules {
+		Rules::Squares => "squares",
+		Rules::Lines => "lines",
+	};
+	Path::new(env!("CARGO_MANIFEST_DIR"))
+		.join("books")
+		.join(format!("{name}.bin"))
+}
+
+/// The book at `path`: `.qbk` files carry their own rules, anything else is
+/// taken as records for `rules`.
+fn read_book(rules: Rules, path: &Path) -> Result<Book, Box<dyn Error>> {
+	let bytes = std::fs::read(path).map_err(|error| format!("{}: {error}", path.display()))?;
+	let book = if path.extension().is_some_and(|ext| ext == "qbk") {
+		book_codec::decode(&bytes)?
+	} else {
+		Book::from_records(rules, &bytes)?
+	};
+	Ok(book)
 }
 
 fn print_board(out: &mut impl Write, solver: &Solver) -> io::Result<()> {

@@ -192,7 +192,7 @@ impl Generator {
 		chunk: &[Candidate],
 		progress: &(dyn Fn(Progress) + Sync),
 	) -> Vec<BookEntry> {
-		let mut solver = Solver::without_book(self.rules, self.table_size);
+		let mut solver = Solver::with_table_size(self.rules, self.table_size);
 		let report = |evaluated: usize, nodes: u64| {
 			progress(Progress {
 				shard,
@@ -251,7 +251,7 @@ mod tests {
 	use std::collections::{BTreeMap, HashMap, HashSet};
 
 	use super::{Candidate, Generator, Progress, enumerate, write_entries};
-	use crate::book::{self, BookEntry};
+	use crate::book::{self, BookEntry, committed};
 	use crate::rules::Rules;
 	use crate::tables::rot_masks;
 	use crate::{Solver, position::Position};
@@ -313,12 +313,16 @@ mod tests {
 					(1, 3),
 					(2, 84),
 					(3, 1586),
-					(4, book::entry_count(rules) - 1674)
+					(4, committed(rules).len() - 1674)
 				]),
 				"{rules:?}"
 			);
 			let found: HashSet<u128> = candidates.iter().map(|c| c.key).collect();
-			let committed: HashSet<u128> = book::entries(rules).map(BookEntry::key).collect();
+			let committed: HashSet<u128> = committed(rules)
+				.entries()
+				.iter()
+				.map(|entry| entry.key())
+				.collect();
 			assert_eq!(
 				found.len(),
 				candidates.len(),
@@ -330,7 +334,7 @@ mod tests {
 
 	#[test]
 	fn written_entries_read_back_as_the_same_book() {
-		let entries: Vec<BookEntry> = book::entries(Rules::Squares).take(10).collect();
+		let entries: Vec<BookEntry> = committed(Rules::Squares).entries()[..10].to_vec();
 		let mut bytes = Vec::new();
 		write_entries(&entries, &mut bytes).unwrap();
 		assert_eq!(bytes.len(), 10 * book::RECORD_SIZE);
@@ -352,9 +356,13 @@ mod tests {
 			let generated = Generator::new(rules, 2, 4).generate(&|progress: Progress| {
 				reports.lock().unwrap().push(progress);
 			});
-			let committed: Vec<BookEntry> = book::entries(rules)
+			let mut committed: Vec<BookEntry> = committed(rules)
+				.entries()
+				.iter()
+				.copied()
 				.filter(|entry| entry.moves_done() <= 2)
 				.collect();
+			committed.sort_by_key(|entry| entry.sort_key());
 			assert_eq!(generated.len(), 88, "{rules:?}");
 			assert_eq!(generated, committed, "{rules:?}");
 			let reports = reports.into_inner().unwrap();
@@ -376,7 +384,9 @@ mod tests {
 	#[test]
 	fn shards_evaluate_their_chunks_and_report_progress() {
 		let rules = Rules::Squares;
-		let values: HashMap<u128, i8> = book::entries(rules)
+		let values: HashMap<u128, i8> = committed(rules)
+			.entries()
+			.iter()
 			.map(|entry| (entry.key(), entry.value))
 			.collect();
 		let candidates: Vec<Candidate> = enumerate(rules, 4)
@@ -410,7 +420,7 @@ mod tests {
 	#[test]
 	fn a_solver_replays_a_candidate_path() {
 		let candidate = enumerate(Rules::Squares, 2).pop().unwrap();
-		let mut solver = Solver::without_book(Rules::Squares, 97);
+		let mut solver = Solver::with_table_size(Rules::Squares, 97);
 		super::replay(&mut solver, &candidate.path);
 		assert_eq!(solver.canonical_key(), candidate.key);
 		assert_eq!(

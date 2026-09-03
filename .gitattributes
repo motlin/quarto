@@ -1,2 +1,6 @@
 # Normalize all text files to LF line endings
 * text=auto eol=lf
+
+# Opening books are binary; never normalise their line endings
+*.qbk binary
+*.bin binary

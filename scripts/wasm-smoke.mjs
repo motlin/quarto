@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 
 const packageDirectory = new URL("../web/src/solver/pkg/", import.meta.url);
+const booksDirectory = new URL("../web/src/solver/books/", import.meta.url);
 const fixturePath = new URL("../solver/tests/fixtures/games_reg/1.txt", import.meta.url);
 
 // Pieces, cells and placements all number 16, and 16 doubles as the sentinel for
@@ -109,9 +110,19 @@ function outcome(solver) {
 
 // 🎮 Replay the fixture and compare every root and move evaluation.
 
+const squaresBook = await readFile(new URL("squares.qbk", booksDirectory));
+const linesBook = await readFile(new URL("lines.qbk", booksDirectory));
+
 const solver = new WasmSolver(true);
 assert.equal(solver.rulesSquares(), true);
-assert.ok(solver.bookEntries() > 40_000, `book entries ${solver.bookEntries()}`);
+assert.equal(solver.bookEntries(), 0, "no book is built in");
+assert.equal(solver.bookDepth(), 0);
+assert.throws(() => solver.loadBook(new Uint8Array([1, 2, 3])), /opening book is truncated/);
+assert.throws(() => solver.loadBook(new TextEncoder().encode("WASM")), /not an opening book/);
+assert.throws(() => solver.loadBook(linesBook), /opening book is for Lines rules, not Squares/);
+const loaded = solver.loadBook(squaresBook);
+assert.ok(loaded > 40_000, `book entries ${loaded}`);
+assert.equal(solver.bookEntries(), loaded);
 assert.equal(solver.bookDepth(), 4);
 assert.equal(solver.movesLeft(), NUM_MOVES);
 assert.ok(solver.bestMove() >= 0, "a move is available at the empty board");
@@ -150,7 +161,8 @@ assert.equal(solver.pieceAt(0), NO_PIECE, "empty cell");
 
 solver.setRules(false);
 assert.equal(solver.rulesSquares(), false);
-assert.ok(solver.bookEntries() > 40_000);
+assert.equal(solver.bookEntries(), 0, "switching rules drops the book");
+assert.ok(solver.loadBook(linesBook) > 40_000);
 solver.setSeed(7);
 assert.ok(solver.applySelect(0));
 assert.ok(solver.applyPlace(0));

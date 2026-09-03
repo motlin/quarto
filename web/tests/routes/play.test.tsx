@@ -551,7 +551,7 @@ describe("/play route", () => {
 		const router = createRouter({
 			routeTree,
 			history: createMemoryHistory({initialEntries: ["/play?opponent=human&rules=lines&name1=Ada&name2=Grace"]}),
-			context: {store: memoryStore(), createSolver: () => new ScriptedSolver()},
+			context: {store: memoryStore(), createSolver: () => new ScriptedSolver(), prefetchBook: () => {}},
 		});
 		render(<RouterProvider router={router} />);
 		await screen.findByRole("heading", {level: 1, name: "Ada vs Grace"});

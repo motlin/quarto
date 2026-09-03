@@ -3,6 +3,7 @@ import {describe, it, expect, beforeAll} from "vitest";
 import {ALL_CELLS, cellFromName, cellName} from "../../src/game/cells.js";
 import {describeValue} from "../../src/game/evaluation.js";
 import {ALL_PIECES, pieceFromToken, pieceToken} from "../../src/game/pieces.js";
+import type {Rules} from "../../src/game/rules.js";
 import {initSync, WasmSolver} from "../../src/solver/pkg/quarto_solver.js";
 import {handle, type Request, type Results, type Snapshot} from "../../src/solver/protocol.js";
 
@@ -11,6 +12,19 @@ const fixturePath = new URL("../../../solver/tests/fixtures/games_reg/2.txt", im
 beforeAll(() => {
 	initSync({module: readFileSync(new URL("../../src/solver/pkg/quarto_solver_bg.wasm", import.meta.url))});
 });
+
+/** The checked-in `.qbk` for `rules`, as the client fetches it. */
+function bookBytes(rules: Rules): ArrayBuffer {
+	const bytes = readFileSync(new URL(`../../src/solver/books/${rules}.qbk`, import.meta.url));
+	return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+}
+
+/** A solver with the opening book loaded, as it plays in the app; without it the empty board takes minutes. */
+function withBook(rules: Rules): WasmSolver {
+	const solver = new WasmSolver(rules === "squares");
+	ask(solver, "loadBook", {rules, bytes: bookBytes(rules)});
+	return solver;
+}
 
 let nextId = 1;
 
@@ -49,19 +63,44 @@ const EMPTY: Omit<Snapshot, "rules" | "bookEntries" | "bookDepth"> = {
 };
 
 describe("handle", () => {
-	it("answers init with the crate version and an empty board under the requested rules", () => {
+	it("answers init with the crate version and an empty board under the requested rules, without a book", () => {
 		const solver = new WasmSolver(true);
 		const {version, snapshot} = ask(solver, "init", {rules: "lines"});
 		expect(version).toMatch(/^\d+\.\d+\.\d+$/);
-		expect(snapshot).toStrictEqual({...EMPTY, rules: "lines", bookEntries: snapshot.bookEntries, bookDepth: 4});
-		expect(snapshot.bookEntries).toBeGreaterThan(40_000);
+		expect(snapshot).toStrictEqual({...EMPTY, rules: "lines", bookEntries: 0, bookDepth: 0});
 	});
 
-	it("switches rules and restarts", () => {
+	it("loads the opening book for the rules in force and reports its size", () => {
 		const solver = new WasmSolver(true);
+		const snapshot = ask(solver, "loadBook", {rules: "squares", bytes: bookBytes("squares")});
+		expect(snapshot).toStrictEqual({...EMPTY, rules: "squares", bookEntries: 40_729, bookDepth: 4});
+		expect(ask(solver, "evaluate", undefined)).toMatchObject({value: 0});
+		expect(ask(solver, "evaluate", undefined).nodes).toBeLessThan(100);
+	});
+
+	it("refuses a book for the other rules, whatever the payload claims", () => {
+		const solver = new WasmSolver(true);
+		expect(refuse(solver, {kind: "loadBook", payload: {rules: "lines", bytes: bookBytes("lines")}})).toBe(
+			"The lines book does not fit squares rules",
+		);
+		expect(refuse(solver, {kind: "loadBook", payload: {rules: "squares", bytes: bookBytes("lines")}})).toBe(
+			"opening book is for Lines rules, not Squares",
+		);
+		expect(refuse(solver, {kind: "loadBook", payload: {rules: "squares", bytes: new ArrayBuffer(3)}})).toBe(
+			"opening book is truncated",
+		);
+		expect(ask(solver, "snapshot", undefined)).toMatchObject({bookEntries: 0, bookDepth: 0});
+	});
+
+	it("switches rules, restarts and drops the book", () => {
+		const solver = withBook("squares");
 		ask(solver, "applySelect", {piece: 0});
 		const snapshot = ask(solver, "setRules", {rules: "lines"});
-		expect(snapshot).toStrictEqual({...EMPTY, rules: "lines", bookEntries: snapshot.bookEntries, bookDepth: 4});
+		expect(snapshot).toStrictEqual({...EMPTY, rules: "lines", bookEntries: 0, bookDepth: 0});
+		expect(ask(solver, "loadBook", {rules: "lines", bytes: bookBytes("lines")})).toMatchObject({
+			bookEntries: 40_789,
+			bookDepth: 4,
+		});
 	});
 
 	it("tracks a selection and a placement, and undoes them", () => {
@@ -106,7 +145,7 @@ describe("handle", () => {
 	});
 
 	it("reports the search effort with an evaluation", () => {
-		const solver = new WasmSolver(true);
+		const solver = withBook("squares");
 		ask(solver, "reset", undefined);
 		const evaluation = ask(solver, "evaluate", undefined);
 		expect(evaluation.value).toBe(0);
@@ -115,7 +154,7 @@ describe("handle", () => {
 	});
 
 	it("picks a best move whose value matches the position", () => {
-		const solver = new WasmSolver(true);
+		const solver = withBook("squares");
 		ask(solver, "setSeed", {seed: 7});
 		const selection = ask(solver, "bestMove", undefined);
 		expect(ALL_PIECES).toContain(selection.move);
@@ -198,7 +237,8 @@ describe("replaying games_reg/2.txt through the protocol", () => {
 		const {plies, result} = parseFixture(readFileSync(fixturePath, "utf8"));
 		expect(plies.length).toBeGreaterThan(20);
 		const solver = new WasmSolver(true);
-		let snapshot = ask(solver, "init", {rules: "squares"}).snapshot;
+		ask(solver, "init", {rules: "squares"});
+		let snapshot = ask(solver, "loadBook", {rules: "squares", bytes: bookBytes("squares")});
 		const replayed: Ply[] = [];
 		for (const ply of plies) {
 			const {movesLeft} = snapshot;

@@ -43,6 +43,8 @@ export interface BestMove extends Search {
 export interface Payloads {
 	readonly init: {readonly rules: Rules};
 	readonly setRules: {readonly rules: Rules};
+	/** A `.qbk` opening book for `rules`, which must be the rules in force; the buffer is transferred, not copied. */
+	readonly loadBook: {readonly rules: Rules; readonly bytes: ArrayBuffer};
 	readonly reset: undefined;
 	readonly applySelect: {readonly piece: Piece};
 	readonly applyPlace: {readonly cell: Cell};
@@ -57,6 +59,7 @@ export interface Payloads {
 export interface Results {
 	readonly init: {readonly version: string; readonly snapshot: Snapshot};
 	readonly setRules: Snapshot;
+	readonly loadBook: Snapshot;
 	readonly reset: Snapshot;
 	readonly applySelect: Snapshot;
 	readonly applyPlace: Snapshot;
@@ -106,9 +109,13 @@ function pieceOrNull(value: number): Piece | null {
 	return value;
 }
 
+function rulesOf(solver: WasmSolver): Rules {
+	return solver.rulesSquares() ? "squares" : "lines";
+}
+
 function snapshot(solver: WasmSolver): Snapshot {
 	return {
-		rules: solver.rulesSquares() ? "squares" : "lines",
+		rules: rulesOf(solver),
 		movesLeft: solver.movesLeft(),
 		currentPiece: pieceOrNull(solver.currentPiece()),
 		piecesTaken: solver.piecesTaken(),
@@ -167,6 +174,12 @@ function dispatch(request: Request, solver: WasmSolver): Results[Kind] {
 			return {version: version(), snapshot: snapshot(solver)};
 		case "setRules":
 			solver.setRules(request.payload.rules === "squares");
+			return snapshot(solver);
+		case "loadBook":
+			if (request.payload.rules !== rulesOf(solver)) {
+				throw new Error(`The ${request.payload.rules} book does not fit ${rulesOf(solver)} rules`);
+			}
+			solver.loadBook(new Uint8Array(request.payload.bytes));
 			return snapshot(solver);
 		case "reset":
 			solver.reset();

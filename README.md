@@ -59,12 +59,18 @@ at every ply. `just solver::differential <games> <skip_plies> <lines|squares>` p
 games through both the `play` binary and the C++ reference and diffs the transcripts byte for byte.
 
 The opening books in `solver/books/` hold the exact value of every position up to four placements
-deep, one file per variant, and are embedded into the solver so the first moves of a game need no
-search. The committed books are canonical: they were converted from the prototype's generated
-headers and are checked, not regenerated, by the build. `just solver::book-check` regenerates the
-first two placements with the Rust generator and asserts every record matches. Regenerating a full
-depth-4 book with `just solver::book 4 <lines|squares>` takes about 40 minutes for squares and 60
-minutes for lines on 16 cores.
+deep, one file per variant, so the first moves of a game need no search. The committed `.bin` books
+are canonical: they were converted from the prototype's generated headers and are checked, not
+regenerated, by the build. `just solver::book-check` regenerates the first two placements with the
+Rust generator and asserts every record matches. Regenerating a full depth-4 book with
+`just solver::book 4 <lines|squares>` takes about 40 minutes for squares and 60 minutes for lines
+on 16 cores.
+
+The wasm ships without book data. `just solver::books` encodes each `.bin` as a delta-varint `.qbk`
+(about a third of the size) into `web/src/solver/books/`, which is committed so the web build needs
+no Rust toolchain; the web app fetches only the book for the chosen rules and loads it into the
+solver before the first search. `just solver::test` asserts the committed `.qbk` files match the
+`.bin` books.
 
 ## Deploying
 

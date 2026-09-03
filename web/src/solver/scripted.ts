@@ -53,6 +53,7 @@ export class ScriptedSolver implements Solver {
 			this.state = newGame({...this.state.setup, rules});
 			return this.snapshot();
 		},
+		loadBook: () => this.snapshot(),
 		reset: () => {
 			this.state = newGame(this.state.setup);
 			return this.snapshot();

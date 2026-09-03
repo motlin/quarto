@@ -253,6 +253,9 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 		const seed = randomSeed();
 		const current: Session = {solver: createSolver(), random: mulberry32(seed), live: true};
 		session.current = current;
+		// Starting the solver fetches and loads the opening book, which can take a moment on a slow connection; the
+		// lamp shows it working until the first turn is driven.
+		setThinking(true);
 		startTurn(async (solver) => {
 			await solver.request("init", {rules: setup.rules});
 			await solver.request("setSeed", {seed});

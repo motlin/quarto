@@ -49,12 +49,18 @@ run *ARGS:
 book depth="4" rules="squares" threads=num_cpus():
     cargo run --release --bin book -- --depth {{ depth }} --rules {{ rules }} --threads {{ threads }} --out books/{{ rules }}.bin
 
+# Encode books/{squares,lines}.bin as the delta-varint .qbk files the web app fetches
+[group('run')]
+books:
+    cargo run --release --bin book -- --encode books/squares.bin --rules squares --out ../web/src/solver/books/squares.qbk
+    cargo run --release --bin book -- --encode books/lines.bin --rules lines --out ../web/src/solver/books/lines.qbk
+
 # Lint the bindings, wasm-pack into ../web/src/solver/pkg, print the .wasm size, and smoke test it from node
 [group('wasm')]
 wasm:
     cargo clippy --lib --target wasm32-unknown-unknown --features wasm -- -D warnings
     wasm-pack build --target web --release --out-dir ../web/src/solver/pkg --out-name quarto_solver -- --features wasm
-    @wc -c < ../web/src/solver/pkg/quarto_solver_bg.wasm | awk '{ printf "quarto_solver_bg.wasm: %.2f MB\n", $1 / 1048576 }'
+    @wc -c < ../web/src/solver/pkg/quarto_solver_bg.wasm | awk '{ printf "quarto_solver_bg.wasm: %.1f KB\n", $1 / 1024 }'
     node ../scripts/wasm-smoke.mjs
 
 # Regenerate depth 2 of both books and compare every record to the committed books (about half an hour)

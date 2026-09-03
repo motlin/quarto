@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {createFileRoute, Link} from "@tanstack/react-router";
 import {loadSetup, saveSetup, type Setup, toPlaySearch} from "../setup/setup.js";
 import {SetupForm} from "../ui/SetupForm.js";
@@ -7,9 +7,21 @@ export const Route = createFileRoute("/")({
 	component: SetupPage,
 });
 
+/** How long the rules control must rest before its book is fetched, so flipping back and forth fetches nothing. */
+export const BOOK_PREFETCH_DELAY_MILLISECONDS = 300;
+
 function SetupPage() {
-	const {store} = Route.useRouteContext();
+	const {store, prefetchBook} = Route.useRouteContext();
 	const [setup, setSetup] = useState(() => loadSetup(store));
+	// The book is fetched once the rules choice settles, so it is usually loaded before /play mounts.
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			prefetchBook(setup.rules);
+		}, BOOK_PREFETCH_DELAY_MILLISECONDS);
+		return () => {
+			clearTimeout(timer);
+		};
+	}, [prefetchBook, setup.rules]);
 	const change = (next: Setup) => {
 		setSetup(next);
 		saveSetup(store, next);

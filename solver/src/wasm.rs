@@ -4,8 +4,10 @@
 //! cross the boundary as a `squares` flag, pieces and cells as their indices,
 //! and values as plain integers, so the web app needs no glue types.
 
+use wasm_bindgen::JsError;
 use wasm_bindgen::prelude::wasm_bindgen;
 
+use crate::book_codec;
 use crate::rules::Rules;
 use crate::solver::Solver;
 
@@ -39,10 +41,23 @@ impl WasmSolver {
 		Self(Solver::new(rules_for(squares)))
 	}
 
-	/// Switch win conditions and restart the game.
+	/// Switch win conditions, drop the opening book and restart the game.
 	#[wasm_bindgen(js_name = setRules)]
 	pub fn set_rules(&mut self, squares: bool) {
 		self.0.set_rules(rules_for(squares));
+	}
+
+	/// Load a `.qbk` opening book for the current rules and seed the
+	/// transposition tables from it; returns how many positions it holds.
+	///
+	/// # Errors
+	///
+	/// Rejects a malformed book or one for the other rules variant.
+	#[wasm_bindgen(js_name = loadBook)]
+	pub fn load_book(&mut self, bytes: &[u8]) -> Result<u32, JsError> {
+		let book = book_codec::decode(bytes)?;
+		let count = self.0.load_book(book)?;
+		u32::try_from(count).map_err(|_| JsError::new("opening book is too large to count"))
 	}
 
 	/// True under squares rules, false under lines rules.
@@ -174,14 +189,14 @@ impl WasmSolver {
 		self.0.node_count() as f64
 	}
 
-	/// Positions in the opening book for the current rules.
+	/// Positions in the loaded opening book; zero until one is loaded.
 	#[wasm_bindgen(js_name = bookEntries)]
 	#[must_use]
 	pub fn book_entries(&self) -> usize {
 		self.0.book_entries()
 	}
 
-	/// Placements covered by the opening book for the current rules.
+	/// Placements covered by the loaded opening book; zero until one is loaded.
 	#[wasm_bindgen(js_name = bookDepth)]
 	#[must_use]
 	pub fn book_depth(&self) -> u8 {

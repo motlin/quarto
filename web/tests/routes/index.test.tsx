@@ -1,17 +1,19 @@
 // @vitest-environment jsdom
 import {describe, expect, it} from "vitest";
-import {fireEvent, render, screen, within} from "@testing-library/react";
+import {fireEvent, render, screen, waitFor, within} from "@testing-library/react";
 import {createMemoryHistory, createRouter, RouterProvider} from "@tanstack/react-router";
+import type {Rules} from "../../src/game/rules.js";
 import {routeTree} from "../../src/routeTree.gen.js";
+import {BOOK_PREFETCH_DELAY_MILLISECONDS} from "../../src/routes/index.js";
 import {SETUP_KEY} from "../../src/setup/setup.js";
 import {memoryStore, type Store} from "../../src/setup/storage.js";
 import {ScriptedSolver} from "../../src/solver/scripted.js";
 
-async function renderSetupRoute(store: Store = memoryStore()) {
+async function renderSetupRoute(store: Store = memoryStore(), prefetchBook: (rules: Rules) => void = () => {}) {
 	const router = createRouter({
 		routeTree,
 		history: createMemoryHistory({initialEntries: ["/"]}),
-		context: {store, createSolver: () => new ScriptedSolver()},
+		context: {store, createSolver: () => new ScriptedSolver(), prefetchBook},
 	});
 	render(<RouterProvider router={router} />);
 	await screen.findByRole("heading", {name: "QuartoBot"});
@@ -70,6 +72,25 @@ describe("setup route", () => {
 		expect(screen.queryByRole("radiogroup", {name: "Difficulty"})).toBeNull();
 		expect(playHref()).toContain("opponent=human");
 		expect(screen.getByPlaceholderText("Player 1")).toBeDefined();
+	});
+
+	it("prefetches the opening book once the rules choice has settled", async () => {
+		const prefetched: Rules[] = [];
+		await renderSetupRoute(memoryStore(), (rules) => prefetched.push(rules));
+		expect(prefetched).toStrictEqual([]);
+		await waitFor(() => {
+			expect(prefetched).toStrictEqual(["squares"]);
+		});
+		fireEvent.click(screen.getByRole("radio", {name: "Lines only"}));
+		fireEvent.click(screen.getByRole("radio", {name: "Lines + 2×2 squares"}));
+		fireEvent.click(screen.getByRole("radio", {name: "Lines only"}));
+		await new Promise((resolve) => {
+			setTimeout(resolve, BOOK_PREFETCH_DELAY_MILLISECONDS / 2);
+		});
+		expect(prefetched).toStrictEqual(["squares"]);
+		await waitFor(() => {
+			expect(prefetched).toStrictEqual(["squares", "lines"]);
+		});
 	});
 
 	it("links to the rules and how-to-play pages", async () => {

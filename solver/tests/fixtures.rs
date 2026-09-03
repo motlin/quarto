@@ -5,6 +5,7 @@
 use std::collections::BTreeMap;
 
 use quarto_solver::Solver;
+use quarto_solver::book::Book;
 use quarto_solver::notation::{
 	cell_from_string, cell_to_string, eval_to_string, piece_from_string, piece_to_string,
 };
@@ -109,6 +110,11 @@ fn legal_moves(solver: &Solver) -> Vec<u8> {
 fn replay_fixture(index: usize) {
 	let Fixture { plies, result } = fixture(index);
 	let mut solver = Solver::new(Rules::Squares);
+	let book_path = format!("{}/books/squares.bin", env!("CARGO_MANIFEST_DIR"));
+	let records = std::fs::read(&book_path).expect(&book_path);
+	solver
+		.load_book(Book::from_records(Rules::Squares, &records).expect("whole records"))
+		.expect("squares book");
 
 	for (ply_index, ply) in plies.iter().enumerate() {
 		let context = format!("fixture {index} ply {ply_index} ({:?})", ply.phase);
