@@ -27,6 +27,22 @@ describe("playSearchSchema", () => {
 		});
 	});
 
+	it("carries the two names of a two-person game and drops them when absent", () => {
+		expect(playSearchSchema.parse({opponent: "human", name1: "Ada", name2: "Grace"})).toStrictEqual({
+			opponent: "human",
+			rules: "squares",
+			first: "you",
+			annotations: "off",
+			name1: "Ada",
+			name2: "Grace",
+		});
+		expect(playSearchSchema.parse({})).not.toHaveProperty("name1");
+	});
+
+	it("rejects a name longer than the setup screen allows", () => {
+		expect(() => playSearchSchema.parse({name1: "A".repeat(17)})).toThrow("Too big");
+	});
+
 	it("rejects an unknown rules variant", () => {
 		expect(() => playSearchSchema.parse({rules: "diagonals"})).toThrow("Invalid option");
 	});

@@ -1,4 +1,7 @@
+import {useMemo} from "react";
 import {createFileRoute, Link} from "@tanstack/react-router";
+import {toGameSetup} from "../setup/setup.js";
+import {PlayScreen} from "../ui/PlayScreen.js";
 import {playSearchSchema} from "./-play-search.js";
 
 export const Route = createFileRoute("/play")({
@@ -7,18 +10,26 @@ export const Route = createFileRoute("/play")({
 });
 
 function PlayPage() {
-	const {opponent, rules, first, annotations} = Route.useSearch();
+	const search = Route.useSearch();
+	const {createSolver} = Route.useRouteContext();
+	const setup = useMemo(() => toGameSetup(search), [search]);
+	// A different URL is a different game, so the screen and its solver start over.
+	const key = JSON.stringify(setup);
 	return (
-		<main>
-			<h1>Play</h1>
-			<p>
-				{opponent} · {rules} · {first} first · annotations {annotations}
-			</p>
-			<nav>
-				<Link to="/">Setup</Link>
-				<Link to="/rules">Rules</Link>
-				<Link to="/how-to-play">How to play</Link>
-			</nav>
-		</main>
+		<PlayScreen
+			key={key}
+			setup={setup}
+			createSolver={createSolver}
+			backLink={
+				<Link className="btn quiet" to="/">
+					<span aria-hidden="true">‹</span> Setup
+				</Link>
+			}
+			helpLink={
+				<Link className="btn round" to="/how-to-play" aria-label="How to play">
+					?
+				</Link>
+			}
+		/>
 	);
 }

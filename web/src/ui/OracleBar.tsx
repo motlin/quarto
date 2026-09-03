@@ -3,13 +3,7 @@
  * cost underneath.
  */
 
-/** "decisive" is a win between two people, where neither side is the bot. */
-export type VerdictKind = "win" | "loss" | "draw" | "decisive";
-
-export interface VerdictView {
-	readonly kind: VerdictKind;
-	readonly text: string;
-}
+import type {VerdictView} from "../game/narration.js";
 
 export interface OracleBarProps {
 	readonly verdict: VerdictView | null;

@@ -20,7 +20,13 @@ export interface WorkerLike {
 }
 
 /** Kinds without a payload take no argument; the rest take exactly their payload. */
-type PayloadArguments<K extends Kind> = Payloads[K] extends undefined ? [] : [payload: Payloads[K]];
+export type PayloadArguments<K extends Kind> = Payloads[K] extends undefined ? [] : [payload: Payloads[K]];
+
+/** What the play screen needs of a solver, so a scripted one can stand in for the worker in tests and stories. */
+export interface Solver {
+	request<K extends Kind>(kind: K, ...args: PayloadArguments<K>): Promise<Results[K]>;
+	terminate(): void;
+}
 
 /** Method syntax on purpose: it lets a `Promise<Results[K]>` resolver sit in a map that forgets `K`. */
 interface Pending {
@@ -32,7 +38,7 @@ function createWorker(): Worker {
 	return new Worker(new URL("./solver.worker.ts", import.meta.url), {type: "module"});
 }
 
-export class SolverClient {
+export class SolverClient implements Solver {
 	private readonly worker: WorkerLike;
 	private readonly pending = new Map<number, Pending>();
 	private nextId = 1;

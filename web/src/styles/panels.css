@@ -121,9 +121,9 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+/* The side column's gap already sets it off; a margin on top of that pushed the phone layout past 740px. */
 .play-status {
 	font-family: var(--mono);
 	font-size: 11px;
 	color: var(--ink-muted);
-	margin-top: 12px;
 }

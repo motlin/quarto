@@ -11,7 +11,13 @@ const plies: readonly [number, boolean][] = [
 	[2, true],
 ];
 
-const setup: GameSetup = {opponent: "bot", rules: "squares", first: "you", hints: "off"};
+const setup: GameSetup = {
+	opponent: "bot",
+	rules: "squares",
+	first: "you",
+	hints: "off",
+	names: ["Player 1", "Player 2"],
+};
 
 describe("playerToMove", () => {
 	it("lets player 0 select first and alternates every ply", () => {

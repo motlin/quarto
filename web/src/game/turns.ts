@@ -14,13 +14,19 @@ export function playerToMove(movesDone: number, isToPlace: boolean): Player {
 	return parity === 0 ? 0 : 1;
 }
 
+export function otherPlayer(player: Player): Player {
+	return player === 0 ? 1 : 0;
+}
+
+/** The seat the bot occupies in a bot game; meaningless between two people. */
 function botPlayer(setup: GameSetup): Player {
 	return setup.first === "bot" ? 0 : 1;
 }
 
+export function isBot(setup: GameSetup, player: Player): boolean {
+	return setup.opponent === "bot" && player === botPlayer(setup);
+}
+
 export function isHumanTurn(setup: GameSetup, movesDone: number, isToPlace: boolean): boolean {
-	if (setup.opponent === "human") {
-		return true;
-	}
-	return playerToMove(movesDone, isToPlace) !== botPlayer(setup);
+	return !isBot(setup, playerToMove(movesDone, isToPlace));
 }

@@ -4,10 +4,18 @@
  */
 
 import {z} from "zod";
-import {annotationsSchema, firstSchema, opponentSchema, type PlaySearch, rulesSchema} from "../routes/-play-search.js";
+import type {GameSetup} from "../game/setup.js";
+import {
+	annotationsSchema,
+	firstSchema,
+	NAME_MAX_LENGTH,
+	opponentSchema,
+	type PlaySearch,
+	rulesSchema,
+} from "../routes/-play-search.js";
 import type {Store} from "./storage.js";
 
-export const NAME_MAX_LENGTH = 16;
+export {NAME_MAX_LENGTH};
 
 const setupSchema = z.object({
 	opponent: opponentSchema.default("bot"),
@@ -45,7 +53,36 @@ export function saveSetup(store: Store, setup: Setup): void {
 	store.set(SETUP_KEY, JSON.stringify(setup));
 }
 
-/** The part of the setup that travels in the /play URL. */
-export function toPlaySearch({opponent, rules, first, annotations}: Setup): PlaySearch {
-	return {opponent, rules, first, annotations};
+function trimmedName(name: string): string | undefined {
+	const trimmed = name.trim();
+	return trimmed === "" ? undefined : trimmed;
+}
+
+/** The part of the setup that travels in the /play URL: the names only matter when two people play. */
+export function toPlaySearch({opponent, rules, first, annotations, names}: Setup): PlaySearch {
+	const search: PlaySearch = {opponent, rules, first, annotations};
+	if (opponent !== "human") {
+		return search;
+	}
+	const [name1, name2] = [trimmedName(names[0]), trimmedName(names[1])];
+	return {
+		...search,
+		...(name1 === undefined ? {} : {name1}),
+		...(name2 === undefined ? {} : {name2}),
+	};
+}
+
+const DEFAULT_NAMES: GameSetup["names"] = ["Player 1", "Player 2"];
+
+/** The game a /play URL starts: a pure function of the search, so reloading it starts the same game. */
+export function toGameSetup({opponent, rules, first, annotations, name1, name2}: PlaySearch): GameSetup {
+	return {
+		opponent,
+		rules,
+		first,
+		hints: annotations,
+		// A blank name1/name2 (e.g. a hand-edited "?name1=" URL) falls back to the default the same way an
+		// absent one does.
+		names: [trimmedName(name1 ?? "") ?? DEFAULT_NAMES[0], trimmedName(name2 ?? "") ?? DEFAULT_NAMES[1]],
+	};
 }

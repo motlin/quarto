@@ -23,7 +23,7 @@ export interface Verdict {
 	readonly value: number;
 	/** Placements still to go in the position the value describes. */
 	readonly movesLeft: number;
-	readonly moverIsHuman: boolean;
+	readonly mover: Player;
 	readonly nodes: number;
 	readonly milliseconds: number;
 }
@@ -71,7 +71,7 @@ export function movesLeft(state: GameState): number {
 	return ALL_CELLS.length - movesDone(state);
 }
 
-function currentPlayer(state: GameState): Player {
+export function currentPlayer(state: GameState): Player {
 	return playerToMove(movesDone(state), isToPlace(state));
 }
 
@@ -118,7 +118,8 @@ export function applyPlace(state: GameState, cell: Cell): GameState {
 	};
 }
 
-function replay(setup: GameSetup, log: readonly Move[]): GameState {
+/** The state after playing `log` from the start. */
+export function replay(setup: GameSetup, log: readonly Move[]): GameState {
 	let state = newGame(setup);
 	for (const move of log) {
 		state = move.kind === "select" ? applySelect(state, move.piece) : applyPlace(state, move.cell);

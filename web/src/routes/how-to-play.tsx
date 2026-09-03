@@ -1,6 +1,6 @@
 import {createFileRoute, Link} from "@tanstack/react-router";
 import {Chip} from "../ui/Hint.js";
-import type {VerdictKind} from "../ui/OracleBar.js";
+import type {VerdictKind} from "../game/narration.js";
 import {HelpPage} from "./-help-page.js";
 
 export const Route = createFileRoute("/how-to-play")({

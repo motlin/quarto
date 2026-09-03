@@ -5,12 +5,13 @@ import {createMemoryHistory, createRouter, RouterProvider} from "@tanstack/react
 import {routeTree} from "../../src/routeTree.gen.js";
 import {SETUP_KEY} from "../../src/setup/setup.js";
 import {memoryStore, type Store} from "../../src/setup/storage.js";
+import {ScriptedSolver} from "../../src/solver/scripted.js";
 
 async function renderRoute(path: string, heading: string, store: Store = memoryStore()) {
 	const router = createRouter({
 		routeTree,
 		history: createMemoryHistory({initialEntries: [path]}),
-		context: {store},
+		context: {store, createSolver: () => new ScriptedSolver()},
 	});
 	const view = render(<RouterProvider router={router} />);
 	await screen.findByRole("heading", {level: 1, name: heading});

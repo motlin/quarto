@@ -17,9 +17,15 @@ import {
 	withVerdict,
 } from "../../src/game/state.js";
 
-const setup: GameSetup = {opponent: "bot", rules: "squares", first: "you", hints: "values"};
+const setup: GameSetup = {
+	opponent: "bot",
+	rules: "squares",
+	first: "you",
+	hints: "values",
+	names: ["Player 1", "Player 2"],
+};
 
-const verdict: Verdict = {value: 0, movesLeft: 16, moverIsHuman: true, nodes: 1234, milliseconds: 5};
+const verdict: Verdict = {value: 0, movesLeft: 16, mover: 0, nodes: 1234, milliseconds: 5};
 
 /** Plays `piece` to `cell` pairs from the start, selecting then placing each. */
 function play(start: GameState, moves: readonly [number, string][]): GameState {

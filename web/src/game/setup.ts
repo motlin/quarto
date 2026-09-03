@@ -14,4 +14,6 @@ export interface GameSetup {
 	readonly rules: Rules;
 	readonly first: FirstMover;
 	readonly hints: Hints;
+	/** Who sits in seat 0 and seat 1 when two people play; a bot game says "You" and "Bot" instead. */
+	readonly names: readonly [string, string];
 }
