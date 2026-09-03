@@ -18,6 +18,38 @@
 	border: 1px dashed var(--line);
 	background: transparent;
 }
+/*
+ * The hand piece is a drag surface. touch-action: none keeps a finger on it from scrolling the page, and the
+ * selection and callout rules keep iOS from selecting the glyph or offering a menu on a long press.
+ */
+.hand-piece.draggable {
+	cursor: grab;
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
+}
+.hand-piece.lifted {
+	cursor: grabbing;
+}
+.hand-piece.lifted .piece {
+	opacity: 0.25;
+}
+
+/* The ghost that follows the pointer while dragging. It is fixed to the viewport and never hit-tested itself. */
+.drag-ghost {
+	position: fixed;
+	z-index: 10;
+	display: grid;
+	place-items: center;
+	pointer-events: none;
+	filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
+	will-change: transform;
+}
+/* Keep the duration in step with RETURN_MILLISECONDS in useDragToPlace.ts. */
+.drag-ghost.returning {
+	transition: transform 180ms ease-out;
+}
 
 .tray {
 	display: grid;

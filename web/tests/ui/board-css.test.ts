@@ -2,13 +2,18 @@ import {readFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {describe, expect, it} from "vitest";
 
-const css = readFileSync(fileURLToPath(new URL("../../src/styles/board.css", import.meta.url)), "utf8");
+function stylesheet(name: string): string {
+	return readFileSync(fileURLToPath(new URL(`../../src/styles/${name}`, import.meta.url)), "utf8");
+}
+
+const css = stylesheet("board.css");
+const pieces = stylesheet("pieces.css");
 
 /** The declarations inside the first rule whose selector list matches, as written. */
-function ruleBody(selector: string): string {
-	const at = css.indexOf(`${selector} {`);
+function ruleBody(selector: string, source: string = css): string {
+	const at = source.indexOf(`${selector} {`);
 	expect(at).toBeGreaterThan(-1);
-	return css.slice(at + selector.length + 2, css.indexOf("}", at));
+	return source.slice(at + selector.length + 2, source.indexOf("}", at));
 }
 
 describe("board grid", () => {
@@ -36,8 +41,8 @@ describe("board grid", () => {
  * shifts back under it and takes the hover again, forever. The hover mark has to leave the cell's box alone.
  */
 describe("hover", () => {
-	it("marks a legal cell without moving it", () => {
-		const body = ruleBody(".cell.legal:hover");
+	it("marks a legal cell without moving it, and marks a drop target the same way", () => {
+		const body = ruleBody(".cell.legal:hover,\n.cell.legal.drop");
 		expect(body).not.toMatch(/\btransform\b/);
 		expect(body).toMatch(/\bbackground\b/);
 	});
@@ -48,5 +53,21 @@ describe("hover", () => {
 		for (const [, , body] of hovers) {
 			expect(body).not.toMatch(/\btransform\b/);
 		}
+	});
+});
+
+/** A finger on the hand piece must start a drag, never a scroll, a text selection or an iOS callout menu. */
+describe("dragging the hand piece", () => {
+	it("claims the touch and turns off selection and callouts", () => {
+		const body = ruleBody(".hand-piece.draggable", pieces);
+		expect(body).toMatch(/touch-action:\s*none/);
+		expect(body).toMatch(/user-select:\s*none/);
+		expect(body).toMatch(/-webkit-touch-callout:\s*none/);
+	});
+
+	it("keeps the ghost out of hit testing", () => {
+		const body = ruleBody(".drag-ghost", pieces);
+		expect(body).toMatch(/position:\s*fixed/);
+		expect(body).toMatch(/pointer-events:\s*none/);
 	});
 });

@@ -4,7 +4,7 @@
  * desktop. The router's links arrive as props so the screen renders in Storybook and in tests without a router.
  */
 
-import type {ReactNode} from "react";
+import {type ReactNode, useMemo} from "react";
 import {ALL_CELLS, asCell, type Cell} from "../game/cells.js";
 import {shortValue} from "../game/evaluation.js";
 import {describeVerdict, gameTitle, outcomeView, playerName, promptFor, statusLine} from "../game/narration.js";
@@ -18,6 +18,7 @@ import {Hand} from "./Hand.js";
 import {MoveLog} from "./MoveLog.js";
 import {OracleBar} from "./OracleBar.js";
 import {Tray} from "./Tray.js";
+import {useDragToPlace} from "./useDragToPlace.js";
 import {usePlayGame} from "./usePlayGame.js";
 
 /** Long enough that a bot move read from the opening book still registers as a move. */
@@ -73,6 +74,8 @@ export function PlayScreen({
 	helpLink,
 }: PlayScreenProps) {
 	const {state, thinking, select, place, undo, restart} = usePlayGame(setup, createSolver, engineDelayMilliseconds);
+	const cells = useMemo(() => legalCells(state), [state]);
+	const drag = useDragToPlace(cells, place);
 	const prompt = promptFor(setup, state);
 	const verdict =
 		outcomeView(setup, state) ?? (state.verdict === null ? null : describeVerdict(setup, state.verdict));
@@ -88,16 +91,17 @@ export function PlayScreen({
 			<div className="table">
 				<div className="board-col">
 					<div className="strip">
-						<Hand piece={state.hand} title={prompt.title} detail={prompt.detail} />
+						<Hand piece={state.hand} title={prompt.title} detail={prompt.detail} drag={drag} />
 						{setup.hints !== "off" && <OracleBar verdict={verdict} thinking={thinking} />}
 					</div>
 					<Board
 						board={state.board}
-						legalCells={legalCells(state)}
+						legalCells={cells}
 						onPlace={place}
 						lastCell={state.lastCell}
 						winningCells={state.status === "won" ? winningCells(state.board, setup.rules) : NO_CELLS}
 						hints={cellHints}
+						dropCell={drag.dropCell}
 					/>
 				</div>
 				<div className="side">

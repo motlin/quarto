@@ -24,7 +24,7 @@ const meta: Meta<typeof Board> = {
 			</div>
 		),
 	],
-	args: {onPlace: fn(), lastCell: null, winningCells: new Set(), hints: new Map()},
+	args: {onPlace: fn(), lastCell: null, winningCells: new Set(), hints: new Map(), dropCell: null},
 };
 
 export default meta;

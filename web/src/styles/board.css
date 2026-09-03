@@ -48,8 +48,10 @@
 .cell.legal {
 	cursor: pointer;
 }
-/* Hover recolours the cell and leaves its box where it is, so the pointer never loses it. */
-.cell.legal:hover {
+/* Hover recolours the cell and leaves its box where it is, so the pointer never loses it. A dragged piece hovering
+ * over the cell marks it the same way. */
+.cell.legal:hover,
+.cell.legal.drop {
 	background: var(--felt-line);
 }
 .cell.legal::after {
@@ -63,7 +65,8 @@
 	background: var(--amber);
 	opacity: 0.55;
 }
-.cell.legal:hover::after {
+.cell.legal:hover::after,
+.cell.legal.drop::after {
 	opacity: 0;
 }
 .cell.last {

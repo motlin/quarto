@@ -27,10 +27,30 @@ describe("Board", () => {
 				lastCell={null}
 				winningCells={new Set()}
 				hints={new Map()}
+				dropCell={null}
 			/>,
 		);
 		fireEvent.click(screen.getByRole("button", {name: "cell b2"}));
 		expect(onPlace).toHaveBeenCalledWith(b2);
+	});
+
+	it("names every cell for hit testing and marks the one a drag hovers", () => {
+		render(
+			<Board
+				board={withPieces({a1: 5})}
+				legalCells={new Set([b2, d4])}
+				onPlace={vi.fn<(cell: Cell) => void>()}
+				lastCell={a1}
+				winningCells={new Set()}
+				hints={new Map()}
+				dropCell={b2}
+			/>,
+		);
+		expect(screen.getAllByRole("button").map((button) => button.dataset["cell"])).toStrictEqual(
+			[...Array(16).keys()].map(String),
+		);
+		expect(screen.getByRole("button", {name: "cell b2"}).className).toBe("cell legal drop");
+		expect(screen.getByRole("button", {name: "cell d4"}).className).toBe("cell legal");
 	});
 
 	it("disables every cell that is not legal, occupied or not", () => {
@@ -43,6 +63,7 @@ describe("Board", () => {
 				lastCell={a1}
 				winningCells={new Set()}
 				hints={new Map()}
+				dropCell={null}
 			/>,
 		);
 		const buttons = screen.getAllByRole("button");
@@ -65,6 +86,7 @@ describe("Board", () => {
 				lastCell={cellFromName("d1")}
 				winningCells={new Set(["a1", "b1", "c1", "d1"].map(cellFromName))}
 				hints={new Map()}
+				dropCell={null}
 			/>,
 		);
 		expect(screen.getByRole("button", {name: /^cell d1/}).className).toContain("winning");
@@ -87,6 +109,7 @@ describe("Board", () => {
 						[d4, "L2"],
 					])
 				}
+				dropCell={null}
 			/>,
 		);
 		const hint = (name: string) => screen.getByRole("button", {name}).querySelector(".hint");

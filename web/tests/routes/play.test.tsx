@@ -11,6 +11,7 @@ import {toGameSetup} from "../../src/setup/setup.js";
 import {memoryStore} from "../../src/setup/storage.js";
 import {type Script, ScriptedSolver} from "../../src/solver/scripted.js";
 import {PlayScreen} from "../../src/ui/PlayScreen.js";
+import {installPointerStubs, pointer} from "../ui/pointer.js";
 
 const youFirst: GameSetup = {
 	opponent: "bot",
@@ -59,6 +60,36 @@ function enabledSlots(): number {
 
 function enabledCells(): number {
 	return screen.getAllByRole("button", {name: /^cell /}).filter((slot) => !slot.hasAttribute("disabled")).length;
+}
+
+function handPiece(): HTMLElement {
+	const found = document.querySelector(".hand-piece");
+	if (!(found instanceof HTMLElement)) {
+		throw new Error("No hand piece");
+	}
+	return found;
+}
+
+/** What one placement leaves behind on both sides, however the piece got to the cell. */
+interface Placed {
+	readonly kinds: readonly string[];
+	readonly log: unknown;
+	readonly board: string[];
+}
+
+async function afterPlacing(setup: GameSetup, placeOnC3: () => void): Promise<Placed> {
+	const solver = renderPlay(setup);
+	await screen.findByText("Choose a piece for Grace.");
+	expect(handPiece().className).toBe("hand-piece empty");
+	fireEvent.click(tray("dark round short hollow"));
+	await screen.findByText("Place the dark round short hollow piece.");
+	placeOnC3();
+	await screen.findByText("Choose a piece for Ada.");
+	return {
+		kinds: solver.kinds(),
+		log: solver.position.log,
+		board: screen.getAllByRole("button", {name: /^cell /}).map((button) => button.getAttribute("aria-label") ?? ""),
+	};
 }
 
 describe("PlayScreen against the bot", () => {
@@ -275,6 +306,33 @@ describe("PlayScreen between two people", () => {
 
 		expect(solver.kinds()).toStrictEqual(["init", "setSeed", "applySelect", "applyPlace", "undo"]);
 		expect(document.querySelector(".oracle")).toBeNull();
+	});
+
+	it("places by dragging the piece in hand onto a cell exactly as a tap on the cell does", async () => {
+		const stubs = installPointerStubs();
+		const byTap = await afterPlacing(twoPeople, () => {
+			fireEvent.click(cell("c3"));
+		});
+		cleanup();
+
+		const byDrag = await afterPlacing(twoPeople, () => {
+			const hand = handPiece();
+			expect(hand.className).toBe("hand-piece draggable");
+			pointer(hand, "pointerdown", {x: 20, y: 30});
+			stubs.hitTest(cell("c3"));
+			pointer(hand, "pointermove", {x: 200, y: 300});
+			expect(cell("c3").className).toBe("cell legal drop");
+			expect(document.querySelector(".drag-ghost .piece")).not.toBeNull();
+			pointer(hand, "pointerup", {x: 200, y: 300});
+		});
+
+		expect(document.querySelector(".drag-ghost")).toBeNull();
+		expect(document.querySelector(".cell.drop")).toBeNull();
+		expect(byDrag).toStrictEqual(byTap);
+		expect(byDrag.kinds).toStrictEqual(["init", "setSeed", "applySelect", "applyPlace"]);
+		expect(byDrag.board[cellFromName("c3")]).toBe("cell c3, dark round short hollow");
+		// Nothing to place now, so the hand is no longer a drag surface.
+		expect(handPiece().className).toBe("hand-piece empty");
 	});
 
 	it("names the winner in the neutral colour", async () => {
