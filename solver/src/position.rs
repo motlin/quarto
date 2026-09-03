@@ -176,7 +176,7 @@ impl Position {
 }
 
 /// Which variant (0 or 1) `piece` has for property `prop`.
-fn variant_of(piece: u8, prop: usize) -> usize {
+pub(crate) fn variant_of(piece: u8, prop: usize) -> usize {
 	usize::from((piece >> prop) & 1)
 }
 

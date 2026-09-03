@@ -1,9 +1,8 @@
 //! Exact Quarto solver.
 //!
 //! The engine mirrors the C prototype in `prototype/solver/quarto.c` so that native
-//! and wasm builds produce byte-identical transcripts. Game state, search, and the
-//! opening book are added module by module; this crate root only declares the
-//! board geometry shared by every module.
+//! and wasm builds produce byte-identical transcripts. [`Solver`] is the entry
+//! point; this crate root only declares the board geometry shared by every module.
 
 /// Number of pieces, and equally the number of cells on the 4x4 board.
 pub const NUM_PIECES: usize = 16;
@@ -43,7 +42,12 @@ pub const NUM_LOSE_MASKS: usize = 1 << (NUM_PROPS * NUM_VARIANTS);
 
 pub mod position;
 pub mod rules;
+pub mod search;
+pub mod solver;
+pub mod table;
 pub mod tables;
+
+pub use solver::Solver;
 
 /// Cell index of `(row, col)` in row-major order.
 #[must_use]
