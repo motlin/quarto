@@ -7,6 +7,7 @@ describe("playSearchSchema", () => {
 			opponent: "bot",
 			rules: "squares",
 			first: "you",
+			difficulty: "impossible",
 			annotations: "off",
 		});
 	});
@@ -17,12 +18,14 @@ describe("playSearchSchema", () => {
 				opponent: "human",
 				rules: "lines",
 				first: "bot",
+				difficulty: "medium",
 				annotations: "values",
 			}),
 		).toStrictEqual({
 			opponent: "human",
 			rules: "lines",
 			first: "bot",
+			difficulty: "medium",
 			annotations: "values",
 		});
 	});
@@ -32,6 +35,7 @@ describe("playSearchSchema", () => {
 			opponent: "human",
 			rules: "squares",
 			first: "you",
+			difficulty: "impossible",
 			annotations: "off",
 			name1: "Ada",
 			name2: "Grace",
@@ -53,6 +57,10 @@ describe("playSearchSchema", () => {
 
 	it("rejects an unknown first mover", () => {
 		expect(() => playSearchSchema.parse({first: "them"})).toThrow("Invalid option");
+	});
+
+	it("rejects an unknown difficulty", () => {
+		expect(() => playSearchSchema.parse({difficulty: "hard"})).toThrow("Invalid option");
 	});
 
 	it("rejects an unknown annotations level", () => {

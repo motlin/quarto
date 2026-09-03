@@ -28,7 +28,7 @@ function playHref(): string {
 describe("setup route", () => {
 	it("links Play to /play with the default setup", async () => {
 		await renderSetupRoute();
-		expect(playHref()).toBe("/play?opponent=bot&rules=squares&first=you&annotations=outcome");
+		expect(playHref()).toBe("/play?opponent=bot&rules=squares&first=you&difficulty=impossible&annotations=outcome");
 	});
 
 	it("updates the Play link and remembers the choice after selecting Lines only", async () => {
@@ -39,18 +39,29 @@ describe("setup route", () => {
 	});
 
 	it("preselects the remembered setup", async () => {
-		const remembered = {opponent: "bot", rules: "lines", first: "bot", annotations: "off", names: ["", ""]};
+		const remembered = {
+			opponent: "bot",
+			rules: "lines",
+			first: "bot",
+			difficulty: "medium",
+			annotations: "off",
+			names: ["", ""],
+		};
 		await renderSetupRoute(memoryStore({[SETUP_KEY]: JSON.stringify(remembered)}));
 		expect(screen.getByRole("radio", {name: "Lines only"}).getAttribute("aria-checked")).toBe("true");
 		expect(playHref()).toContain("first=bot");
+		expect(playHref()).toContain("difficulty=medium");
 		expect(playHref()).toContain("annotations=off");
+		expect(screen.getByRole("radio", {name: "Medium"}).getAttribute("aria-checked")).toBe("true");
 	});
 
-	it("hides the first-move control when the opponent is another person", async () => {
+	it("hides the first-move and difficulty controls when the opponent is another person", async () => {
 		await renderSetupRoute();
 		expect(screen.getByRole("radiogroup", {name: "Who moves first"})).toBeDefined();
+		expect(screen.getByRole("radiogroup", {name: "Difficulty"})).toBeDefined();
 		fireEvent.click(screen.getByRole("radio", {name: "Another person"}));
 		expect(screen.queryByRole("radiogroup", {name: "Who moves first"})).toBeNull();
+		expect(screen.queryByRole("radiogroup", {name: "Difficulty"})).toBeNull();
 		expect(playHref()).toContain("opponent=human");
 		expect(screen.getByPlaceholderText("Player 1")).toBeDefined();
 	});

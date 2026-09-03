@@ -1,5 +1,5 @@
 /**
- * ⚙️ The setup screen's choices: four segmented controls, plus two name inputs when two people share the device.
+ * ⚙️ The setup screen's choices: five segmented controls, plus two name inputs when two people share the device.
  * State flows down and comes back whole through onChange; the Play link and the help links arrive through `actions`
  * so the form knows nothing about the router.
  */
@@ -62,7 +62,7 @@ function Segment<T extends string>({label, options, value, onChange}: SegmentPro
 }
 
 const OPPONENTS: readonly SegmentOption<Setup["opponent"]>[] = [
-	{value: "bot", label: "Bot", help: "A perfect solver on this device. It never makes a mistake."},
+	{value: "bot", label: "Bot", help: "The computer, on this device. Choose how strong it plays below."},
 	{value: "human", label: "Another person", help: "Two people take turns on this one device."},
 ];
 
@@ -77,6 +77,15 @@ const RULES: readonly SegmentOption<Setup["rules"]>[] = [
 		label: "Lines + 2×2 squares",
 		help: "Rows, columns, diagonals, or any 2×2 square sharing a trait. The official advanced variant.",
 	},
+];
+
+const DIFFICULTIES: readonly SegmentOption<Setup["difficulty"]>[] = [
+	{
+		value: "medium",
+		label: "Medium",
+		help: "Blocks your one-move wins and takes its own; otherwise plays at random.",
+	},
+	{value: "impossible", label: "Impossible", help: "Perfect play from the solved game tree."},
 ];
 
 const FIRST: readonly SegmentOption<Setup["first"]>[] = [
@@ -141,6 +150,16 @@ export function SetupForm({value, onChange, actions}: SetupFormProps) {
 					</div>
 					<p className="field-help">The first player hands over a piece; the second player places it.</p>
 				</div>
+			)}
+			{value.opponent === "bot" && (
+				<Segment
+					label="Difficulty"
+					options={DIFFICULTIES}
+					value={value.difficulty}
+					onChange={(difficulty) => {
+						onChange({...value, difficulty});
+					}}
+				/>
 			)}
 			<Segment
 				label="Rules"

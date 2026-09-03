@@ -13,7 +13,14 @@ import {
 import type {GameSetup} from "../../src/game/setup.js";
 import {applyPlace, applySelect, type GameState, newGame, type Verdict, withVerdict} from "../../src/game/state.js";
 
-const botGame: GameSetup = {opponent: "bot", rules: "squares", first: "you", hints: "outcome", names: ["", ""]};
+const botGame: GameSetup = {
+	opponent: "bot",
+	rules: "squares",
+	first: "you",
+	difficulty: "impossible",
+	hints: "outcome",
+	names: ["", ""],
+};
 const botFirst: GameSetup = {...botGame, first: "bot"};
 const twoPeople: GameSetup = {...botGame, opponent: "human", rules: "lines", names: ["Ada", "Grace"]};
 
@@ -55,8 +62,9 @@ describe("winsPhrase", () => {
 
 describe("gameTitle", () => {
 	it("puts the first mover first", () => {
-		expect(gameTitle(botGame)).toBe("You vs bot");
-		expect(gameTitle(botFirst)).toBe("Bot vs you");
+		expect(gameTitle(botGame)).toBe("You vs bot · impossible");
+		expect(gameTitle(botFirst)).toBe("Bot vs you · impossible");
+		expect(gameTitle({...botGame, difficulty: "medium"})).toBe("You vs bot · medium");
 		expect(gameTitle(twoPeople)).toBe("Ada vs Grace");
 	});
 });

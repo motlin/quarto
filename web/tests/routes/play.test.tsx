@@ -12,7 +12,14 @@ import {memoryStore} from "../../src/setup/storage.js";
 import {type Script, ScriptedSolver} from "../../src/solver/scripted.js";
 import {PlayScreen} from "../../src/ui/PlayScreen.js";
 
-const youFirst: GameSetup = {opponent: "bot", rules: "squares", first: "you", hints: "outcome", names: ["", ""]};
+const youFirst: GameSetup = {
+	opponent: "bot",
+	rules: "squares",
+	first: "you",
+	difficulty: "impossible",
+	hints: "outcome",
+	names: ["", ""],
+};
 const botFirst: GameSetup = {...youFirst, first: "bot"};
 const twoPeople: GameSetup = {...youFirst, opponent: "human", hints: "off", names: ["Ada", "Grace"]};
 
@@ -165,7 +172,7 @@ describe("PlayScreen against the bot", () => {
 		await waitFor(() => {
 			expect(document.querySelector(".lamp.thinking")).not.toBeNull();
 		});
-		expect(screen.getByRole("heading", {level: 1}).textContent).toBe("Bot vs you");
+		expect(screen.getByRole("heading", {level: 1}).textContent).toBe("Bot vs you · impossible");
 		expect(enabledSlots()).toBe(0);
 
 		solver.release();
@@ -206,6 +213,43 @@ describe("PlayScreen against the bot", () => {
 		expect(enabledSlots()).toBe(16);
 		expect(solver.kinds()).toContain("reset");
 		expect(solver.position.log).toStrictEqual([]);
+	});
+});
+
+describe("PlayScreen against the Medium bot", () => {
+	const medium: GameSetup = {...youFirst, difficulty: "medium"};
+
+	it("never asks the solver for a move, yet still asks it for the verdict", async () => {
+		const solver = renderPlay(medium, {value: 14});
+		await screen.findByText("Choose a piece for the bot.");
+		expect(screen.getByRole("heading", {level: 1}).textContent).toBe("You vs bot · medium");
+		await screen.findByText("You win in 3");
+
+		fireEvent.click(tray("dark square short solid"));
+
+		await screen.findByText(/^Place the .* piece\.$/);
+		expect(screen.getByText("Move list · 1 placements")).toBeDefined();
+		expect(enabledCells()).toBe(15);
+		expect(solver.kinds()).not.toContain("bestMove");
+		expect(solver.kinds()).toStrictEqual([
+			"init",
+			"setSeed",
+			"evaluate",
+			"applySelect",
+			"evaluate",
+			"applyPlace",
+			"evaluate",
+			"applySelect",
+			"evaluate",
+		]);
+		expect(solver.position.log).toHaveLength(3);
+	});
+
+	it("opens with a choice only when it moves first", async () => {
+		const solver = renderPlay({...medium, first: "bot", hints: "off"});
+		await screen.findByText(/^Place the .* piece\.$/);
+		expect(solver.kinds()).toStrictEqual(["init", "setSeed", "applySelect"]);
+		expect(enabledCells()).toBe(16);
 	});
 });
 
@@ -260,6 +304,7 @@ describe("the same setup search starts the same game", () => {
 			opponent: "human",
 			rules: "lines",
 			first: "you",
+			difficulty: "impossible",
 			hints: "values",
 			names: ["Ada", "Player 2"],
 		});

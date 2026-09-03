@@ -10,7 +10,9 @@
 
 import {useCallback, useEffect, useRef, useState} from "react";
 import type {Cell} from "../game/cells.js";
+import {mediumTurn} from "../game/medium.js";
 import type {Piece} from "../game/pieces.js";
+import {mulberry32, type Random} from "../game/random.js";
 import type {GameSetup} from "../game/setup.js";
 import {
 	applyPlace,
@@ -41,8 +43,19 @@ export interface PlayGame {
 /** One worker and its lifetime; `live` goes false on unmount so a rejection from termination is not a failure. */
 interface Session {
 	readonly solver: Solver;
+	/** The Medium bot's dice, seeded alongside the solver so a game replays the same way. */
+	readonly random: Random;
 	live: boolean;
 }
+
+/** A bot's move for one ply and what the search for it cost; a Medium choice costs nothing worth showing. */
+interface Chosen {
+	readonly move: Cell | Piece;
+	readonly nodes: number;
+	readonly ms: number;
+}
+
+const FREE = {nodes: 0, ms: 0};
 
 function randomSeed(): number {
 	const [seed] = crypto.getRandomValues(new Uint32Array(1));
@@ -112,21 +125,21 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 			const wantVerdict = setup.hints !== "off";
 			const wantValues = setup.hints === "values";
 
-			async function botPly(): Promise<void> {
+			async function botPly(choose: () => Promise<Chosen>): Promise<void> {
 				const before = stateRef.current;
 				setThinking(true);
 				const deadline = performance.now() + engineDelayMilliseconds;
-				const [evaluation, best] = await Promise.all([
+				const [evaluation, chosen] = await Promise.all([
 					wantVerdict ? solver.request("evaluate") : null,
-					solver.request("bestMove"),
+					choose(),
 				]);
 				await sleepUntil(deadline);
 				if (turn.current !== token) {
 					return;
 				}
-				let next = isToPlace(before) ? applyPlace(before, best.move) : applySelect(before, best.move);
+				let next = isToPlace(before) ? applyPlace(before, chosen.move) : applySelect(before, chosen.move);
 				if (next === before) {
-					throw new Error(`The solver chose an illegal move: ${best.move}`);
+					throw new Error(`The bot chose an illegal move: ${chosen.move}`);
 				}
 				const mirrored = mirror(solver, next);
 				if (evaluation !== null) {
@@ -134,12 +147,23 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 						value: evaluation.value,
 						movesLeft: movesLeft(before),
 						mover: currentPlayer(before),
-						nodes: evaluation.nodes + best.nodes,
-						milliseconds: evaluation.ms + best.ms,
+						nodes: evaluation.nodes + chosen.nodes,
+						milliseconds: evaluation.ms + chosen.ms,
 					});
 				}
 				commit(next);
 				await mirrored;
+			}
+
+			/** The Medium bot settles its whole turn at once, then plays it a ply at a time so each move reads. */
+			async function mediumBotTurn(): Promise<void> {
+				const {place, select} = mediumTurn(stateRef.current, current.random);
+				if (place !== null) {
+					await botPly(async () => Promise.resolve({move: place, ...FREE}));
+				}
+				if (select !== null && turn.current === token) {
+					await botPly(async () => Promise.resolve({move: select, ...FREE}));
+				}
 			}
 
 			async function consultOracle(): Promise<void> {
@@ -172,13 +196,17 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 					}
 					break;
 				}
-				await botPly();
+				if (setup.difficulty === "medium") {
+					await mediumBotTurn();
+				} else {
+					await botPly(async () => solver.request("bestMove"));
+				}
 			}
 			if (turn.current === token) {
 				setThinking(false);
 			}
 		},
-		[setup.hints, engineDelayMilliseconds, commit],
+		[setup.hints, setup.difficulty, engineDelayMilliseconds, commit],
 	);
 
 	/** Starts a new turn after `prepare` has put the worker in step with the reducer. */
@@ -202,11 +230,12 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 	);
 
 	useEffect(() => {
-		const current: Session = {solver: createSolver(), live: true};
+		const seed = randomSeed();
+		const current: Session = {solver: createSolver(), random: mulberry32(seed), live: true};
 		session.current = current;
 		startTurn(async (solver) => {
 			await solver.request("init", {rules: setup.rules});
-			await solver.request("setSeed", {seed: randomSeed()});
+			await solver.request("setSeed", {seed});
 		});
 		return () => {
 			current.live = false;

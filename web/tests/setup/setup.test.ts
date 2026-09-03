@@ -16,6 +16,7 @@ describe("setup persistence", () => {
 			opponent: "bot",
 			rules: "squares",
 			first: "you",
+			difficulty: "impossible",
 			annotations: "outcome",
 			names: ["", ""],
 		});
@@ -28,6 +29,7 @@ describe("setup persistence", () => {
 			opponent: "human",
 			rules: "lines",
 			first: "bot",
+			difficulty: "medium",
 			annotations: "off",
 			names: ["Ada", "Grace"],
 		};
@@ -50,13 +52,15 @@ describe("setup persistence", () => {
 		expect(loadSetup(store)).toStrictEqual({...DEFAULT_SETUP, rules: "lines"});
 	});
 
-	it("reduces a bot game to the four search params the play route reads", () => {
+	it("reduces a bot game to the five search params the play route reads", () => {
 		expect(toPlaySearch({...DEFAULT_SETUP, rules: "lines", names: ["Ada", "Grace"]})).toStrictEqual({
 			opponent: "bot",
 			rules: "lines",
 			first: "you",
+			difficulty: "impossible",
 			annotations: "outcome",
 		});
+		expect(toPlaySearch({...DEFAULT_SETUP, difficulty: "medium"}).difficulty).toBe("medium");
 	});
 
 	it("adds the trimmed names to a two-person game and leaves a blank name out", () => {
@@ -64,6 +68,7 @@ describe("setup persistence", () => {
 			opponent: "human",
 			rules: "squares",
 			first: "you",
+			difficulty: "impossible",
 			annotations: "outcome",
 			name1: "Ada",
 		});
@@ -72,17 +77,27 @@ describe("setup persistence", () => {
 
 describe("toGameSetup", () => {
 	it("maps the search params onto the game's setup with the default names", () => {
-		expect(toGameSetup({opponent: "bot", rules: "lines", first: "bot", annotations: "values"})).toStrictEqual({
+		expect(
+			toGameSetup({opponent: "bot", rules: "lines", first: "bot", difficulty: "medium", annotations: "values"}),
+		).toStrictEqual({
 			opponent: "bot",
 			rules: "lines",
 			first: "bot",
+			difficulty: "medium",
 			hints: "values",
 			names: ["Player 1", "Player 2"],
 		});
 	});
 
 	it("keeps the names given for a two-person game", () => {
-		const search = {opponent: "human", rules: "squares", first: "you", annotations: "off", name2: "Grace"} as const;
+		const search = {
+			opponent: "human",
+			rules: "squares",
+			first: "you",
+			difficulty: "impossible",
+			annotations: "off",
+			name2: "Grace",
+		} as const;
 		expect(toGameSetup(search).names).toStrictEqual(["Player 1", "Grace"]);
 	});
 
@@ -91,6 +106,7 @@ describe("toGameSetup", () => {
 			opponent: "human",
 			rules: "squares",
 			first: "you",
+			difficulty: "impossible",
 			annotations: "off",
 			name1: "",
 			name2: "  ",
@@ -99,12 +115,26 @@ describe("toGameSetup", () => {
 	});
 
 	it("trims the names it is given", () => {
-		const search = {opponent: "human", rules: "squares", first: "you", annotations: "off", name1: " Ada "} as const;
+		const search = {
+			opponent: "human",
+			rules: "squares",
+			first: "you",
+			difficulty: "impossible",
+			annotations: "off",
+			name1: " Ada ",
+		} as const;
 		expect(toGameSetup(search).names).toStrictEqual(["Ada", "Player 2"]);
 	});
 
 	it("is a pure function of the search, so the same URL always starts the same game", () => {
-		const search = {opponent: "human", rules: "squares", first: "you", annotations: "off", name1: "Ada"} as const;
+		const search = {
+			opponent: "human",
+			rules: "squares",
+			first: "you",
+			difficulty: "impossible",
+			annotations: "off",
+			name1: "Ada",
+		} as const;
 		expect(toGameSetup(search)).toStrictEqual(toGameSetup({...search}));
 	});
 });

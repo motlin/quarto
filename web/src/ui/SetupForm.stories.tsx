@@ -52,6 +52,11 @@ export const TwoPeople: Story = {
 	args: {initial: {...DEFAULT_SETUP, opponent: "human", annotations: "off", names: ["Ada", ""]}},
 };
 
+/** The beatable bot: one ply of lookahead, random otherwise. */
+export const MediumBot: Story = {
+	args: {initial: {...DEFAULT_SETUP, difficulty: "medium"}},
+};
+
 export const MoveValues: Story = {
 	args: {initial: {...DEFAULT_SETUP, rules: "lines", first: "bot", annotations: "values"}},
 };

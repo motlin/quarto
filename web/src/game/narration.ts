@@ -52,7 +52,8 @@ export function gameTitle(setup: GameSetup): string {
 	if (setup.opponent === "human") {
 		return `${setup.names[0]} vs ${setup.names[1]}`;
 	}
-	return setup.first === "you" ? "You vs bot" : "Bot vs you";
+	const seats = setup.first === "you" ? "You vs bot" : "Bot vs you";
+	return `${seats} · ${setup.difficulty}`;
 }
 
 export function describeVerdict(setup: GameSetup, verdict: Verdict): VerdictView {

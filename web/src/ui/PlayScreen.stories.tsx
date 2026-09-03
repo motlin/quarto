@@ -7,7 +7,14 @@ import {PlayScreen} from "./PlayScreen.js";
 import {withTheme} from "./withTheme.js";
 import "../styles/index.css";
 
-const botGame: GameSetup = {opponent: "bot", rules: "squares", first: "you", hints: "outcome", names: ["", ""]};
+const botGame: GameSetup = {
+	opponent: "bot",
+	rules: "squares",
+	first: "you",
+	difficulty: "impossible",
+	hints: "outcome",
+	names: ["", ""],
+};
 
 /** The bot fills the top row from the left, then works down; every third move value reads "=", then W2 and L3. */
 const script: Partial<Script> = {

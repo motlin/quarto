@@ -19,8 +19,8 @@ function SetupPage() {
 			<header className="masthead">
 				<h1>QuartoBot</h1>
 				<p>
-					Play against a perfect solver that never errs, or with a friend on one device, and see the exact
-					outcome of every position.
+					Play against a bot you can beat or a perfect solver that never errs, or with a friend on one device,
+					and see the exact outcome of every position.
 				</p>
 			</header>
 			<SetupForm

@@ -1,5 +1,5 @@
 /**
- * ⚙️ The choices made on the setup screen: the four the play route reads from the URL, plus the two names a
+ * ⚙️ The choices made on the setup screen: the five the play route reads from the URL, plus the two names a
  * two-person game uses. The last setup is remembered per browser and preselected on the next visit.
  */
 
@@ -7,6 +7,7 @@ import {z} from "zod";
 import type {GameSetup} from "../game/setup.js";
 import {
 	annotationsSchema,
+	difficultySchema,
 	firstSchema,
 	NAME_MAX_LENGTH,
 	opponentSchema,
@@ -21,6 +22,7 @@ const setupSchema = z.object({
 	opponent: opponentSchema.default("bot"),
 	rules: rulesSchema.default("squares"),
 	first: firstSchema.default("you"),
+	difficulty: difficultySchema.default("impossible"),
 	// A bot game usually wants to see the outcome; the URL default stays "off" so a bare /play plays blind.
 	annotations: annotationsSchema.default("outcome"),
 	// Blank falls back to "Player 1" / "Player 2" when the game starts.
@@ -59,8 +61,8 @@ function trimmedName(name: string): string | undefined {
 }
 
 /** The part of the setup that travels in the /play URL: the names only matter when two people play. */
-export function toPlaySearch({opponent, rules, first, annotations, names}: Setup): PlaySearch {
-	const search: PlaySearch = {opponent, rules, first, annotations};
+export function toPlaySearch({opponent, rules, first, difficulty, annotations, names}: Setup): PlaySearch {
+	const search: PlaySearch = {opponent, rules, first, difficulty, annotations};
 	if (opponent !== "human") {
 		return search;
 	}
@@ -75,11 +77,12 @@ export function toPlaySearch({opponent, rules, first, annotations, names}: Setup
 const DEFAULT_NAMES: GameSetup["names"] = ["Player 1", "Player 2"];
 
 /** The game a /play URL starts: a pure function of the search, so reloading it starts the same game. */
-export function toGameSetup({opponent, rules, first, annotations, name1, name2}: PlaySearch): GameSetup {
+export function toGameSetup({opponent, rules, first, difficulty, annotations, name1, name2}: PlaySearch): GameSetup {
 	return {
 		opponent,
 		rules,
 		first,
+		difficulty,
 		hints: annotations,
 		// A blank name1/name2 (e.g. a hand-edited "?name1=" URL) falls back to the default the same way an
 		// absent one does.

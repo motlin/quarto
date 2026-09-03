@@ -15,6 +15,7 @@ const setup: GameSetup = {
 	opponent: "bot",
 	rules: "squares",
 	first: "you",
+	difficulty: "impossible",
 	hints: "off",
 	names: ["Player 1", "Player 2"],
 };

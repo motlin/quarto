@@ -95,7 +95,14 @@ export class ScriptedSolver implements Solver {
 
 	constructor(script: Partial<Script> = {}, rules: Rules = "squares") {
 		this.script = {bestMoves: [], value: 0, moveValue: () => 0, ...script};
-		this.state = newGame({opponent: "human", rules, first: "you", hints: "off", names: ["", ""]});
+		this.state = newGame({
+			opponent: "human",
+			rules,
+			first: "you",
+			difficulty: "impossible",
+			hints: "off",
+			names: ["", ""],
+		});
 	}
 
 	async request<K extends Kind>(kind: K, ...args: PayloadArguments<K>): Promise<Results[K]> {
