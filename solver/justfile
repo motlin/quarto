@@ -49,10 +49,13 @@ run *ARGS:
 book depth="4" rules="squares" threads=num_cpus():
     cargo run --release --bin book -- --depth {{ depth }} --rules {{ rules }} --threads {{ threads }} --out books/{{ rules }}.bin
 
-# Placeholder until the wasm bindings exist (wasm-pack into ../web/src/solver/pkg)
+# Lint the bindings, wasm-pack into ../web/src/solver/pkg, print the .wasm size, and smoke test it from node
 [group('wasm')]
 wasm:
-    @echo "solver: wasm build not wired up yet"
+    cargo clippy --lib --target wasm32-unknown-unknown --features wasm -- -D warnings
+    wasm-pack build --target web --release --out-dir ../web/src/solver/pkg --out-name quarto_solver -- --features wasm
+    @wc -c < ../web/src/solver/pkg/quarto_solver_bg.wasm | awk '{ printf "quarto_solver_bg.wasm: %.2f MB\n", $1 / 1048576 }'
+    node ../scripts/wasm-smoke.mjs
 
 # Regenerate depth 2 of both books and compare every record to the committed books (about half an hour)
 [group('test')]

@@ -21,7 +21,7 @@ path = "src/bin/book.rs"
 wasm = ["dep:wasm-bindgen"]
 
 [dependencies]
-wasm-bindgen = { version = "0.2", optional = true }
+wasm-bindgen = { version = "0.2.127", optional = true }
 
 [dev-dependencies]
 
@@ -33,6 +33,19 @@ opt-level = 3
 [profile.release]
 lto = "thin"
 strip = true
+
+# The wasm-opt bundled with wasm-pack predates the features rustc now enables
+# by default on wasm32, so it must be told they are allowed.
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = [
+	"-O",
+	"--enable-bulk-memory",
+	"--enable-nontrapping-float-to-int",
+	"--enable-reference-types",
+	"--enable-multivalue",
+	"--enable-sign-ext",
+	"--enable-mutable-globals",
+]
 
 # Lints are configured here rather than in a separate clippy.toml so the policy
 # travels with the manifest. Override or extend per project as needed.
