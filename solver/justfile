@@ -44,10 +44,20 @@ coverage:
 run *ARGS:
     cargo run -- {{ARGS}}
 
+# Regenerate books/<rules>.bin (depth, lines|squares, threads); depth 4 takes about an hour on 16 cores
+[group('run')]
+book depth="4" rules="squares" threads=num_cpus():
+    cargo run --release --bin book -- --depth {{ depth }} --rules {{ rules }} --threads {{ threads }} --out books/{{ rules }}.bin
+
 # Placeholder until the wasm bindings exist (wasm-pack into ../web/src/solver/pkg)
 [group('wasm')]
 wasm:
     @echo "solver: wasm build not wired up yet"
+
+# Regenerate depth 2 of both books and compare every record to the committed books (about half an hour)
+[group('test')]
+book-check:
+    cargo nextest run --run-ignored only --no-fail-fast book_check
 
 # Diff play transcripts of random games against the C++ reference (games, plies skipped, lines|squares)
 [group('test')]

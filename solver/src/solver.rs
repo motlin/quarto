@@ -31,6 +31,7 @@ pub struct Solver {
 	rng: u32,
 	book_entries: usize,
 	book_depth: u8,
+	use_book: bool,
 }
 
 impl Solver {
@@ -43,6 +44,18 @@ impl Solver {
 	/// A solver whose transposition shards each hold `table_size` slots.
 	#[must_use]
 	pub fn with_table_size(rules: Rules, table_size: usize) -> Self {
+		Self::build(rules, table_size, true)
+	}
+
+	/// A solver that never seeds its tables from the opening book, so every
+	/// value comes from search. The book generator uses this to compute the
+	/// book rather than read it back.
+	#[must_use]
+	pub fn without_book(rules: Rules, table_size: usize) -> Self {
+		Self::build(rules, table_size, false)
+	}
+
+	fn build(rules: Rules, table_size: usize, use_book: bool) -> Self {
 		let mut solver = Self {
 			rules,
 			tables: Tables::new(rules),
@@ -54,6 +67,7 @@ impl Solver {
 			rng: DEFAULT_SEED,
 			book_entries: 0,
 			book_depth: 0,
+			use_book,
 		};
 		solver.reset();
 		solver
@@ -89,6 +103,9 @@ impl Solver {
 	fn load_book(&mut self) {
 		self.book_entries = 0;
 		self.book_depth = 0;
+		if !self.use_book {
+			return;
+		}
 		for entry in book::entries(self.rules) {
 			let moves_done = entry.moves_done();
 			self.tts[table_for_moves_done(usize::from(moves_done))].put(
@@ -660,6 +677,20 @@ mod tests {
 				solver.node_count()
 			);
 		}
+	}
+
+	#[test]
+	fn a_solver_without_the_book_searches_what_the_book_would_answer() {
+		let mut solver = Solver::without_book(Rules::Squares, 1_009);
+		assert_eq!(solver.book_entries(), 0);
+		assert_eq!(solver.book_depth(), 0);
+		replay(&mut solver, &FIXTURE_1[..12]);
+		assert_eq!(solver.evaluate(), 0);
+		assert!(solver.node_count() > 100, "{}", solver.node_count());
+		solver.reset();
+		assert_eq!(solver.book_entries(), 0);
+		solver.set_rules(Rules::Lines);
+		assert_eq!(solver.book_entries(), 0);
 	}
 
 	#[test]

@@ -58,6 +58,14 @@ transcripts in `solver/tests/fixtures/games_reg/` and asserts the exact value of
 at every ply. `just solver::differential <games> <skip_plies> <lines|squares>` plays seeded random
 games through both the `play` binary and the C++ reference and diffs the transcripts byte for byte.
 
+The opening books in `solver/books/` hold the exact value of every position up to four placements
+deep, one file per variant, and are embedded into the solver so the first moves of a game need no
+search. The committed books are canonical: they were converted from the prototype's generated
+headers and are checked, not regenerated, by the build. `just solver::book-check` regenerates the
+first two placements with the Rust generator and asserts every record matches. Regenerating a full
+depth-4 book with `just solver::book 4 <lines|squares>` takes about 40 minutes for squares and 60
+minutes for lines on 16 cores.
+
 ## Deploying
 
 The site is static, so it goes to Cloudflare Pages. Deployment details will follow once the web

@@ -27,7 +27,13 @@ pub struct BookEntry {
 }
 
 impl BookEntry {
-	fn from_record(record: &[u8]) -> Self {
+	/// Decode one [`RECORD_SIZE`]-byte record.
+	///
+	/// # Panics
+	///
+	/// Panics when `record` is shorter than [`RECORD_SIZE`].
+	#[must_use]
+	pub fn from_record(record: &[u8]) -> Self {
 		let key_low = u64::from_le_bytes(record[0..8].try_into().expect("8 key bytes"));
 		let cells_taken = u16::from_le_bytes(record[8..10].try_into().expect("2 cell bytes"));
 		let value = i8::from_le_bytes([record[10]]);
@@ -36,6 +42,22 @@ impl BookEntry {
 			cells_taken,
 			value,
 		}
+	}
+
+	/// The record this entry is stored as in a book file.
+	#[must_use]
+	pub fn to_record(self) -> [u8; RECORD_SIZE] {
+		let mut record = [0; RECORD_SIZE];
+		record[0..8].copy_from_slice(&self.key_low.to_le_bytes());
+		record[8..10].copy_from_slice(&self.cells_taken.to_le_bytes());
+		record[10] = self.value.to_le_bytes()[0];
+		record
+	}
+
+	/// The order entries are stored in: by depth, then cell mask, then property masks.
+	#[must_use]
+	pub fn sort_key(self) -> (u8, u16, u64) {
+		(self.moves_done(), self.cells_taken, self.key_low)
 	}
 
 	/// The full canonical key as [`crate::position::Position::canonical_key`] computes it.
@@ -100,6 +122,14 @@ mod tests {
 	}
 
 	#[test]
+	fn a_record_round_trips_through_an_entry() {
+		let record = [
+			0x10, 0x08, 0x10, 0x08, 0x10, 0x08, 0x10, 0x08, 0x18, 0x18, 0xFE,
+		];
+		assert_eq!(BookEntry::from_record(&record).to_record(), record);
+	}
+
+	#[test]
 	fn the_key_stacks_cells_taken_above_the_property_masks() {
 		let entry = BookEntry {
 			key_low: 0x0808_0808_0810_0810,
@@ -138,9 +168,7 @@ mod tests {
 	#[test]
 	fn entries_are_sorted_and_distinct() {
 		for rules in [Rules::Squares, Rules::Lines] {
-			let keys: Vec<_> = entries(rules)
-				.map(|e| (e.moves_done(), e.cells_taken, e.key_low))
-				.collect();
+			let keys: Vec<_> = entries(rules).map(BookEntry::sort_key).collect();
 			assert!(keys.windows(2).all(|w| w[0] < w[1]), "{rules:?}");
 		}
 	}
