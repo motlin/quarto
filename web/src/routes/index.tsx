@@ -1,9 +1,11 @@
 import {useEffect, useState} from "react";
 import {createFileRoute, Link} from "@tanstack/react-router";
-import {loadSetup, saveSetup, type Setup, toPlaySearch} from "../setup/setup.js";
+import {fromPlaySearch, loadSetup, saveSetup, type Setup, toPlaySearch} from "../setup/setup.js";
 import {SetupForm} from "../ui/SetupForm.js";
+import {setupSearchSchema} from "./-play-search.js";
 
 export const Route = createFileRoute("/")({
+	validateSearch: setupSearchSchema,
 	component: SetupPage,
 });
 
@@ -12,7 +14,10 @@ export const BOOK_PREFETCH_DELAY_MILLISECONDS = 300;
 
 function SetupPage() {
 	const {store, prefetchBook} = Route.useRouteContext();
-	const [setup, setSetup] = useState(() => loadSetup(store));
+	const search = Route.useSearch();
+	const navigate = Route.useNavigate();
+	// A shared URL beats what this browser remembers; the remembered setup fills in whatever the URL leaves out.
+	const [setup, setSetup] = useState(() => fromPlaySearch(search, loadSetup(store)));
 	// The book is fetched once the rules choice settles, so it is usually loaded before /play mounts.
 	useEffect(() => {
 		const timer = setTimeout(() => {
@@ -25,6 +30,9 @@ function SetupPage() {
 	const change = (next: Setup) => {
 		setSetup(next);
 		saveSetup(store, next);
+		// The address bar always describes the current setup, so it can be copied and shared mid-configuration.
+		// Replacing keeps every tweak from becoming a Back-button stop.
+		void navigate({to: "/", search: toPlaySearch(next), replace: true});
 	};
 	return (
 		<main className="screen">

@@ -13,6 +13,7 @@ import {
 	opponentSchema,
 	type PlaySearch,
 	rulesSchema,
+	type SetupSearch,
 	undoSchema,
 } from "../routes/-play-search.js";
 import type {Store} from "./storage.js";
@@ -73,6 +74,19 @@ export function toPlaySearch({opponent, rules, first, difficulty, annotations, u
 		...search,
 		...(name1 === undefined ? {} : {name1}),
 		...(name2 === undefined ? {} : {name2}),
+	};
+}
+
+/** The setup a shared URL describes: whatever it mentions wins, and `base` fills in the rest. */
+export function fromPlaySearch(search: SetupSearch, base: Setup): Setup {
+	return {
+		opponent: search.opponent ?? base.opponent,
+		rules: search.rules ?? base.rules,
+		first: search.first ?? base.first,
+		difficulty: search.difficulty ?? base.difficulty,
+		annotations: search.annotations ?? base.annotations,
+		undo: search.undo ?? base.undo,
+		names: [search.name1 ?? base.names[0], search.name2 ?? base.names[1]],
 	};
 }
 

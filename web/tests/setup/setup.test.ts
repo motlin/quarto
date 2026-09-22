@@ -1,6 +1,7 @@
 import {describe, expect, it} from "vitest";
 import {
 	DEFAULT_SETUP,
+	fromPlaySearch,
 	loadSetup,
 	saveSetup,
 	type Setup,
@@ -9,6 +10,43 @@ import {
 	toPlaySearch,
 } from "../../src/setup/setup.js";
 import {memoryStore} from "../../src/setup/storage.js";
+
+describe("fromPlaySearch", () => {
+	const remembered: Setup = {
+		opponent: "bot",
+		rules: "squares",
+		first: "bot",
+		difficulty: "medium",
+		annotations: "off",
+		undo: "off",
+		names: ["Ada", ""],
+	};
+
+	it("returns the remembered setup unchanged when the URL carries nothing", () => {
+		expect(fromPlaySearch({}, remembered)).toStrictEqual(remembered);
+	});
+
+	it("lets every URL value override the remembered one and leaves the rest alone", () => {
+		expect(fromPlaySearch({rules: "lines", annotations: "values"}, remembered)).toStrictEqual({
+			...remembered,
+			rules: "lines",
+			annotations: "values",
+		});
+	});
+
+	it("maps name1 and name2 onto the two seats, keeping a remembered name the URL does not mention", () => {
+		expect(fromPlaySearch({opponent: "human", name2: "Grace"}, remembered)).toStrictEqual({
+			...remembered,
+			opponent: "human",
+			names: ["Ada", "Grace"],
+		});
+	});
+
+	it("round-trips through toPlaySearch for a two-person game", () => {
+		const setup: Setup = {...remembered, opponent: "human", names: ["Ada", "Grace"]};
+		expect(fromPlaySearch(toPlaySearch(setup), DEFAULT_SETUP)).toStrictEqual(setup);
+	});
+});
 
 describe("setup persistence", () => {
 	it("starts from the defaults when nothing is stored: a bot game with squares and outcome annotations", () => {
