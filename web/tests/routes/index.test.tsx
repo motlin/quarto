@@ -5,19 +5,23 @@ import {createMemoryHistory, createRouter, RouterProvider} from "@tanstack/react
 import type {Rules} from "../../src/game/rules.js";
 import {routeTree} from "../../src/routeTree.gen.js";
 import {BOOK_PREFETCH_DELAY_MILLISECONDS} from "../../src/routes/index.js";
-import {SETUP_KEY} from "../../src/setup/setup.js";
+import {DEFAULT_SETUP, SETUP_KEY} from "../../src/setup/setup.js";
 import {memoryStore, type Store} from "../../src/setup/storage.js";
 import {ScriptedSolver} from "../../src/solver/scripted.js";
 
-async function renderSetupRoute(store: Store = memoryStore(), prefetchBook: (rules: Rules) => void = () => {}) {
+async function renderSetupRoute(
+	store: Store = memoryStore(),
+	prefetchBook: (rules: Rules) => void = () => {},
+	initialEntry = "/",
+) {
 	const router = createRouter({
 		routeTree,
-		history: createMemoryHistory({initialEntries: ["/"]}),
+		history: createMemoryHistory({initialEntries: [initialEntry]}),
 		context: {store, createSolver: () => new ScriptedSolver(), prefetchBook},
 	});
 	render(<RouterProvider router={router} />);
 	await screen.findByRole("heading", {name: "QuartoBot"});
-	return store;
+	return {store, router};
 }
 
 // The router restores scroll on navigation and jsdom has no scrollTo; a no-op keeps the log clean.
@@ -36,10 +40,53 @@ describe("setup route", () => {
 	});
 
 	it("updates the Play link and remembers the choice after selecting Lines only", async () => {
-		const store = await renderSetupRoute();
+		const {store} = await renderSetupRoute();
 		fireEvent.click(screen.getByRole("radio", {name: "Lines only"}));
 		expect(playHref()).toContain("rules=lines");
 		expect(JSON.parse(store.get(SETUP_KEY) ?? "{}")).toMatchObject({rules: "lines"});
+	});
+
+	it("keeps the address bar in step with the setup so the configuration can be shared", async () => {
+		const {router} = await renderSetupRoute();
+		expect(router.state.location.href).toBe("/");
+		fireEvent.click(screen.getByRole("radio", {name: "Lines only"}));
+		await waitFor(() => {
+			expect(router.state.location.href).toBe(
+				"/?opponent=bot&rules=lines&first=you&difficulty=impossible&annotations=outcome&undo=allowed",
+			);
+		});
+		fireEvent.click(screen.getByRole("radio", {name: "Medium"}));
+		await waitFor(() => {
+			expect(router.state.location.search).toMatchObject({rules: "lines", difficulty: "medium"});
+		});
+		// Each tweak replaces the entry rather than stacking one, so Back still leaves the setup screen.
+		expect(router.history.canGoBack()).toBe(false);
+	});
+
+	it("preselects the setup a shared URL carries over the remembered one", async () => {
+		const remembered = {...DEFAULT_SETUP, rules: "squares", difficulty: "impossible"};
+		const {store} = await renderSetupRoute(
+			memoryStore({[SETUP_KEY]: JSON.stringify(remembered)}),
+			() => {},
+			"/?opponent=human&rules=lines&name1=Ada",
+		);
+		expect(screen.getByRole("radio", {name: "Lines only"}).getAttribute("aria-checked")).toBe("true");
+		expect(screen.getByRole("radio", {name: "Another person"}).getAttribute("aria-checked")).toBe("true");
+		expect(screen.getByPlaceholderText<HTMLInputElement>("Player 1").value).toBe("Ada");
+		expect(playHref()).toBe(
+			"/play?opponent=human&rules=lines&first=you&difficulty=impossible&annotations=outcome&undo=allowed&name1=Ada",
+		);
+		// Landing on a shared link does not overwrite what this browser remembered until something is changed.
+		expect(JSON.parse(store.get(SETUP_KEY) ?? "{}")).toMatchObject({rules: "squares"});
+	});
+
+	it("ignores a URL value it does not understand and keeps the remembered choice", async () => {
+		await renderSetupRoute(
+			memoryStore({[SETUP_KEY]: JSON.stringify({...DEFAULT_SETUP, rules: "lines"})}),
+			() => {},
+			"/?rules=diagonals",
+		);
+		expect(screen.getByRole("radio", {name: "Lines only"}).getAttribute("aria-checked")).toBe("true");
 	});
 
 	it("preselects the remembered setup", async () => {

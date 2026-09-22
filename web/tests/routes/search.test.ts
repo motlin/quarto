@@ -1,5 +1,37 @@
 import {describe, it, expect} from "vitest";
-import {playSearchSchema} from "../../src/routes/-play-search.js";
+import {playSearchSchema, setupSearchSchema} from "../../src/routes/-play-search.js";
+
+describe("setupSearchSchema", () => {
+	it("parses an empty search to no overrides at all", () => {
+		expect(setupSearchSchema.parse({})).toStrictEqual({});
+	});
+
+	it("keeps every explicit value, names included", () => {
+		const search = {
+			opponent: "human",
+			rules: "lines",
+			first: "bot",
+			difficulty: "medium",
+			annotations: "values",
+			undo: "off",
+			name1: "Ada",
+			name2: "Grace",
+		} as const;
+		expect(setupSearchSchema.parse(search)).toStrictEqual(search);
+	});
+
+	it("blanks a value it does not understand instead of failing the setup page", () => {
+		// An explicit undefined, not a missing key: the router merges this over the raw search, so only an
+		// explicit undefined displaces the bad raw value.
+		expect(
+			setupSearchSchema.parse({rules: "diagonals", difficulty: "medium", name1: "A".repeat(17)}),
+		).toStrictEqual({
+			rules: undefined,
+			difficulty: "medium",
+			name1: undefined,
+		});
+	});
+});
 
 describe("playSearchSchema", () => {
 	it("fills in the defaults for an empty search", () => {
