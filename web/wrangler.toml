@@ -13,8 +13,9 @@
 # those are Worker settings, and wrangler rejects them once
 # `pages_build_output_dir` is set.
 
-# Placeholder until the Pages project is created; the name cannot be renamed
-# afterwards, so confirm availability with `wrangler pages project create`.
+# Created 2026-09-22 (`wrangler pages project create quartobot`); Pages project
+# names cannot be renamed. Serves https://quartobot.pages.dev and the custom
+# domain https://quarto.motlin.com.
 name = "quartobot"
 compatibility_date = "2025-01-12"
 pages_build_output_dir = "dist"
