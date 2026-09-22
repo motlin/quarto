@@ -5,7 +5,8 @@ you never place your own piece — your opponent hands it to you. The Bot has so
 every move it makes is the best one there is, and when annotations are on it tells you exactly how
 far you are from winning or losing.
 
-Play it at _(link to come once the site is deployed)_.
+Play it at [quarto.motlin.com](https://quarto.motlin.com/) (or the Cloudflare Pages URL,
+[quartobot.pages.dev](https://quartobot.pages.dev/)).
 
 ## The rules
 
@@ -74,8 +75,12 @@ solver before the first search. `just solver::test` asserts the committed `.qbk`
 
 ## Deploying
 
-The site is static, so it goes to Cloudflare Pages. Deployment details will follow once the web
-module exists.
+The site is static, so it lives on Cloudflare Pages as the project `quartobot`
+(`web/wrangler.toml`), served at <https://quartobot.pages.dev/> and the custom domain
+<https://quarto.motlin.com/>. `just web::deploy` builds the wasm and the web app and uploads
+`web/dist/` to the production deployment with `wrangler pages deploy`; it needs a one-time
+`npx wrangler login` in `web/`. Every deploy also gets its own preview URL
+(`<hash>.quartobot.pages.dev`), printed at the end of the upload.
 
 ## Where it came from
 
