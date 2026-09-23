@@ -42,7 +42,7 @@ coverage:
 # cargo run -- {{ARGS}}
 [group('run')]
 run *ARGS:
-    cargo run -- {{ARGS}}
+    cargo run -- {{ ARGS }}
 
 # Regenerate books/<rules>.bin (depth, lines|squares, threads); depth 4 takes about an hour on 16 cores
 [group('run')]
