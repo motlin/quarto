@@ -66,8 +66,7 @@ function AppPage() {
 			<h2>Annotations</h2>
 			<p>
 				Annotations are chosen in setup, before the game starts, and stay fixed for the whole game: there is no
-				toggle on the play screen. Against the bot most people leave the outcome on. In a two-person game they
-				are usually left off, so that nobody sees the answer unless both players want to.
+				toggle on the play screen.
 			</p>
 
 			<h2>Undo and New game</h2>
