@@ -1,5 +1,5 @@
 /**
- * 📖 The frame around the two help documents: a way back to setup, a way into a game with the remembered setup,
+ * 📖 The frame around the Rules and Using-the-app pages: a way back to setup, a way into a game with the remembered setup,
  * the title, and the prose at a readable measure.
  */
 

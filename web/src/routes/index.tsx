@@ -54,8 +54,8 @@ function SetupPage() {
 						<Link className="btn quiet" to="/rules">
 							Rules
 						</Link>
-						<Link className="btn quiet" to="/how-to-play">
-							How to play
+						<Link className="btn quiet" to="/app">
+							Using the app
 						</Link>
 					</>
 				}

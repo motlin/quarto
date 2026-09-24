@@ -26,9 +26,23 @@ function headings(level: number): string[] {
 }
 
 describe("rules page", () => {
-	it("walks through pieces, board, winning, the 2x2 variant and the draw", async () => {
+	it("walks through pieces, board, turns, winning, the 2x2 variant and the draw", async () => {
 		await renderRoute("/rules", "Rules");
-		expect(headings(2)).toEqual(["The pieces", "The board", "Winning", "Lines and 2×2 squares", "A draw"]);
+		expect(headings(2)).toEqual([
+			"The pieces",
+			"The board",
+			"Taking turns",
+			"Winning",
+			"Lines and 2×2 squares",
+			"A draw",
+		]);
+	});
+
+	it("explains that you choose the piece your opponent places, as three steps", async () => {
+		await renderRoute("/rules", "Rules");
+		expect(screen.getByText(/never place your own piece/).tagName).toBe("P");
+		const steps = screen.getAllByRole("listitem").map((item) => item.querySelector("b")?.textContent);
+		expect(steps).toEqual(["Hand over a piece", "They place it", "They hand you one"]);
 	});
 
 	it("shows all sixteen pieces, each named", async () => {
@@ -64,15 +78,15 @@ describe("rules page", () => {
 		expect(screen.getByRole("link", {name: "Play"}).getAttribute("href")).toBe(
 			"/play?opponent=bot&rules=lines&first=bot&difficulty=impossible&annotations=off&undo=allowed",
 		);
-		expect(screen.getByRole("link", {name: "How to play"}).getAttribute("href")).toBe("/how-to-play");
+		expect(screen.getByRole("link", {name: "Using the app"}).getAttribute("href")).toBe("/app");
 	});
 });
 
-describe("how-to-play page", () => {
-	it("covers turns, the verdict, move values, annotations, the controls and the solver", async () => {
-		await renderRoute("/how-to-play", "How to play");
+describe("app page", () => {
+	it("covers the play screen, the verdict, move values, annotations, the controls and the solver", async () => {
+		await renderRoute("/app", "Using the app");
 		expect(headings(2)).toEqual([
-			"Taking turns",
+			"The play screen",
 			"Reading the verdict",
 			"Move values",
 			"Annotations",
@@ -81,8 +95,14 @@ describe("how-to-play page", () => {
 		]);
 	});
 
+	it("leaves the rules of the game to the Rules page", async () => {
+		await renderRoute("/app", "Using the app");
+		expect(screen.queryByText(/never place your own piece/)).toBeNull();
+		expect(screen.queryByRole("list")).toBeNull();
+	});
+
 	it("shows one example of every verdict and every move-value label", async () => {
-		await renderRoute("/how-to-play", "How to play");
+		await renderRoute("/app", "Using the app");
 		for (const verdict of ["Draw with perfect play", "You win in 3", "Bot wins in 2", "Player 1 wins in 4"]) {
 			expect(screen.getByText(verdict).closest(".verdict")).not.toBeNull();
 		}
@@ -92,7 +112,7 @@ describe("how-to-play page", () => {
 	});
 
 	it("credits the solver it is a port of", async () => {
-		await renderRoute("/how-to-play", "How to play");
+		await renderRoute("/app", "Using the app");
 		expect(screen.getByRole("link", {name: "Quarto-Solver"}).getAttribute("href")).toBe(
 			"https://github.com/indjev99/Quarto-Solver",
 		);

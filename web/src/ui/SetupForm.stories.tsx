@@ -20,7 +20,7 @@ function Interactive({initial}: {initial: Setup}) {
 					<a className="btn quiet" href="#rules">
 						Rules
 					</a>
-					<a className="btn quiet" href="#how-to-play">
+					<a className="btn quiet" href="#app">
 						How to play
 					</a>
 				</>

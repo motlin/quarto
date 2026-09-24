@@ -3,15 +3,9 @@ import {Chip} from "../ui/Hint.js";
 import type {VerdictKind} from "../game/narration.js";
 import {HelpPage} from "./-help-page.js";
 
-export const Route = createFileRoute("/how-to-play")({
-	component: HowToPlayPage,
+export const Route = createFileRoute("/app")({
+	component: AppPage,
 });
-
-const STEPS: readonly {readonly title: string; readonly detail: string}[] = [
-	{title: "Hand over a piece", detail: "Pick any piece from the tray. It goes to your opponent, not to you."},
-	{title: "They place it", detail: "On any empty cell. If it completes a winning line, they win."},
-	{title: "They hand you one", detail: "Now you place, then you choose again. And so on until the board is full."},
-];
 
 const VERDICTS: readonly {readonly kind: VerdictKind; readonly text: string; readonly meaning: string}[] = [
 	{
@@ -36,31 +30,14 @@ const VERDICTS: readonly {readonly kind: VerdictKind; readonly text: string; rea
 	},
 ];
 
-function HowToPlayPage() {
+function AppPage() {
 	return (
-		<HelpPage title="How to play">
-			<h2>Taking turns</h2>
-			<p>
-				You never place your own piece. The player who chooses hands a piece to the opponent, who must place it
-				and then chooses the next piece for you. The first player only chooses; the second makes the first
-				placement.
-			</p>
-			<ol className="flow">
-				{STEPS.map(({title, detail}, index) => (
-					<li key={title}>
-						<span className="step" aria-hidden="true">
-							{index + 1}
-						</span>
-						<div>
-							<b>{title}</b>
-							<p>{detail}</p>
-						</div>
-					</li>
-				))}
-			</ol>
+		<HelpPage title="Using the app">
+			<h2>The play screen</h2>
 			<p>
 				The strip above the board always says what to do next: place the piece in your hand, or choose one from
-				the tray. Only the cells or pieces you can tap are marked.
+				the tray for your opponent. Only the cells or pieces you can tap are marked, and the piece in your hand
+				can be dragged onto a cell instead of tapped.
 			</p>
 
 			<h2>Reading the verdict</h2>
@@ -120,7 +97,8 @@ function HowToPlayPage() {
 				<a href="https://github.com/indjev99/Quarto-Solver">Quarto-Solver</a>.
 			</p>
 			<p>
-				The <Link to="/rules">Rules</Link> page covers the pieces, the board and the two ways to win.
+				The <Link to="/rules">Rules</Link> page covers the pieces, the board, how turns work and the two ways to
+				win.
 			</p>
 		</HelpPage>
 	);

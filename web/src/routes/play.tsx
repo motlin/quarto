@@ -26,7 +26,7 @@ function PlayPage() {
 				</Link>
 			}
 			helpLink={
-				<Link className="btn round" to="/how-to-play" aria-label="How to play">
+				<Link className="btn round" to="/app" aria-label="Using the app">
 					?
 				</Link>
 			}

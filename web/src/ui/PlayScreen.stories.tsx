@@ -38,7 +38,7 @@ function Scripted({setup}: {setup: GameSetup}) {
 				</a>
 			}
 			helpLink={
-				<a className="btn round" href="#how-to-play" aria-label="How to play">
+				<a className="btn round" href="#app" aria-label="Using the app">
 					?
 				</a>
 			}
