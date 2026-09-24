@@ -18,6 +18,15 @@ importers:
 
   .:
     dependencies:
+      '@fontsource-variable/bricolage-grotesque':
+        specifier: 5.3.0
+        version: 5.3.0
+      '@fontsource/ibm-plex-mono':
+        specifier: 5.3.0
+        version: 5.3.0
+      '@fontsource/ibm-plex-sans':
+        specifier: 5.3.0
+        version: 5.3.0
       '@tanstack/react-router':
         specifier: ^1.170.27
         version: 1.170.32(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -701,6 +710,15 @@ packages:
     resolution: {integrity: sha512-UsuvlRhub13cHVnIqGlfE/czp0qxxDobUDm6jBIY9Ojw3n3WC94n6+lww6xUWsiXZLKwSM4T/xvAMWH0l48nHg==}
     cpu: [x64]
     os: [win32]
+
+  '@fontsource-variable/bricolage-grotesque@5.3.0':
+    resolution: {integrity: sha512-TLi9Q4hJjS2UvoTMRSS2nHu6c4R56lAw60NR9QYtVRCHn0XtsFpiEhNffZ8Glsoxu6wEEwLKBP8lb94J52PNBA==}
+
+  '@fontsource/ibm-plex-mono@5.3.0':
+    resolution: {integrity: sha512-eTgnZjZEGk1QtD3ZstF+Vclo2HLAni8YMy34/DxllwZvyz1lR/1RF/xTiAquOBO7MvqBx8D2Ig2WCPMVfdZu7Q==}
+
+  '@fontsource/ibm-plex-sans@5.3.0':
+    resolution: {integrity: sha512-CbE4CbbEEZJX860XyUiRpsksXIQR8Rp2XDva2VO53NJox9tVNtusrysd2x5YkUEY3ErQ66W1IiiQL8/wihhw5w==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -4095,6 +4113,12 @@ snapshots:
 
   '@fallow-cli/win32-x64-msvc@3.22.0':
     optional: true
+
+  '@fontsource-variable/bricolage-grotesque@5.3.0': {}
+
+  '@fontsource/ibm-plex-mono@5.3.0': {}
+
+  '@fontsource/ibm-plex-sans@5.3.0': {}
 
   '@humanfs/core@0.19.2':
     dependencies:

@@ -7,7 +7,17 @@
  * Every file states its phone rule before the 800px media query that widens it, and board.css states
  * .cell.last before .cell.winning so a cell that is both keeps the winning ring. Keep the order when
  * adding a file.
+ *
+ * The fonts are bundled from the fontsource packages rather than fetched from Google, so the page looks
+ * the same offline, behind a filter, and without a third-party request. The weights match what the
+ * stylesheets use; the browser downloads only the latin subset it needs.
  */
+@import "@fontsource-variable/bricolage-grotesque/opsz.css";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
 @import "./tokens.css";
 @import "./layout.css";
 @import "./board.css";
