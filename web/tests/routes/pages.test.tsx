@@ -79,7 +79,11 @@ describe("rules page", () => {
 			"Rules",
 			memoryStore({[SETUP_KEY]: JSON.stringify({opponent: "bot", rules: "lines", names: ["", ""]})}),
 		);
-		expect(screen.getByRole("link", {name: /Back/}).getAttribute("href")).toBe("/");
+		// Back appears above and below the text, so a reader at the end of the page need not scroll up.
+		const backs = screen.getAllByRole("link", {name: /Back/});
+		expect(backs).toHaveLength(2);
+		expect(backs.map((link) => link.getAttribute("href"))).toEqual(["/", "/"]);
+		expect(backs[1]?.compareDocumentPosition(screen.getByRole("article"))).toBe(Node.DOCUMENT_POSITION_PRECEDING);
 		expect(screen.queryByRole("link", {name: "Play"})).toBeNull();
 		expect(screen.queryByRole("button", {name: "Play"})).toBeNull();
 		expect(screen.getByRole("link", {name: "Using the app"}).getAttribute("href")).toBe("/app");
@@ -88,7 +92,9 @@ describe("rules page", () => {
 	it("returns to the game you came from, with its rules intact, when opened from a game", async () => {
 		const game = "/play?opponent=bot&rules=lines&first=you&difficulty=impossible&annotations=off&undo=allowed";
 		const router = await renderRoute("/rules", "Rules", memoryStore(), [game, "/rules"]);
-		fireEvent.click(screen.getByRole("button", {name: /Back/}));
+		const backs = screen.getAllByRole("button", {name: /Back/});
+		expect(backs).toHaveLength(2);
+		fireEvent.click(backs[1]!);
 		await waitFor(() => {
 			expect(router.state.location.pathname).toBe("/play");
 		});
@@ -129,7 +135,10 @@ describe("app page", () => {
 		expect(screen.getByRole("link", {name: "Quarto-Solver"}).getAttribute("href")).toBe(
 			"https://github.com/indjev99/Quarto-Solver",
 		);
-		expect(screen.getByRole("link", {name: /Back/}).getAttribute("href")).toBe("/");
+		expect(screen.getAllByRole("link", {name: /Back/}).map((link) => link.getAttribute("href"))).toEqual([
+			"/",
+			"/",
+		]);
 		expect(screen.queryByRole("link", {name: "Play"})).toBeNull();
 		expect(screen.getByRole("link", {name: "Rules"}).getAttribute("href")).toBe("/rules");
 	});
