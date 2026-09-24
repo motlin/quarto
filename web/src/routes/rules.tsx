@@ -18,9 +18,8 @@ const TRAITS: readonly {readonly label: string; readonly pair: readonly [Piece, 
 ];
 
 const STEPS: readonly {readonly title: string; readonly detail: string}[] = [
-	{title: "Hand over a piece", detail: "Pick any piece not yet on the board. It goes to your opponent, not to you."},
-	{title: "They place it", detail: "On any empty cell. If it completes a winning line, they win."},
-	{title: "They hand you one", detail: "Now you place, then you choose again. And so on until the board is full."},
+	{title: "Place", detail: "Put the piece you were handed on any empty cell."},
+	{title: "Pick", detail: "Choose one of the pieces still off the board and hand it to your opponent."},
 ];
 
 /** Four different dark pieces along the top row; the two bystanders share no trait with the row. */
@@ -34,8 +33,8 @@ function RulesPage() {
 		<HelpPage title="Rules">
 			<h2>The pieces</h2>
 			<p>
-				Quarto is played with sixteen wooden pieces. Each is light or dark, round or square, short or tall, and
-				solid or hollow, and no two pieces are alike: every combination of the four traits appears exactly once.
+				Quarto is played with sixteen pieces. Each is light or dark, round or square, short or tall, and solid
+				or hollow, and no two pieces are alike: every combination of the four traits appears exactly once.
 			</p>
 			<div className="piece-set" aria-label="The sixteen pieces">
 				{ALL_PIECES.map((piece) => (
@@ -63,11 +62,7 @@ function RulesPage() {
 			</p>
 
 			<h2>Taking turns</h2>
-			<p>
-				You never place your own piece. The player who chooses hands a piece to the opponent, who must place it
-				and then chooses the next piece for you. The first player only chooses; the second makes the first
-				placement.
-			</p>
+			<p>The first player picks a piece for the second, who places it. After that every turn is the same:</p>
 			<ol className="flow">
 				{STEPS.map(({title, detail}, index) => (
 					<li key={title}>
@@ -97,20 +92,16 @@ function RulesPage() {
 
 			<h2>Lines and 2×2 squares</h2>
 			<p>
-				The common advanced variant adds one more way to win: any 2×2 square of four pieces sharing a trait also
-				counts. Nine such squares fit on the board, which makes the game far sharper than lines alone, and lines
-				alone tend to end in a draw between careful players. You pick the variant in setup, and it holds for the
-				whole game.
+				With 2×2 squares turned on in setup, any 2×2 block of four pieces sharing a trait also wins. Nine such
+				blocks fit on the board, which makes the game far sharper: with lines alone, careful players tend to
+				draw.
 			</p>
 			<WinDiagram board={TALL_SQUARE} rules="squares" caption="Four tall pieces in a 2×2 square" />
 
 			<h2>A draw</h2>
+			<p>If the sixteenth piece is placed without either player winning, the game is a draw.</p>
 			<p>
-				If the sixteenth piece goes down without completing a winning line, or a winning square when those are
-				on, the game is a draw.
-			</p>
-			<p>
-				<Link to="/app">Using the app</Link> covers the play screen, the solver's verdict and the controls.
+				<Link to="/app">Using the app</Link> covers the solver's verdict and the controls.
 			</p>
 		</HelpPage>
 	);

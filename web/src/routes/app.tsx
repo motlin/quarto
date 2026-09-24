@@ -33,18 +33,9 @@ const VERDICTS: readonly {readonly kind: VerdictKind; readonly text: string; rea
 function AppPage() {
 	return (
 		<HelpPage title="Using the app">
-			<h2>The play screen</h2>
-			<p>
-				The strip above the board always says what to do next: place the piece in your hand, or choose one from
-				the tray for your opponent. Only the cells or pieces you can tap are marked, and the piece in your hand
-				can be dragged onto a cell instead of tapped.
-			</p>
-
 			<h2>Reading the verdict</h2>
 			<p>
 				With annotations on, the verdict beside the lamp states the outcome of the position under perfect play.
-				It comes from a solver that searches every continuation to the end of the game, so it is exact rather
-				than an estimate: a losing readout is a certainty, not a warning.
 			</p>
 			<dl className="verdicts">
 				{VERDICTS.map(({kind, text, meaning}) => (
@@ -60,8 +51,8 @@ function AppPage() {
 				))}
 			</dl>
 			<p>
-				The number counts placements, not turns: "wins in 3" means the winning piece goes down on the third
-				placement from now.
+				The number counts placements, not turns: "wins in 3" means the win comes on the third placement from
+				now.
 			</p>
 
 			<h2>Move values</h2>

@@ -1,6 +1,6 @@
 # QuartoBot
 
-Quarto with a perfect-play opponent. Sixteen wooden pieces, a four-by-four board, and a twist:
+Quarto with a perfect-play opponent. Sixteen pieces, a four-by-four board, and a twist:
 you never place your own piece — your opponent hands it to you. The Bot has solved the game, so
 every move it makes is the best one there is, and when annotations are on it tells you exactly how
 far you are from winning or losing.

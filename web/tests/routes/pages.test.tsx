@@ -38,11 +38,18 @@ describe("rules page", () => {
 		]);
 	});
 
-	it("explains that you choose the piece your opponent places, as three steps", async () => {
+	it("explains a turn as placing the piece you were handed, then picking one for your opponent", async () => {
 		await renderRoute("/rules", "Rules");
-		expect(screen.getByText(/never place your own piece/).tagName).toBe("P");
+		expect(screen.getByText(/The first player picks a piece for the second/).tagName).toBe("P");
 		const steps = screen.getAllByRole("listitem").map((item) => item.querySelector("b")?.textContent);
-		expect(steps).toEqual(["Hand over a piece", "They place it", "They hand you one"]);
+		expect(steps).toEqual(["Place", "Pick"]);
+		expect(screen.getByText(/piece you were handed/)).toBeDefined();
+	});
+
+	it("describes 2×2 squares as a setup option and a draw as the sixteenth piece being placed", async () => {
+		await renderRoute("/rules", "Rules");
+		expect(screen.getByText(/2×2 square/, {selector: "p"}).textContent).toMatch(/^With 2×2 squares turned on/);
+		expect(screen.getByText(/sixteenth piece is placed/)).toBeDefined();
 	});
 
 	it("shows all sixteen pieces, each named", async () => {
@@ -83,10 +90,9 @@ describe("rules page", () => {
 });
 
 describe("app page", () => {
-	it("covers the play screen, the verdict, move values, annotations, the controls and the solver", async () => {
+	it("covers the verdict, move values, annotations, the controls and the solver", async () => {
 		await renderRoute("/app", "Using the app");
 		expect(headings(2)).toEqual([
-			"The play screen",
 			"Reading the verdict",
 			"Move values",
 			"Annotations",
@@ -97,7 +103,7 @@ describe("app page", () => {
 
 	it("leaves the rules of the game to the Rules page", async () => {
 		await renderRoute("/app", "Using the app");
-		expect(screen.queryByText(/never place your own piece/)).toBeNull();
+		expect(screen.queryByText(/piece you were handed/)).toBeNull();
 		expect(screen.queryByRole("list")).toBeNull();
 	});
 

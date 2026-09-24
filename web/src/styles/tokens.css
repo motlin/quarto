@@ -27,6 +27,9 @@
 	--maple-edge: #b8925a;
 	--walnut: #5a3a22;
 	--walnut-edge: #33200f;
+	/* The bore of a hollow piece: well darker than the edge so it reads as a hole on the top face, not a shadow. */
+	--maple-hole: #5c3d1c;
+	--walnut-hole: #0f0804;
 	/* Move-value chips always sit on a dark badge, so they read the same on felt in both themes. */
 	--label-win: #9ce8b8;
 	--label-loss: #ffb0a0;
