@@ -93,8 +93,8 @@ function RulesPage() {
 			<h2>Lines and 2×2 squares</h2>
 			<p>
 				With 2×2 squares turned on in setup, any 2×2 block of four pieces sharing a trait also wins. Nine such
-				blocks fit on the board, which makes the game far sharper: with lines alone, careful players tend to
-				draw.
+				blocks fit on the board, leaving fewer ways to draw. Players find this the harder variant, because
+				holding a draw against the bot is difficult.
 			</p>
 			<WinDiagram board={TALL_SQUARE} rules="squares" caption="Four tall pieces in a 2×2 square" />
 
