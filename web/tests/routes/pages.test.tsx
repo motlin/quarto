@@ -114,6 +114,12 @@ describe("app page", () => {
 		]);
 	});
 
+	it("says annotations can be changed during a game", async () => {
+		await renderRoute("/app", "Using the app");
+		expect(screen.getByText(/changed at any time/).tagName).toBe("P");
+		expect(screen.queryByText(/there is no toggle on the play screen/)).toBeNull();
+	});
+
 	it("leaves the rules of the game to the Rules page", async () => {
 		await renderRoute("/app", "Using the app");
 		expect(screen.queryByText(/piece you were handed/)).toBeNull();

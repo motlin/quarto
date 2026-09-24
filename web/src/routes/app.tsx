@@ -65,8 +65,8 @@ function AppPage() {
 
 			<h2>Annotations</h2>
 			<p>
-				Annotations are chosen in setup, before the game starts, and stay fixed for the whole game: there is no
-				toggle on the play screen.
+				Annotations can be changed at any time, in setup or from the control under the tray during a game.
+				Turning them on mid-game reads the current position; nothing else about the game changes.
 			</p>
 
 			<h2>Undo and New game</h2>

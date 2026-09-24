@@ -127,6 +127,13 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 	const session = useRef<Session | null>(null);
 	/** Bumped by every committed human action; a loop whose token is behind stops at its next check. */
 	const turn = useRef(0);
+	/**
+	 * Annotations can change mid-game from the play screen. The loop reads the level from here, not from a closure,
+	 * so a bot turn already under way asks for the verdict or not according to the level at that moment, and the
+	 * solver session (which only needs the rules) is never restarted over it.
+	 */
+	const hints = useRef(setup.hints);
+	hints.current = setup.hints;
 
 	if (failure !== null) {
 		throw failure;
@@ -140,15 +147,15 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 	const drive = useCallback(
 		async (current: Session, token: number): Promise<void> => {
 			const {solver} = current;
-			const wantVerdict = setup.hints !== "off";
-			const wantValues = setup.hints === "values";
+			const wantVerdict = () => hints.current !== "off";
+			const wantValues = () => hints.current === "values";
 
 			async function botPly(choose: () => Promise<Chosen>): Promise<void> {
 				const before = stateRef.current;
 				setThinking(true);
 				const deadline = performance.now() + engineDelayMilliseconds;
 				const [evaluation, chosen] = await Promise.all([
-					wantVerdict ? solver.request("evaluate") : null,
+					wantVerdict() ? solver.request("evaluate") : null,
 					choose(),
 				]);
 				await sleepUntil(deadline);
@@ -189,7 +196,7 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 				setThinking(true);
 				const [evaluation, values] = await Promise.all([
 					solver.request("evaluate"),
-					wantValues ? solver.request("moveValues") : null,
+					wantValues() ? solver.request("moveValues") : null,
 				]);
 				if (turn.current !== token) {
 					return;
@@ -211,7 +218,7 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 
 			while (turn.current === token && stateRef.current.status === "playing") {
 				if (isHumanToMove(stateRef.current)) {
-					if (wantVerdict) {
+					if (wantVerdict()) {
 						await consultOracle();
 					}
 					break;
@@ -226,7 +233,7 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 				setThinking(false);
 			}
 		},
-		[setup.hints, setup.difficulty, engineDelayMilliseconds, commit],
+		[setup.difficulty, engineDelayMilliseconds, commit],
 	);
 
 	/** Starts a new turn after `prepare` has put the worker in step with the reducer. */
@@ -266,6 +273,26 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 			current.solver.terminate();
 		};
 	}, [createSolver, setup.rules, startTurn]);
+
+	/**
+	 * Annotations turned on (or up to move values) while the human is to move: the position was never asked about,
+	 * or only for its verdict, so ask now. Nothing to do while the bot moves, since its turn ends by consulting the
+	 * oracle at whatever level is current by then; and nothing to do when turned off, the screen just stops showing.
+	 */
+	const mounted = useRef(false);
+	useEffect(() => {
+		if (!mounted.current) {
+			mounted.current = true;
+			return;
+		}
+		const current = stateRef.current;
+		if (setup.hints === "off" || current.status !== "playing" || !isHumanToMove(current) || thinking) {
+			return;
+		}
+		startTurn(async () => Promise.resolve());
+		// `thinking` is deliberately not a dependency: this runs on a change of level, not when a search ends.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [setup.hints, startTurn]);
 
 	/** Applies a human transition and, when it committed plies, mirrors them to the worker and starts a new turn. */
 	const act = useCallback(

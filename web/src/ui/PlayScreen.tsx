@@ -13,7 +13,7 @@ import {shortValue} from "../game/evaluation.js";
 import {describeVerdict, gameTitle, outcomeView, playerName, promptFor, statusLine} from "../game/narration.js";
 import {asPiece, type Piece} from "../game/pieces.js";
 import {winningCells} from "../game/rules.js";
-import type {GameSetup} from "../game/setup.js";
+import type {GameSetup, Hints} from "../game/setup.js";
 import {
 	awaitsPlacement,
 	awaitsSelection,
@@ -31,6 +31,8 @@ import {Board} from "./Board.js";
 import {Hand} from "./Hand.js";
 import {MoveLog} from "./MoveLog.js";
 import {OracleBar} from "./OracleBar.js";
+import {ANNOTATIONS} from "./annotations.js";
+import {Segment} from "./Segment.js";
 import {Tray} from "./Tray.js";
 import {useDragToPlace} from "./useDragToPlace.js";
 import {usePlayGame} from "./usePlayGame.js";
@@ -39,7 +41,7 @@ import {usePlayGame} from "./usePlayGame.js";
 const ENGINE_DELAY_MILLISECONDS = 350;
 
 export interface PlayScreenProps {
-	/** Fixed for the life of the screen; remount to change it. */
+	/** Fixed for the life of the screen except `hints`, which the Annotations control changes mid-game. */
 	readonly setup: GameSetup;
 	/** Called once on mount; must be a stable function, since a new one would start a new solver. */
 	readonly createSolver: () => Solver;
@@ -48,6 +50,8 @@ export interface PlayScreenProps {
 	readonly backLink: ReactNode;
 	/** The round help button. */
 	readonly helpLink: ReactNode;
+	/** The Annotations control was used; the owner answers by rendering again with the new `setup.hints`. */
+	readonly onHintsChange: (hints: Hints) => void;
 }
 
 const NO_CELLS: ReadonlySet<Cell> = new Set();
@@ -67,13 +71,17 @@ function legalPieces(state: GameState): ReadonlySet<Piece> {
 	return new Set(state.remaining);
 }
 
-/** The move-value labels for the moves of one kind: cells while placing, pieces while choosing. */
+/**
+ * The move-value labels for the moves of one kind: cells while placing, pieces while choosing. Values fetched
+ * earlier stay in the state when annotations are turned down, so the level gates them here.
+ */
 function hintLabels<Move extends number>(
 	state: GameState,
+	hints: Hints,
 	placing: boolean,
 	asMove: (move: number) => Move,
 ): ReadonlyMap<Move, string> {
-	if (state.hintValues === null || isToPlace(state) !== placing) {
+	if (hints !== "values" || state.hintValues === null || isToPlace(state) !== placing) {
 		return new Map();
 	}
 	const left = movesLeft(state);
@@ -86,6 +94,7 @@ export function PlayScreen({
 	engineDelayMilliseconds = ENGINE_DELAY_MILLISECONDS,
 	backLink,
 	helpLink,
+	onHintsChange,
 }: PlayScreenProps) {
 	const {state, thinking, select, place, confirm, takeBack, undo, restart} = usePlayGame(
 		setup,
@@ -97,8 +106,8 @@ export function PlayScreen({
 	const prompt = promptFor(setup, state);
 	const verdict =
 		outcomeView(setup, state) ?? (state.verdict === null ? null : describeVerdict(setup, state.verdict));
-	const cellHints = hintLabels(state, true, asCell);
-	const pieceHints = hintLabels(state, false, asPiece);
+	const cellHints = hintLabels(state, setup.hints, true, asCell);
+	const pieceHints = hintLabels(state, setup.hints, false, asPiece);
 	return (
 		<main className="screen play">
 			<nav className="topbar" aria-label="Game">
@@ -155,6 +164,13 @@ export function PlayScreen({
 							New game
 						</button>
 					</div>
+					<Segment
+						label="Annotations"
+						options={ANNOTATIONS}
+						value={setup.hints}
+						onChange={onHintsChange}
+						compact
+					/>
 					<MoveLog moves={state.log} playerName={(player) => playerName(setup, player)} />
 					<div className="play-status">{statusLine(state)}</div>
 				</div>

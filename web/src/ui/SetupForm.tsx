@@ -6,59 +6,13 @@
 
 import {type ReactNode, useId} from "react";
 import {NAME_MAX_LENGTH, type Setup} from "../setup/setup.js";
+import {ANNOTATIONS} from "./annotations.js";
+import {Segment, type SegmentOption} from "./Segment.js";
 
 export interface SetupFormProps {
 	readonly value: Setup;
 	readonly onChange: (setup: Setup) => void;
 	readonly actions: ReactNode;
-}
-
-interface SegmentOption<T extends string> {
-	readonly value: T;
-	readonly label: string;
-	readonly help: string;
-}
-
-interface SegmentProps<T extends string> {
-	readonly label: string;
-	readonly options: readonly SegmentOption<T>[];
-	readonly value: T;
-	readonly onChange: (value: T) => void;
-}
-
-/** A row of radio buttons styled as one control, with the selected option's one-line description underneath. */
-function Segment<T extends string>({label, options, value, onChange}: SegmentProps<T>) {
-	const labelId = useId();
-	const helpId = useId();
-	const selected = options.find((option) => option.value === value);
-	if (selected === undefined) {
-		throw new Error(`${label}: no option for value ${value}`);
-	}
-	return (
-		<div className="field">
-			<span className="field-label" id={labelId}>
-				{label}
-			</span>
-			<div className="segment" role="radiogroup" aria-labelledby={labelId} aria-describedby={helpId}>
-				{options.map((option) => (
-					<button
-						key={option.value}
-						type="button"
-						role="radio"
-						aria-checked={option.value === value}
-						onClick={() => {
-							onChange(option.value);
-						}}
-					>
-						{option.label}
-					</button>
-				))}
-			</div>
-			<p className="field-help" id={helpId}>
-				{selected.help}
-			</p>
-		</div>
-	);
 }
 
 const OPPONENTS: readonly SegmentOption<Setup["opponent"]>[] = [
@@ -91,16 +45,6 @@ const DIFFICULTIES: readonly SegmentOption<Setup["difficulty"]>[] = [
 const FIRST: readonly SegmentOption<Setup["first"]>[] = [
 	{value: "you", label: "You", help: "You hand the bot its first piece."},
 	{value: "bot", label: "Bot", help: "The bot hands you your first piece."},
-];
-
-const ANNOTATIONS: readonly SegmentOption<Setup["annotations"]>[] = [
-	{value: "off", label: "Off", help: "No solver readout. The usual choice for two people."},
-	{value: "outcome", label: "Outcome", help: "Shows who wins with perfect play and in how many moves."},
-	{
-		value: "values",
-		label: "Outcome + move values",
-		help: "Also labels every legal move with its exact outcome. Slower early in the game.",
-	},
 ];
 
 const UNDO: readonly SegmentOption<Setup["undo"]>[] = [
