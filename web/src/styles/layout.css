@@ -36,8 +36,12 @@
 	gap: 14px;
 }
 @media (min-width: 800px) {
+	/*
+	 * The board column stops at the board's own max width (board.css), so the strip above the board is never
+	 * wider than the board and no slack opens up between the board and the tray; the tray takes what is left.
+	 */
 	.table {
-		grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+		grid-template-columns: minmax(0, 560px) minmax(280px, 1fr);
 		gap: 28px;
 		align-items: start;
 	}
