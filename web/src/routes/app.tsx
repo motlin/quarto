@@ -11,22 +11,22 @@ const VERDICTS: readonly {readonly kind: VerdictKind; readonly text: string; rea
 	{
 		kind: "draw",
 		text: "Draw with perfect play",
-		meaning: "Neither side can force a win from here. One slip turns it into a countdown for the other side.",
+		meaning: "Best play from both sides ends in a draw.",
 	},
 	{
 		kind: "win",
 		text: "You win in 3",
-		meaning: "You have a forced win that ends within three more placements, whatever the bot does.",
+		meaning: "You can force a win within three placements, whatever the bot does.",
 	},
 	{
 		kind: "loss",
 		text: "Bot wins in 2",
-		meaning: "The bot has a forced win within two placements and plays perfectly, so it will find it.",
+		meaning: "The bot can force a win within two placements — and it will.",
 	},
 	{
 		kind: "decisive",
 		text: "Player 1 wins in 4",
-		meaning: "In a two-person game the verdict names the player, since nobody at the table is the bot.",
+		meaning: "In a two-person game the verdict names the player.",
 	},
 ];
 
