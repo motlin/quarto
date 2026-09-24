@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import {afterEach, describe, expect, it} from "vitest";
-import {cleanup, fireEvent, render, screen, waitFor} from "@testing-library/react";
+import {cleanup, fireEvent, render, screen, waitFor, within} from "@testing-library/react";
 import {createMemoryHistory, createRouter, RouterProvider} from "@tanstack/react-router";
 import {cellFromName} from "../../src/game/cells.js";
 import type {GameSetup} from "../../src/game/setup.js";
@@ -28,18 +28,44 @@ const twoPeople: GameSetup = {...youFirst, opponent: "human", hints: "off", name
 /** "=" on every third move, then a win in two and a loss in three, so every label shape shows up. */
 const VARIED: Script["moveValue"] = (move, movesLeft) => [0, movesLeft - 1, -(movesLeft - 2)][move % 3] ?? 0;
 
-function renderPlay(setup: GameSetup, script: Partial<Script> = {}): ScriptedSolver {
+interface Mounted {
+	readonly solver: ScriptedSolver;
+	/** Re-renders the same screen (same solver) with a different setup, as the route does when the URL changes. */
+	readonly rerender: (setup: GameSetup) => void;
+	readonly onHintsChange: (hints: GameSetup["hints"]) => void;
+	readonly hintsChanges: GameSetup["hints"][];
+}
+
+function mountPlay(setup: GameSetup, script: Partial<Script> = {}): Mounted {
 	const solver = new ScriptedSolver(script, setup.rules);
-	render(
+	const hintsChanges: GameSetup["hints"][] = [];
+	const onHintsChange = (hints: GameSetup["hints"]) => {
+		hintsChanges.push(hints);
+	};
+	const createSolver = () => solver;
+	const screenFor = (current: GameSetup) => (
 		<PlayScreen
-			setup={setup}
-			createSolver={() => solver}
+			setup={current}
+			createSolver={createSolver}
 			engineDelayMilliseconds={0}
 			backLink={<a href="/">Setup</a>}
 			helpLink={<a href="/app">Using the app</a>}
-		/>,
+			onHintsChange={onHintsChange}
+		/>
 	);
-	return solver;
+	const view = render(screenFor(setup));
+	return {
+		solver,
+		rerender: (current) => {
+			view.rerender(screenFor(current));
+		},
+		onHintsChange,
+		hintsChanges,
+	};
+}
+
+function renderPlay(setup: GameSetup, script: Partial<Script> = {}): ScriptedSolver {
+	return mountPlay(setup, script).solver;
 }
 
 // The router restores scroll on navigation and jsdom has no scrollTo; a no-op keeps the log clean.
@@ -231,6 +257,59 @@ describe("PlayScreen against the bot", () => {
 		expect(document.querySelector(".oracle")).toBeNull();
 		expect(document.querySelectorAll(".hint")).toHaveLength(0);
 		expect(screen.getByText("lines + squares · move 2 of 16")).toBeDefined();
+	});
+
+	it("offers an Annotations control on the play screen that reports the level chosen", async () => {
+		const {hintsChanges} = mountPlay(youFirst);
+		await screen.findByText("Choose a piece for the bot.");
+		const group = screen.getByRole("radiogroup", {name: "Annotations"});
+		expect(within(group).getByRole("radio", {name: "Outcome"}).getAttribute("aria-checked")).toBe("true");
+		fireEvent.click(within(group).getByRole("radio", {name: "Outcome + move values"}));
+		fireEvent.click(within(group).getByRole("radio", {name: "Off"}));
+		expect(hintsChanges).toStrictEqual(["values", "off"]);
+	});
+
+	it("turning annotations on mid-game evaluates the current position without restarting the game", async () => {
+		const {solver, rerender} = mountPlay({...youFirst, hints: "off"}, {bestMoves: [cellFromName("b2"), 7]});
+		await screen.findByText("Choose a piece for the bot.");
+		fireEvent.click(tray("dark square short solid"));
+		await screen.findByText("Place the dark square tall solid piece.");
+		expect(document.querySelector(".oracle")).toBeNull();
+		const before = solver.kinds().length;
+
+		rerender({...youFirst, hints: "outcome"});
+
+		await waitFor(() => {
+			expect(document.querySelector(".oracle .verdict")).not.toBeNull();
+		});
+		// The game carried on: the same solver, one more evaluation, no fresh init, the move still played.
+		expect(solver.kinds().slice(before)).toStrictEqual(["evaluate"]);
+		expect(solver.kinds().filter((kind) => kind === "init")).toHaveLength(1);
+		// The status line now also reports the evaluation's cost, so match its head.
+		expect(screen.getByText(/^lines \+ squares · move 2 of 16/)).toBeDefined();
+		expect(screen.getByText("Place the dark square tall solid piece.")).toBeDefined();
+	});
+
+	it("turning annotations off hides the verdict and the move values and asks the solver nothing", async () => {
+		const {solver, rerender} = mountPlay({...youFirst, hints: "values"}, {moveValue: VARIED});
+		await screen.findByText("Choose a piece for the bot.");
+		await waitFor(() => {
+			expect(document.querySelectorAll(".hint").length).toBeGreaterThan(0);
+		});
+		const before = solver.kinds().length;
+
+		rerender({...youFirst, hints: "off"});
+
+		expect(document.querySelector(".oracle")).toBeNull();
+		expect(document.querySelectorAll(".hint")).toHaveLength(0);
+		expect(solver.kinds()).toHaveLength(before);
+
+		// Back to outcome only: the verdict returns, the per-move labels do not.
+		rerender({...youFirst, hints: "outcome"});
+		await waitFor(() => {
+			expect(document.querySelector(".oracle .verdict")).not.toBeNull();
+		});
+		expect(document.querySelectorAll(".hint")).toHaveLength(0);
 	});
 
 	it("starts over with the same setup on New game", async () => {
@@ -559,5 +638,34 @@ describe("/play route", () => {
 		expect(screen.getByRole("link", {name: /Setup/}).getAttribute("href")).toBe("/");
 		expect(screen.getByRole("link", {name: "Using the app"}).getAttribute("href")).toBe("/app");
 		expect(screen.getByText("lines only · move 1 of 16")).toBeDefined();
+	});
+
+	it("writes an annotations change to the URL without starting a new game", async () => {
+		const solver = new ScriptedSolver({}, "lines");
+		const router = createRouter({
+			routeTree,
+			history: createMemoryHistory({
+				initialEntries: ["/play?opponent=human&rules=lines&annotations=off&name1=Ada&name2=Grace"],
+			}),
+			context: {store: memoryStore(), createSolver: () => solver, prefetchBook: () => {}},
+		});
+		render(<RouterProvider router={router} />);
+		await screen.findByText("Choose a piece for Grace.");
+		fireEvent.click(tray("dark square short solid"));
+		await screen.findByText("Place the dark square short solid piece.");
+
+		const group = screen.getByRole("radiogroup", {name: "Annotations"});
+		fireEvent.click(within(group).getByRole("radio", {name: "Outcome"}));
+
+		await waitFor(() => {
+			expect(router.state.location.search).toMatchObject({annotations: "outcome", name1: "Ada"});
+		});
+		// Replaced, not pushed: Back still leaves the game rather than stepping through annotation changes.
+		expect(router.history.canGoBack()).toBe(false);
+		await waitFor(() => {
+			expect(document.querySelector(".oracle .verdict")).not.toBeNull();
+		});
+		expect(screen.getByText("Place the dark square short solid piece.")).toBeDefined();
+		expect(solver.kinds().filter((kind) => kind === "init")).toHaveLength(1);
 	});
 });

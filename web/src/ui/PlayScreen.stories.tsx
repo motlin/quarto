@@ -1,5 +1,5 @@
 import type {Meta, StoryObj} from "@storybook/react-vite";
-import {useCallback} from "react";
+import {useCallback, useState} from "react";
 import {userEvent, within} from "storybook/test";
 import {cellFromName} from "../game/cells.js";
 import type {GameSetup} from "../game/setup.js";
@@ -28,10 +28,13 @@ const script: Partial<Script> = {
 /** Hands the screen a scripted solver so the story plays without the worker, and stands in for the router's links. */
 function Scripted({setup}: {setup: GameSetup}) {
 	const createSolver = useCallback(() => new ScriptedSolver(script, setup.rules), [setup.rules]);
+	// The Annotations control works in the story too: the level lives here, as it lives in the URL on the site.
+	const [hints, setHints] = useState(setup.hints);
 	return (
 		<PlayScreen
-			setup={setup}
+			setup={{...setup, hints}}
 			createSolver={createSolver}
+			onHintsChange={setHints}
 			backLink={
 				<a className="btn quiet" href="#setup">
 					<span aria-hidden="true">‹</span> Setup
