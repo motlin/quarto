@@ -1,21 +1,22 @@
 // @vitest-environment jsdom
 import {describe, expect, it} from "vitest";
-import {render, screen} from "@testing-library/react";
+import {fireEvent, render, screen, waitFor} from "@testing-library/react";
 import {createMemoryHistory, createRouter, RouterProvider} from "@tanstack/react-router";
 import {routeTree} from "../../src/routeTree.gen.js";
 import {SETUP_KEY} from "../../src/setup/setup.js";
 import {memoryStore, type Store} from "../../src/setup/storage.js";
 import {ScriptedSolver} from "../../src/solver/scripted.js";
 
-async function renderRoute(path: string, heading: string, store: Store = memoryStore()) {
+/** Renders the last of `entries` (default: just `path`), so a page can be opened directly or from another page. */
+async function renderRoute(path: string, heading: string, store: Store = memoryStore(), entries = [path]) {
 	const router = createRouter({
 		routeTree,
-		history: createMemoryHistory({initialEntries: [path]}),
+		history: createMemoryHistory({initialEntries: entries, initialIndex: entries.length - 1}),
 		context: {store, createSolver: () => new ScriptedSolver(), prefetchBook: () => {}},
 	});
-	const view = render(<RouterProvider router={router} />);
+	render(<RouterProvider router={router} />);
 	await screen.findByRole("heading", {level: 1, name: heading});
-	return view;
+	return router;
 }
 
 // The router restores scroll on navigation and jsdom has no scrollTo; a no-op keeps the log clean.
@@ -67,25 +68,31 @@ describe("rules page", () => {
 		expect(screen.getByRole("img", {name: "Four tall pieces in a 2×2 square"})).toBeDefined();
 	});
 
-	it("links back to setup and to a game with the remembered setup", async () => {
+	it("says a win is called over a real table", async () => {
+		await renderRoute("/rules", "Rules");
+		expect(screen.getByText(/Over a real table/)).toBeDefined();
+	});
+
+	it("offers only Back, which leads to setup when the page was opened directly", async () => {
 		await renderRoute(
 			"/rules",
 			"Rules",
-			memoryStore({
-				[SETUP_KEY]: JSON.stringify({
-					opponent: "bot",
-					rules: "lines",
-					first: "bot",
-					annotations: "off",
-					names: ["", ""],
-				}),
-			}),
+			memoryStore({[SETUP_KEY]: JSON.stringify({opponent: "bot", rules: "lines", names: ["", ""]})}),
 		);
-		expect(screen.getByRole("link", {name: "Setup"}).getAttribute("href")).toBe("/");
-		expect(screen.getByRole("link", {name: "Play"}).getAttribute("href")).toBe(
-			"/play?opponent=bot&rules=lines&first=bot&difficulty=impossible&annotations=off&undo=allowed",
-		);
+		expect(screen.getByRole("link", {name: /Back/}).getAttribute("href")).toBe("/");
+		expect(screen.queryByRole("link", {name: "Play"})).toBeNull();
+		expect(screen.queryByRole("button", {name: "Play"})).toBeNull();
 		expect(screen.getByRole("link", {name: "Using the app"}).getAttribute("href")).toBe("/app");
+	});
+
+	it("returns to the game you came from, with its rules intact, when opened from a game", async () => {
+		const game = "/play?opponent=bot&rules=lines&first=you&difficulty=impossible&annotations=off&undo=allowed";
+		const router = await renderRoute("/rules", "Rules", memoryStore(), [game, "/rules"]);
+		fireEvent.click(screen.getByRole("button", {name: /Back/}));
+		await waitFor(() => {
+			expect(router.state.location.pathname).toBe("/play");
+		});
+		expect(router.state.location.search).toMatchObject({rules: "lines", annotations: "off"});
 	});
 });
 
@@ -122,10 +129,8 @@ describe("app page", () => {
 		expect(screen.getByRole("link", {name: "Quarto-Solver"}).getAttribute("href")).toBe(
 			"https://github.com/indjev99/Quarto-Solver",
 		);
-		expect(screen.getByRole("link", {name: "Setup"}).getAttribute("href")).toBe("/");
-		expect(screen.getByRole("link", {name: "Play"}).getAttribute("href")).toBe(
-			"/play?opponent=bot&rules=squares&first=you&difficulty=impossible&annotations=outcome&undo=allowed",
-		);
+		expect(screen.getByRole("link", {name: /Back/}).getAttribute("href")).toBe("/");
+		expect(screen.queryByRole("link", {name: "Play"})).toBeNull();
 		expect(screen.getByRole("link", {name: "Rules"}).getAttribute("href")).toBe("/rules");
 	});
 });
