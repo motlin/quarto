@@ -85,9 +85,9 @@ function RulesPage() {
 			</p>
 			<WinDiagram board={DARK_ROW} rules="lines" caption="Four different dark pieces in a row" />
 			<p>
-				Over the real table a player claims the win by calling <i>Quarto!</i> before the next piece is chosen,
-				and a line nobody calls stays in play. Here the app watches the board and ends the game the moment a
-				winning line appears, so there is nothing to call.
+				Over a real table a player claims the win by calling <i>Quarto!</i> before the next piece is chosen, and
+				a line nobody calls stays in play. Here the app watches the board and ends the game the moment a winning
+				line appears, so there is nothing to call.
 			</p>
 
 			<h2>Lines and 2×2 squares</h2>
