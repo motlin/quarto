@@ -21,12 +21,13 @@ const ROUND_RY = 4.5;
 interface Wood {
 	readonly fill: string;
 	readonly edge: string;
+	readonly hole: string;
 }
 
 function woodOf(piece: Piece): Wood {
 	return isDark(piece)
-		? {fill: "var(--walnut)", edge: "var(--walnut-edge)"}
-		: {fill: "var(--maple)", edge: "var(--maple-edge)"};
+		? {fill: "var(--walnut)", edge: "var(--walnut-edge)", hole: "var(--walnut-hole)"}
+		: {fill: "var(--maple)", edge: "var(--maple-edge)", hole: "var(--maple-hole)"};
 }
 
 function SquareBody({top, wood}: {top: number; wood: Wood}) {
@@ -105,11 +106,23 @@ function Groove({square, wood}: {square: boolean; wood: Wood}) {
 	);
 }
 
+/** The bore is a good deal darker than the wood, and the far lip catches the light so the hole reads as depth. */
 function Hole({square, top, wood}: {square: boolean; top: number; wood: Wood}) {
 	if (square) {
-		return <rect data-part="hole" x={13} y={top + 2} width={14} height={5} rx={1.5} fill={wood.edge} />;
+		return (
+			<>
+				<rect x={12} y={top + 2.4} width={16} height={6} rx={1.5} fill="#fff" fillOpacity={0.3} />
+				<rect data-part="hole" x={12} y={top + 1.6} width={16} height={6} rx={1.5} fill={wood.hole} />
+			</>
+		);
 	}
-	return <ellipse data-part="hole" cx={CENTER} cy={top + ROUND_RY} rx={7} ry={2.2} fill={wood.edge} />;
+	const cy = top + ROUND_RY;
+	return (
+		<>
+			<ellipse cx={CENTER} cy={cy + 0.8} rx={8} ry={2.7} fill="#fff" fillOpacity={0.3} />
+			<ellipse data-part="hole" cx={CENTER} cy={cy} rx={8} ry={2.7} fill={wood.hole} />
+		</>
+	);
 }
 
 /** The size of the drawing every piece is made in, for anything that places a PieceShape inside a larger SVG. */

@@ -79,4 +79,11 @@ describe("PieceGlyph", () => {
 		expect(solid.querySelector("[data-part='hole']")).toBeNull();
 		expect(hollow.querySelector("[data-part='hole']")).not.toBeNull();
 	});
+
+	it("bores the hole in a colour darker than the wood's edge so it stands out on both woods", () => {
+		const {container: light} = render(<PieceGlyph piece={8} />);
+		const {container: dark} = render(<PieceGlyph piece={9} />);
+		expect(light.querySelector("[data-part='hole']")?.getAttribute("fill")).toBe("var(--maple-hole)");
+		expect(dark.querySelector("[data-part='hole']")?.getAttribute("fill")).toBe("var(--walnut-hole)");
+	});
 });
