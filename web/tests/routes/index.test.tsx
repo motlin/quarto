@@ -140,9 +140,9 @@ describe("setup route", () => {
 		});
 	});
 
-	it("links to the rules and how-to-play pages", async () => {
+	it("links to the rules and app pages", async () => {
 		await renderSetupRoute();
 		expect(screen.getByRole("link", {name: "Rules"}).getAttribute("href")).toBe("/rules");
-		expect(screen.getByRole("link", {name: "How to play"}).getAttribute("href")).toBe("/how-to-play");
+		expect(screen.getByRole("link", {name: "Using the app"}).getAttribute("href")).toBe("/app");
 	});
 });

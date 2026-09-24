@@ -17,6 +17,12 @@ const TRAITS: readonly {readonly label: string; readonly pair: readonly [Piece, 
 	{label: "solid or hollow", pair: [0, 8]},
 ];
 
+const STEPS: readonly {readonly title: string; readonly detail: string}[] = [
+	{title: "Hand over a piece", detail: "Pick any piece not yet on the board. It goes to your opponent, not to you."},
+	{title: "They place it", detail: "On any empty cell. If it completes a winning line, they win."},
+	{title: "They hand you one", detail: "Now you place, then you choose again. And so on until the board is full."},
+];
+
 /** Four different dark pieces along the top row; the two bystanders share no trait with the row. */
 const DARK_ROW = boardWith({a1: 1, b1: 3, c1: 5, d1: 15, c2: 6, b3: 8});
 
@@ -56,6 +62,26 @@ function RulesPage() {
 				board, and a piece never moves once it has been placed.
 			</p>
 
+			<h2>Taking turns</h2>
+			<p>
+				You never place your own piece. The player who chooses hands a piece to the opponent, who must place it
+				and then chooses the next piece for you. The first player only chooses; the second makes the first
+				placement.
+			</p>
+			<ol className="flow">
+				{STEPS.map(({title, detail}, index) => (
+					<li key={title}>
+						<span className="step" aria-hidden="true">
+							{index + 1}
+						</span>
+						<div>
+							<b>{title}</b>
+							<p>{detail}</p>
+						</div>
+					</li>
+				))}
+			</ol>
+
 			<h2>Winning</h2>
 			<p>
 				Whoever places the fourth piece of a row, column or diagonal in which all four pieces share at least one
@@ -84,8 +110,7 @@ function RulesPage() {
 				on, the game is a draw.
 			</p>
 			<p>
-				<Link to="/how-to-play">How to play</Link> covers taking turns on this device and reading the solver's
-				verdict.
+				<Link to="/app">Using the app</Link> covers the play screen, the solver's verdict and the controls.
 			</p>
 		</HelpPage>
 	);

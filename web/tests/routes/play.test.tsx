@@ -36,7 +36,7 @@ function renderPlay(setup: GameSetup, script: Partial<Script> = {}): ScriptedSol
 			createSolver={() => solver}
 			engineDelayMilliseconds={0}
 			backLink={<a href="/">Setup</a>}
-			helpLink={<a href="/how-to-play">How to play</a>}
+			helpLink={<a href="/app">Using the app</a>}
 		/>,
 	);
 	return solver;
@@ -557,7 +557,7 @@ describe("/play route", () => {
 		await screen.findByRole("heading", {level: 1, name: "Ada vs Grace"});
 		await screen.findByText("Choose a piece for Grace.");
 		expect(screen.getByRole("link", {name: /Setup/}).getAttribute("href")).toBe("/");
-		expect(screen.getByRole("link", {name: "How to play"}).getAttribute("href")).toBe("/how-to-play");
+		expect(screen.getByRole("link", {name: "Using the app"}).getAttribute("href")).toBe("/app");
 		expect(screen.getByText("lines only · move 1 of 16")).toBeDefined();
 	});
 });
