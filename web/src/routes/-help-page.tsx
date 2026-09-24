@@ -43,6 +43,10 @@ export function HelpPage({title, children}: {title: string; children: ReactNode}
 				<h1>{title}</h1>
 			</header>
 			<article className="prose">{children}</article>
+			{/* Repeated below the text so a reader at the end of the page need not scroll back up. */}
+			<footer className="help-foot">
+				<BackControl />
+			</footer>
 		</main>
 	);
 }

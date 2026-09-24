@@ -54,7 +54,10 @@
 	min-height: 40px;
 	margin-bottom: 12px;
 }
-/* A help page's top bar has no title in it: just the way back and the way into a game, pushed apart. */
+/* A help page's top bar holds only the way back; the same control repeats under the text. */
+.help-foot {
+	margin-top: 28px;
+}
 .topbar.help {
 	justify-content: space-between;
 }

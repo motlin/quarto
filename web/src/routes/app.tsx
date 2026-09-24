@@ -21,7 +21,7 @@ const VERDICTS: readonly {readonly kind: VerdictKind; readonly text: string; rea
 	{
 		kind: "loss",
 		text: "Bot wins in 2",
-		meaning: "The bot can force a win within two placements — and it will.",
+		meaning: "The bot can force a win within two placements, and it will.",
 	},
 	{
 		kind: "decisive",
@@ -59,8 +59,8 @@ function AppPage() {
 			<p>
 				With move values on, every legal choice is labelled from the point of view of the player about to move:{" "}
 				<Chip label="W3" /> wins in 3, <Chip label="L2" /> loses in 2 against best play, and <Chip label="=" />{" "}
-				holds the draw. When you are placing, the labels sit on the empty cells; when you are choosing, they sit
-				on the pieces in the tray.
+				holds the draw. When you are placing, the empty cells are labelled; when you are choosing, the pieces in
+				the tray are.
 			</p>
 
 			<h2>Annotations</h2>
