@@ -1,0 +1,97 @@
+# Publishes the site to Cloudflare Pages on push to main.
+#
+# The whole deployable is the static build in web/dist/: QuartoBot runs the solver as wasm in the browser and
+# keeps nothing on a server, so there is no Worker here and nothing to bind. `wrangler pages deploy` reads the
+# directory named by `pages_build_output_dir` in web/wrangler.toml and uploads it.
+#
+# Checks are duplicated from merge-group.yml because branch protection is unavailable on this plan.
+
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+permissions: {}
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
+jobs:
+  build:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          cache: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            solver/target
+          key: cargo-${{ hashFiles('solver/Cargo.lock') }}
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-${{ hashFiles('web/pnpm-lock.yaml') }}
+
+      - run: just solver::wasm
+      - run: just web::check
+      - run: just web::test
+      - run: just web::build
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist
+          path: web/dist
+
+  deploy:
+    needs: build
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://quartobot.pages.dev
+    steps:
+      # web/wrangler.toml comes from the repo; web/dist/ is what the build job just made.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Installing wrangler here is what stops cloudflare/wrangler-action installing its own:
+      # package.json names its versions through pnpm's catalog:, which npm cannot read at all, so
+      # the action's `npm i wrangler@4` ends in EUNSUPPORTEDPROTOCOL. Installing first also pins
+      # wrangler to the version in pnpm-lock.yaml rather than whatever @4 is today.
+      # Nothing is cached in a job that holds the Cloudflare credentials: a poisoned cache would be
+      # a poisoned deploy. The build job above may cache, because it publishes nothing.
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          cache: false
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - run: just web::install
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist
+          path: web/dist
+
+      # `--branch main` is what makes this the production deployment rather than a preview: Pages
+      # sorts one from the other by the branch name it is told, not by the command.
+      - name: Deploy to Pages
+        run: cd web && node_modules/.bin/wrangler pages deploy --branch main
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

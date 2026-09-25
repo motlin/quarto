@@ -60,9 +60,9 @@ pre-commit: install
 audit-just-options:
     python3 ../scripts/audit-just-options.py
 
-# Build the solver wasm package into src/solver/pkg
+# Build the solver wasm package into src/solver/pkg (CI reuses the one its wasm job built)
 wasm:
-    just --justfile ../solver/justfile wasm
+    {{ if ci != "" { if path_exists(module_directory() / "src/solver/pkg/quarto_solver_bg.wasm") == "true" { "echo Reusing the prebuilt solver wasm in src/solver/pkg" } else { "just --justfile ../solver/justfile wasm" } } else { "just --justfile ../solver/justfile wasm" } }}
 
 # Upload dist/ to the production Cloudflare Pages deployment
 deploy: build

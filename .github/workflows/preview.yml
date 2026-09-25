@@ -1,0 +1,129 @@
+# Publishes a pull request preview to Cloudflare Pages and puts its URL on the pull request.
+#
+# A Pages preview is just a deployment made under a branch name that is not the production one, so
+# `--branch pr-N` is the whole mechanism: it is served at https://pr-N.quartobot.pages.dev and it
+# is replaced, not accumulated, each time the pull request is pushed to.
+#
+# There is no cleanup workflow to go with this. A Pages preview holds no state, nothing a later pull
+# request could reach, so an old alias left standing costs nothing, and Pages retires it with the branch.
+#
+# Checks are duplicated from merge-group.yml because branch protection is unavailable on this plan.
+
+name: Deploy Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions: {}
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    env:
+      CI: "true"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          cache: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            solver/target
+          key: cargo-${{ hashFiles('solver/Cargo.lock') }}
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-${{ hashFiles('web/pnpm-lock.yaml') }}
+
+      - run: just solver::wasm
+      - run: just web::check
+      - run: just web::test
+      - run: just web::build
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist
+          path: web/dist
+
+  preview:
+    # Forks and dependabot cannot read the Cloudflare secrets, so there is nothing to deploy with.
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
+    needs: build
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    environment:
+      name: preview-${{ github.event.pull_request.number }}
+      url: https://pr-${{ github.event.pull_request.number }}.quartobot.pages.dev
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Installed here rather than by cloudflare/wrangler-action, and uncached because this job
+      # holds the Cloudflare credentials; see deploy.yml for both reasons in full.
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          cache: false
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - run: just web::install
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist
+          path: web/dist
+
+      - name: Deploy this pull request's preview
+        run: cd web && node_modules/.bin/wrangler pages deploy --branch pr-${{ github.event.pull_request.number }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Say where the preview is
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const number = context.issue.number;
+            // A Pages deployment made under a branch name is served at <branch>.<project>.pages.dev.
+            const url = `https://pr-${number}.quartobot.pages.dev`;
+            const body = `Preview: ${url}`;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: number,
+            });
+            const mine = comments.find(
+              (comment) => comment.user.type === "Bot" && comment.body.startsWith("Preview: "),
+            );
+
+            if (mine) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: mine.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: number,
+                body,
+              });
+            }
