@@ -68,10 +68,11 @@ wasm:
 deploy: build
     vp run deploy
 
-# Run all pre-commit checks
+# Run all pre-commit checks; the oxfmt-web hook is skipped because check already formats web/
 [arg("quick", long, value="true", help="Skip tests")]
-verify quick="": check build fallow pre-commit
-    {{ if quick != "true" { "just test" } else { "true" } }}
+verify quick="": check build fallow
+    SKIP=oxfmt-web pre-commit run --all-files
+    {{ if quick != "true" { "vp run --cache test:run" } else { "true" } }}
     @echo "All pre-commit checks passed!"
 
 # Deprecated alias for `verify`

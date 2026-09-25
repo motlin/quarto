@@ -30,9 +30,9 @@ fmt:
 deny:
     cargo deny check
 
-# build + test + clippy + fmt + deny + coverage (mirrors the CI gate)
+# build + test + clippy + fmt + deny (coverage reruns the tests instrumented, so only CI's solver-coverage job runs it)
 [group('build')]
-check: build test clippy fmt deny coverage
+check: build test clippy fmt deny
 
 # cargo llvm-cov (coverage; writes lcov.info in CI)
 [group('build')]
@@ -58,13 +58,24 @@ books:
     cargo run --release --bin book -- --encode books/squares.bin --rules squares --out ../web/src/solver/books/squares.qbk
     cargo run --release --bin book -- --encode books/lines.bin --rules lines --out ../web/src/solver/books/lines.qbk
 
-# Lint the bindings, wasm-pack into ../web/src/solver/pkg, print the .wasm size, and smoke test it from node
+# Lint the bindings, wasm-pack into ../web/src/solver/pkg, print the .wasm size, and smoke test it from node; skipped while nothing it reads or writes changed since the last pass
 [group('wasm')]
 wasm:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    stamp=target/wasm-inputs.sha256
+    if [[ -f ../web/src/solver/pkg/quarto_solver_bg.wasm && -f $stamp && "$(< "$stamp")" == "$(../scripts/wasm-inputs-hash.sh)" ]]; then
+        echo "Solver wasm is up to date in ../web/src/solver/pkg"
+        exit 0
+    fi
+    set -x
     cargo clippy --lib --target wasm32-unknown-unknown --features wasm -- -D warnings
     wasm-pack build --target web --release --out-dir ../web/src/solver/pkg --out-name quarto_solver -- --features wasm
-    @wc -c < ../web/src/solver/pkg/quarto_solver_bg.wasm | awk '{ printf "quarto_solver_bg.wasm: %.1f KB\n", $1 / 1024 }'
+    { set +x; } 2>/dev/null
+    wc -c < ../web/src/solver/pkg/quarto_solver_bg.wasm | awk '{ printf "quarto_solver_bg.wasm: %.1f KB\n", $1 / 1024 }'
     node ../scripts/wasm-smoke.mjs
+    mkdir -p target
+    ../scripts/wasm-inputs-hash.sh > "$stamp"
 
 # Regenerate depth 2 of both books and compare every record to the committed books (about half an hour)
 [group('test')]

@@ -37,7 +37,7 @@ If all sixteen pieces are placed without a line, the game is a draw.
 ```bash
 just install     # install the toolchain with mise
 just             # list every recipe, including the solver:: and web:: modules
-just verify      # everything CI runs
+just verify      # everything CI runs except coverage
 ```
 
 Tool versions are pinned in `.mise/config.toml`; nothing else needs installing by hand.
