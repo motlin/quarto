@@ -25,7 +25,7 @@
 		"prepare": "VITE_GIT_HOOKS=0 vp config"
 	},
 	"dependencies": {
-		"@tanstack/react-router": "^1.170.27",
+		"@tanstack/react-router": "^1.170.38",
 		"agentation": "^3.0.2",
 		"react": "^19.2.8",
 		"react-dom": "^19.2.8",
@@ -38,7 +38,7 @@
 		"@storybook/addon-onboarding": "^10.5.7",
 		"@storybook/addon-vitest": "^10.5.7",
 		"@storybook/react-vite": "^10.5.7",
-		"@tanstack/router-plugin": "^1.168.30",
+		"@tanstack/router-plugin": "^1.168.40",
 		"@testing-library/react": "^16.3.2",
 		"@types/jsdom": "^30.0.0",
 		"@types/node": "^26.2.0",
