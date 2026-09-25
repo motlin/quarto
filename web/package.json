@@ -12,7 +12,6 @@
 		"build": "vp build",
 		"oxlint": "vp lint . --fix",
 		"oxlint:ci": "vp lint . --format github",
-		"fmt": "vp fmt",
 		"fmt:ci": "vp fmt --check",
 		"fallow": "fallow fix --yes",
 		"fallow:ci": "fallow dead-code",
@@ -59,7 +58,7 @@
 		"vite": "catalog:",
 		"vite-plus": "catalog:",
 		"vitest": "catalog:",
-		"wrangler": "^4.122.0"
+		"wrangler": "^4.138.0"
 	},
 	"packageManager": "pnpm@12.4.1"
 }

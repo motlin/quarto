@@ -14,9 +14,20 @@ peerDependencyRules:
   allowAny:
     - vite
     - vitest
+  # Upstream ranges that lag the toolchain; each pair runs fine together, so the
+  # mismatch is accepted rather than printed on every resolving install.
+  # vite-plus pins @vitest/browser-preview 4 while the catalog overrides vitest to 5,
+  # typescript-eslint (via eslint-plugin-storybook) has not widened its range to
+  # TypeScript 7, and storybook's vite-plus range stops at 0.2.
   allowedVersions:
     vite: "*"
     vitest: "*"
+    "vitest>@vitest/browser-preview": "4"
+    "@typescript-eslint/utils>typescript": "7"
+    "@typescript-eslint/typescript-estree>typescript": "7"
+    "@typescript-eslint/project-service>typescript": "7"
+    "@typescript-eslint/tsconfig-utils>typescript": "7"
+    "storybook>vite-plus": "0.3"
 allowBuilds:
   "@swc/core": true
   esbuild: true
