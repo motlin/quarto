@@ -58,10 +58,7 @@ fn compute_rot_masks() -> Box<RotMasks> {
 		}
 	}
 
-	let rows: Vec<[u16; NUM_CELL_MASKS]> = flat
-		.chunks_exact(NUM_CELL_MASKS)
-		.map(|row| row.try_into().expect("chunk has NUM_CELL_MASKS entries"))
-		.collect();
+	let rows: Vec<[u16; NUM_CELL_MASKS]> = flat.as_chunks::<NUM_CELL_MASKS>().0.to_vec();
 	rows.into_boxed_slice()
 		.try_into()
 		.expect("exactly NUM_ROTS rows")

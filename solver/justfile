@@ -44,7 +44,10 @@ coverage:
 run *ARGS:
     cargo run -- {{ ARGS }}
 
-# Regenerate books/<rules>.bin (depth, lines|squares, threads); depth 4 takes about an hour on 16 cores
+# Regenerate books/<rules>.bin; depth 4 takes about an hour on 16 cores
+[arg("depth", long, help="Book depth in placements")]
+[arg("rules", long, help="Rule variant: lines or squares")]
+[arg("threads", long, help="Worker threads")]
 [group('run')]
 book depth="4" rules="squares" threads=num_cpus():
     cargo run --release --bin book -- --depth {{ depth }} --rules {{ rules }} --threads {{ threads }} --out books/{{ rules }}.bin
@@ -68,7 +71,10 @@ wasm:
 book-check:
     cargo nextest run --run-ignored only --no-fail-fast book_check
 
-# Diff play transcripts of random games against the C++ reference (games, plies skipped, lines|squares)
+# Diff play transcripts of random games against the C++ reference
+[arg("skip", long, help="Random plies played before comparing")]
+[arg("games", long, help="Number of random games")]
+[arg("rules", long, help="Rule variant: lines or squares")]
 [group('test')]
 differential games="20" skip="8" rules="squares":
     ../scripts/differential.sh {{ games }} {{ skip }} {{ rules }}

@@ -28,20 +28,14 @@ pub struct BookEntry {
 }
 
 impl BookEntry {
-	/// Decode one [`RECORD_SIZE`]-byte record.
-	///
-	/// # Panics
-	///
-	/// Panics when `record` is shorter than [`RECORD_SIZE`].
+	/// Decode one record as stored in a book file.
 	#[must_use]
-	pub fn from_record(record: &[u8]) -> Self {
-		let key_low = u64::from_le_bytes(record[0..8].try_into().expect("8 key bytes"));
-		let cells_taken = u16::from_le_bytes(record[8..10].try_into().expect("2 cell bytes"));
-		let value = i8::from_le_bytes([record[10]]);
+	pub fn from_record(record: &[u8; RECORD_SIZE]) -> Self {
+		let [k0, k1, k2, k3, k4, k5, k6, k7, c0, c1, value] = *record;
 		Self {
-			key_low,
-			cells_taken,
-			value,
+			key_low: u64::from_le_bytes([k0, k1, k2, k3, k4, k5, k6, k7]),
+			cells_taken: u16::from_le_bytes([c0, c1]),
+			value: i8::from_le_bytes([value]),
 		}
 	}
 
@@ -193,7 +187,9 @@ impl Book {
 		Ok(Self::new(
 			rules,
 			bytes
-				.chunks_exact(RECORD_SIZE)
+				.as_chunks::<RECORD_SIZE>()
+				.0
+				.iter()
 				.map(BookEntry::from_record)
 				.collect(),
 		))

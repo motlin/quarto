@@ -56,6 +56,10 @@ storybook *args: install
 pre-commit: install
     pre-commit run --all-files
 
+# Audit public singular recipe parameters for documented options
+audit-just-options:
+    python3 ../scripts/audit-just-options.py
+
 # Build the solver wasm package into src/solver/pkg
 wasm:
     just --justfile ../solver/justfile wasm
