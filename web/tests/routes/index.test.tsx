@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import {describe, expect, it} from "vitest";
-import {fireEvent, render, screen, waitFor, within} from "@testing-library/react";
+import {act, fireEvent, render, screen, waitFor, within} from "@testing-library/react";
 import {createMemoryHistory, createRouter, RouterProvider} from "@tanstack/react-router";
 import type {Rules} from "../../src/game/rules.js";
 import {routeTree} from "../../src/routeTree.gen.js";
@@ -131,8 +131,11 @@ describe("setup route", () => {
 		fireEvent.click(screen.getByRole("radio", {name: "Lines only"}));
 		fireEvent.click(screen.getByRole("radio", {name: "Lines + 2×2 squares"}));
 		fireEvent.click(screen.getByRole("radio", {name: "Lines only"}));
-		await new Promise((resolve) => {
-			setTimeout(resolve, BOOK_PREFETCH_DELAY_MILLISECONDS / 2);
+		// The clicks' router navigations settle during this wait, so it runs inside act.
+		await act(async () => {
+			await new Promise((resolve) => {
+				setTimeout(resolve, BOOK_PREFETCH_DELAY_MILLISECONDS / 2);
+			});
 		});
 		expect(prefetched).toStrictEqual(["squares"]);
 		await waitFor(() => {
