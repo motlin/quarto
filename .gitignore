@@ -3,7 +3,6 @@
 /solver/target
 /web/dist
 /web/storybook-static
-/dist
 
 # Dependencies
 node_modules/
@@ -13,10 +12,7 @@ web/src/routeTree.gen.*
 web/src/solver/pkg/
 .fallow/
 
-# Prototype and reference binaries
-prototype/web/solver.wasm
-prototype/solver/quarto_native
-prototype/solver/bookgen
+# Reference binary
 reference/quarto_reference
 
 # Local environment overrides
