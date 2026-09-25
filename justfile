@@ -14,11 +14,10 @@ install:
     mise install --quiet
     mise current
 
-# Check every module, then run all pre-commit hooks
+# Check every module; web::verify also runs the pre-commit hooks over the whole repo
 verify:
     just solver::check
     just web::verify
-    pre-commit run --all-files
     @echo "All pre-commit checks passed!"
 
 # set up `git-test`
