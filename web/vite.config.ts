@@ -3,6 +3,8 @@ import {resolve} from "node:path";
 import {tanstackRouter} from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 
+process.title = "quartobot-web";
+
 export default defineConfig({
 	fmt: {
 		semi: true,

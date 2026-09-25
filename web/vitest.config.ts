@@ -11,9 +11,7 @@ export default mergeConfig(
 			environment: "node",
 			pool: "threads",
 			isolate: true,
-			experimental: {
-				fsModuleCache: true,
-			},
+			fsModuleCache: true,
 		},
 	}),
 );

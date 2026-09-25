@@ -56,7 +56,7 @@ the freestanding C port and single-file page the rewrite grew out of.
 
 Two checks pin the solver to upstream. `just solver::test` replays the ten upstream game
 transcripts in `solver/tests/fixtures/games_reg/` and asserts the exact value of every legal move
-at every ply. `just solver::differential <games> <skip_plies> <lines|squares>` plays seeded random
+at every ply. `just solver::differential --games <n> --skip <plies> --rules <lines|squares>` plays seeded random
 games through both the `play` binary and the C++ reference and diffs the transcripts byte for byte.
 
 The opening books in `solver/books/` hold the exact value of every position up to four placements
@@ -64,7 +64,7 @@ deep, one file per variant, so the first moves of a game need no search. The com
 are canonical: they were converted from the prototype's generated headers and are checked, not
 regenerated, by the build. `just solver::book-check` regenerates the first two placements with the
 Rust generator and asserts every record matches. Regenerating a full depth-4 book with
-`just solver::book 4 <lines|squares>` takes about 40 minutes for squares and 60 minutes for lines
+`just solver::book --depth 4 --rules <lines|squares>` takes about 40 minutes for squares and 60 minutes for lines
 on 16 cores.
 
 The wasm ships without book data. `just solver::books` encodes each `.bin` as a delta-varint `.qbk`

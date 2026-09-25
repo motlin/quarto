@@ -217,9 +217,9 @@ impl Generator {
 }
 
 fn replay(solver: &mut Solver, path: &[u8]) {
-	for pair in path.chunks_exact(2) {
-		assert!(solver.apply_select(pair[0]), "bad path: select {}", pair[0]);
-		assert!(solver.apply_place(pair[1]), "bad path: place {}", pair[1]);
+	for &[select, place] in path.as_chunks::<2>().0 {
+		assert!(solver.apply_select(select), "bad path: select {select}");
+		assert!(solver.apply_place(place), "bad path: place {place}");
 	}
 }
 
@@ -294,9 +294,9 @@ mod tests {
 		let rot = rot_masks();
 		for candidate in enumerate(Rules::Squares, 3) {
 			let mut position = Position::new();
-			for pair in candidate.path.chunks_exact(2) {
-				position.move_select(pair[0]);
-				position.move_place(pair[1]);
+			for &[select, place] in candidate.path.as_chunks::<2>().0 {
+				position.move_select(select);
+				position.move_place(place);
 			}
 			assert_eq!(position.canonical_key(rot), candidate.key);
 		}
@@ -339,7 +339,9 @@ mod tests {
 		write_entries(&entries, &mut bytes).unwrap();
 		assert_eq!(bytes.len(), 10 * book::RECORD_SIZE);
 		let read: Vec<BookEntry> = bytes
-			.chunks_exact(book::RECORD_SIZE)
+			.as_chunks::<{ book::RECORD_SIZE }>()
+			.0
+			.iter()
 			.map(BookEntry::from_record)
 			.collect();
 		assert_eq!(read, entries);
