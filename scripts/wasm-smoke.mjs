@@ -17,7 +17,7 @@ const NO_PIECE = 16;
 const {default: init, WasmSolver, version} = await import(new URL("quarto_solver.js", packageDirectory));
 await init({module_or_path: await readFile(new URL("quarto_solver_bg.wasm", packageDirectory))});
 
-// 📜 Transcript notation, ported from prototype/test/parse-fixture.mjs.
+// 📜 Transcript notation, as in the upstream fixtures under solver/tests/fixtures/games_reg/.
 
 function pieceFromString(text) {
 	assert.equal(text.length, 2, `piece token ${text}`);

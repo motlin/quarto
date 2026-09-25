@@ -52,12 +52,11 @@ repos:
         pass_filenames: false
       - id: oxfmt
         name: vp fmt
-        # Runs on all changed files outside web/ and the legacy prototype, which
-        # is kept verbatim as an oracle; the flag makes oxfmt skip file types it
-        # does not format instead of erroring when none in the batch match
+        # Runs on all changed files outside web/; the flag makes oxfmt skip file
+        # types it does not format instead of erroring when none in the batch match
         entry: vp fmt --no-error-on-unmatched-pattern
         language: system
-        exclude: "^(web|prototype)/"
+        exclude: "^web/"
       - id: oxfmt-web
         name: vp fmt (web)
         # Runs from web/ so the app's own vite.config.ts applies; the web/ prefix
