@@ -25,11 +25,13 @@ import {
 	currentPlayer,
 	type GameState,
 	isHumanToMove,
+	type Move,
 	isToPlace,
 	movesLeft,
 	newGame,
 	provisionalPlace,
 	provisionalSelect,
+	replay,
 	takeBack,
 	undoToHumanDecision,
 	withHints,
@@ -119,8 +121,17 @@ function toError(error: unknown): Error {
 	return error instanceof Error ? error : new Error(String(error));
 }
 
-export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engineDelayMilliseconds: number): PlayGame {
-	const [state, setState] = useState(() => newGame(setup));
+/**
+ * `resumeFrom` is a game already under way (the committed moves of a game left for the help page, or a reload); the
+ * reducer starts from it and the fresh worker is brought to the same position before it is asked anything.
+ */
+export function usePlayGame(
+	setup: GameSetup,
+	createSolver: () => Solver,
+	engineDelayMilliseconds: number,
+	resumeFrom: readonly Move[] = [],
+): PlayGame {
+	const [state, setState] = useState(() => (resumeFrom.length > 0 ? replay(setup, resumeFrom) : newGame(setup)));
 	const [thinking, setThinking] = useState(false);
 	const [failure, setFailure] = useState<Error | null>(null);
 	const stateRef = useRef(state);
@@ -266,6 +277,10 @@ export function usePlayGame(setup: GameSetup, createSolver: () => Solver, engine
 		startTurn(async (solver) => {
 			await solver.request("init", {rules: setup.rules});
 			await solver.request("setSeed", {seed});
+			const resumed = stateRef.current;
+			if (resumed.log.length > 0) {
+				await mirror(solver, resumed, resumed.log.length);
+			}
 		});
 		return () => {
 			current.live = false;

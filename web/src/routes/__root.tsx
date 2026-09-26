@@ -11,6 +11,8 @@ import "../styles/index.css";
  */
 interface RouterContext {
 	readonly store: Store;
+	/** Where the game in progress is kept for the tab, so visiting the help page or reloading does not lose it. */
+	readonly gameStore: Store;
 	readonly createSolver: () => Solver;
 	readonly prefetchBook: (rules: Rules) => void;
 }

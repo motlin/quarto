@@ -17,7 +17,7 @@ async function renderSetupRoute(
 	const router = createRouter({
 		routeTree,
 		history: createMemoryHistory({initialEntries: [initialEntry]}),
-		context: {store, createSolver: () => new ScriptedSolver(), prefetchBook},
+		context: {store, gameStore: memoryStore(), createSolver: () => new ScriptedSolver(), prefetchBook},
 	});
 	render(<RouterProvider router={router} />);
 	await screen.findByRole("heading", {name: "QuartoBot"});
