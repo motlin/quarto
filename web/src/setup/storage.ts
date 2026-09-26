@@ -27,6 +27,24 @@ export const browserStore: Store = {
 	},
 };
 
+/** Like `browserStore`, but kept only for the life of the tab: a game in progress, not a preference. */
+export const tabStore: Store = {
+	get(key) {
+		try {
+			return globalThis.sessionStorage.getItem(key);
+		} catch {
+			return null;
+		}
+	},
+	set(key, value) {
+		try {
+			globalThis.sessionStorage.setItem(key, value);
+		} catch {
+			// As above: without storage the game still plays, it just is not kept when the screen is left.
+		}
+	},
+};
+
 /** A store that remembers only for the life of the page, for tests and for Storybook. */
 export function memoryStore(initial: Record<string, string> = {}): Store {
 	const held = new Map(Object.entries(initial));

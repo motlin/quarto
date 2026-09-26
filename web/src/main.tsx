@@ -3,7 +3,7 @@ import {createRoot} from "react-dom/client";
 import {createRouter, RouterProvider} from "@tanstack/react-router";
 import {Agentation} from "agentation";
 import {routeTree} from "./routeTree.gen.js";
-import {browserStore} from "./setup/storage.js";
+import {browserStore, tabStore} from "./setup/storage.js";
 import {openingBooks} from "./solver/books.js";
 import {SolverClient} from "./solver/client.js";
 
@@ -11,6 +11,7 @@ const router = createRouter({
 	routeTree,
 	context: {
 		store: browserStore,
+		gameStore: tabStore,
 		createSolver: () => new SolverClient(),
 		prefetchBook: (rules) => {
 			openingBooks.prefetch(rules);

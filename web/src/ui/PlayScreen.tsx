@@ -7,7 +7,7 @@
  * the tray show the turn's provisional steps, and the committed position's readout stays until Confirm.
  */
 
-import {type ReactNode, useMemo} from "react";
+import {type ReactNode, useEffect, useMemo} from "react";
 import {ALL_CELLS, asCell, type Cell} from "../game/cells.js";
 import {shortValue} from "../game/evaluation.js";
 import {describeVerdict, gameTitle, outcomeView, playerName, promptFor, statusLine} from "../game/narration.js";
@@ -22,6 +22,7 @@ import {
 	handWithPending,
 	hasPending,
 	isHumanToMove,
+	type Move,
 	isToPlace,
 	isTurnComplete,
 	movesLeft,
@@ -52,6 +53,10 @@ export interface PlayScreenProps {
 	readonly helpLink: ReactNode;
 	/** The Annotations control was used; the owner answers by rendering again with the new `setup.hints`. */
 	readonly onHintsChange: (hints: Hints) => void;
+	/** A game already under way to pick up where it was left; absent or empty starts a new game. */
+	readonly resumeFrom?: readonly Move[];
+	/** Called with the committed moves whenever they change, so the owner can keep the game across a remount. */
+	readonly onMovesChange?: (moves: readonly Move[]) => void;
 }
 
 const NO_CELLS: ReadonlySet<Cell> = new Set();
@@ -95,12 +100,18 @@ export function PlayScreen({
 	backLink,
 	helpLink,
 	onHintsChange,
+	resumeFrom,
+	onMovesChange,
 }: PlayScreenProps) {
 	const {state, thinking, select, place, confirm, takeBack, undo, restart} = usePlayGame(
 		setup,
 		createSolver,
 		engineDelayMilliseconds,
+		resumeFrom,
 	);
+	useEffect(() => {
+		onMovesChange?.(state.log);
+	}, [onMovesChange, state.log]);
 	const cells = useMemo(() => legalCells(state), [state]);
 	const drag = useDragToPlace(cells, place);
 	const prompt = promptFor(setup, state);

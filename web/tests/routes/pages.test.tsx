@@ -12,7 +12,7 @@ async function renderRoute(path: string, heading: string, store: Store = memoryS
 	const router = createRouter({
 		routeTree,
 		history: createMemoryHistory({initialEntries: entries, initialIndex: entries.length - 1}),
-		context: {store, createSolver: () => new ScriptedSolver(), prefetchBook: () => {}},
+		context: {store, gameStore: memoryStore(), createSolver: () => new ScriptedSolver(), prefetchBook: () => {}},
 	});
 	render(<RouterProvider router={router} />);
 	await screen.findByRole("heading", {level: 1, name: heading});

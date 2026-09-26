@@ -630,7 +630,12 @@ describe("/play route", () => {
 		const router = createRouter({
 			routeTree,
 			history: createMemoryHistory({initialEntries: ["/play?opponent=human&rules=lines&name1=Ada&name2=Grace"]}),
-			context: {store: memoryStore(), createSolver: () => new ScriptedSolver(), prefetchBook: () => {}},
+			context: {
+				store: memoryStore(),
+				gameStore: memoryStore(),
+				createSolver: () => new ScriptedSolver(),
+				prefetchBook: () => {},
+			},
 		});
 		render(<RouterProvider router={router} />);
 		await screen.findByRole("heading", {level: 1, name: "Ada vs Grace"});
@@ -640,6 +645,73 @@ describe("/play route", () => {
 		expect(screen.getByText("lines only · move 1 of 16")).toBeDefined();
 	});
 
+	it("keeps the game in progress while the reader visits the help page and comes back", async () => {
+		const solvers: ScriptedSolver[] = [];
+		const router = createRouter({
+			routeTree,
+			history: createMemoryHistory({
+				initialEntries: ["/play?opponent=human&rules=lines&annotations=off&name1=Ada&name2=Grace"],
+			}),
+			context: {
+				store: memoryStore(),
+				gameStore: memoryStore(),
+				createSolver: () => {
+					const solver = new ScriptedSolver({}, "lines");
+					solvers.push(solver);
+					return solver;
+				},
+				prefetchBook: () => {},
+			},
+		});
+		render(<RouterProvider router={router} />);
+		await screen.findByText("Choose a piece for Grace.");
+		fireEvent.click(tray("dark square short solid"));
+		await screen.findByText("Place the dark square short solid piece.");
+		fireEvent.click(cell("b2"));
+		await screen.findByText("Choose a piece for Ada.");
+
+		fireEvent.click(screen.getByRole("link", {name: "Using the app"}));
+		await screen.findByRole("heading", {level: 1, name: "Using the app"});
+		fireEvent.click(screen.getAllByRole("button", {name: /Back/})[0]!);
+
+		// The same game, not a fresh one: Grace is still to choose, b2 is taken, two plies are logged.
+		await screen.findByText("Choose a piece for Ada.");
+		expect(cell("b2").getAttribute("aria-label")).toContain("dark square short solid");
+		expect(screen.getByText(/^lines only · move 2 of 16/)).toBeDefined();
+		// The fresh solver was brought to the same position before anything else was asked of it.
+		const restored = solvers.at(-1)!;
+		expect(solvers).toHaveLength(2);
+		expect(restored.kinds().slice(0, 4)).toStrictEqual(["init", "setSeed", "applySelect", "applyPlace"]);
+	});
+
+	it("starts a fresh game after New game, even when coming back from the help page", async () => {
+		const router = createRouter({
+			routeTree,
+			history: createMemoryHistory({
+				initialEntries: ["/play?opponent=human&rules=lines&annotations=off&name1=Ada&name2=Grace"],
+			}),
+			context: {
+				store: memoryStore(),
+				gameStore: memoryStore(),
+				createSolver: () => new ScriptedSolver({}, "lines"),
+				prefetchBook: () => {},
+			},
+		});
+		render(<RouterProvider router={router} />);
+		await screen.findByText("Choose a piece for Grace.");
+		fireEvent.click(tray("dark square short solid"));
+		await screen.findByText("Place the dark square short solid piece.");
+		fireEvent.click(screen.getByRole("button", {name: "New game"}));
+		await screen.findByText("Choose a piece for Grace.");
+
+		fireEvent.click(screen.getByRole("link", {name: "Using the app"}));
+		await screen.findByRole("heading", {level: 1, name: "Using the app"});
+		fireEvent.click(screen.getAllByRole("button", {name: /Back/})[0]!);
+
+		await screen.findByText("Choose a piece for Grace.");
+		expect(screen.getByText(/^lines only · move 1 of 16/)).toBeDefined();
+	});
+
 	it("writes an annotations change to the URL without starting a new game", async () => {
 		const solver = new ScriptedSolver({}, "lines");
 		const router = createRouter({
@@ -647,7 +719,12 @@ describe("/play route", () => {
 			history: createMemoryHistory({
 				initialEntries: ["/play?opponent=human&rules=lines&annotations=off&name1=Ada&name2=Grace"],
 			}),
-			context: {store: memoryStore(), createSolver: () => solver, prefetchBook: () => {}},
+			context: {
+				store: memoryStore(),
+				gameStore: memoryStore(),
+				createSolver: () => solver,
+				prefetchBook: () => {},
+			},
 		});
 		render(<RouterProvider router={router} />);
 		await screen.findByText("Choose a piece for Grace.");
