@@ -1,5 +1,3 @@
-set dotenv-filename := ".envrc"
-
 mod solver
 mod web
 
