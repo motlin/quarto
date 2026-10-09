@@ -5,8 +5,8 @@ repos:
       - id: check-yaml
         args: ["--allow-multiple-documents"]
       - id: check-json
-        # TypeScript, markdownlint and fallow config files allow comments.
-        exclude: "tsconfig.*\\.json|\\.markdownlint.*\\.jsonc|\\.fallowrc\\.jsonc"
+        # TypeScript config files allow comments.
+        exclude: "tsconfig.*\\.json"
       - id: check-toml
       - id: check-xml
       - id: end-of-file-fixer
