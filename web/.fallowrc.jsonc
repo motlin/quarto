@@ -11,7 +11,8 @@
 	// Tooling that never appears in an import: Storybook addons are named as
 	// strings in .storybook/main.ts, @storybook/react-vite is imported from the
 	// ignored .storybook/ directory, eslint-plugin-storybook and jiti are loaded
-	// by vite.config.ts, @storybook/addon-docs is only imported from .mdx docs
+	// by vite.config.ts, eslint is eslint-plugin-storybook's peer dependency,
+	// @storybook/addon-docs is only imported from .mdx docs
 	// pages, and wrangler is a CLI run by `just deploy` and the deploy workflows.
 	"ignoreDependencies": [
 		"@chromatic-com/storybook",
@@ -20,6 +21,7 @@
 		"@storybook/addon-onboarding",
 		"@storybook/addon-vitest",
 		"@storybook/react-vite",
+		"eslint",
 		"eslint-plugin-storybook",
 		"jiti",
 		"wrangler",
