@@ -51,19 +51,23 @@ repos:
         files: "^solver/"
         pass_filenames: false
       - id: oxfmt
-        name: vp fmt
+        name: oxfmt-next-line
         # Runs on all changed files outside web/; the flag makes oxfmt skip file
         # types it does not format instead of erroring when none in the batch match
-        entry: vp fmt --no-error-on-unmatched-pattern
+        entry: oxfmt-next-line --no-error-on-unmatched-pattern
         language: system
         exclude: "^web/"
+        # Show "Finished in Xms on N files" so every run proves formatting happened.
+        verbose: true
       - id: oxfmt-web
-        name: vp fmt (web)
-        # Runs from web/ so the app's own vite.config.ts applies; the web/ prefix
+        name: oxfmt-next-line (web)
+        # Runs from web/ so the app's own .oxfmtrc.json applies; the web/ prefix
         # is stripped from each filename pre-commit passes
-        entry: bash -c 'cd web && vp fmt --no-error-on-unmatched-pattern "${@#web/}"' --
+        entry: bash -c 'cd web && oxfmt-next-line --no-error-on-unmatched-pattern "${@#web/}"' --
         language: system
         files: "^web/"
+        # Show "Finished in Xms on N files" so every run proves formatting happened.
+        verbose: true
       - id: markdownlint-cli2
         name: markdownlint-cli2
         entry: markdownlint-cli2
