@@ -9,20 +9,34 @@ import {handle, type Request, type Results, type Snapshot} from "../../src/solve
 
 const fixturePath = new URL("../../../solver/tests/fixtures/games_reg/2.txt", import.meta.url);
 
-beforeAll(() => {
-	initSync({module: readFileSync(new URL("../../src/solver/pkg/quarto_solver_bg.wasm", import.meta.url))});
+beforeAll(() =>
+{
+	initSync(
+		{
+			module: readFileSync(new URL("../../src/solver/pkg/quarto_solver_bg.wasm", import.meta.url)),
+		},
+	);
 });
 
 /** The checked-in `.qbk` for `rules`, as the client fetches it. */
-function bookBytes(rules: Rules): ArrayBuffer {
+function bookBytes(rules: Rules): ArrayBuffer
+{
 	const bytes = readFileSync(new URL(`../../src/solver/books/${rules}.qbk`, import.meta.url));
 	return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
 }
 
 /** A solver with the opening book loaded, as it plays in the app; without it the empty board takes minutes. */
-function withBook(rules: Rules): WasmSolver {
+function withBook(rules: Rules): WasmSolver
+{
 	const solver = new WasmSolver(rules === "squares");
-	ask(solver, "loadBook", {rules, bytes: bookBytes(rules)});
+	ask(
+		solver,
+		"loadBook",
+		{
+			rules,
+			bytes: bookBytes(rules),
+		},
+	);
 	return solver;
 }
 
@@ -32,26 +46,48 @@ let nextId = 1;
 function ask<K extends Request["kind"]>(
 	solver: WasmSolver,
 	kind: K,
-	payload: Extract<Request, {kind: K}>["payload"],
-): Results[K] {
+	payload: Extract<
+		Request,
+		{
+			kind: K;
+		}
+	>["payload"],
+): Results[K]
+{
 	const id = nextId++;
-	const response = handle({id, kind, payload} as Request, solver);
+	const response = handle(
+		{
+			id,
+			kind,
+			payload,
+		} as Request,
+		solver,
+	);
 	expect(response.id).toBe(id);
-	if (!response.ok) {
+	if (!response.ok)
+	{
 		throw new Error(`${kind} failed: ${response.error}`);
 	}
 	return response.result as Results[K];
 }
 
-function refuse(solver: WasmSolver, request: Omit<Request, "id">): string {
+function refuse(solver: WasmSolver, request: Omit<Request, "id">): string
+{
 	const id = nextId++;
-	const response = handle({id, ...request} as Request, solver);
+	const response = handle(
+		{
+			id,
+			...request,
+		} as Request,
+		solver,
+	);
 	expect(response.id).toBe(id);
 	expect(response.ok).toBe(false);
 	return response.ok ? "" : response.error;
 }
 
-const EMPTY: Omit<Snapshot, "rules" | "bookEntries" | "bookDepth"> = {
+const EMPTY: Omit<Snapshot, "rules" | "bookEntries" | "bookDepth"> =
+{
 	movesLeft: 16,
 	currentPiece: null,
 	piecesTaken: 0,
@@ -62,89 +98,281 @@ const EMPTY: Omit<Snapshot, "rules" | "bookEntries" | "bookDepth"> = {
 	isDone: false,
 };
 
-describe("handle", () => {
-	it("answers init with the crate version and an empty board under the requested rules, without a book", () => {
+describe("handle", () =>
+{
+	it("answers init with the crate version and an empty board under the requested rules, without a book", () =>
+	{
 		const solver = new WasmSolver(true);
-		const {version, snapshot} = ask(solver, "init", {rules: "lines"});
+		const {version, snapshot} = ask(
+			solver,
+			"init",
+			{
+				rules: "lines",
+			},
+		);
 		expect(version).toMatch(/^\d+\.\d+\.\d+$/);
-		expect(snapshot).toStrictEqual({...EMPTY, rules: "lines", bookEntries: 0, bookDepth: 0});
+		expect(snapshot).toStrictEqual(
+			{
+				...EMPTY,
+				rules: "lines",
+				bookEntries: 0,
+				bookDepth: 0,
+			},
+		);
 	});
 
-	it("loads the opening book for the rules in force and reports its size", () => {
+	it("loads the opening book for the rules in force and reports its size", () =>
+	{
 		const solver = new WasmSolver(true);
-		const snapshot = ask(solver, "loadBook", {rules: "squares", bytes: bookBytes("squares")});
-		expect(snapshot).toStrictEqual({...EMPTY, rules: "squares", bookEntries: 40_729, bookDepth: 4});
-		expect(ask(solver, "evaluate", undefined)).toMatchObject({value: 0});
+		const snapshot = ask(
+			solver,
+			"loadBook",
+			{
+				rules: "squares",
+				bytes: bookBytes("squares"),
+			},
+		);
+		expect(snapshot).toStrictEqual(
+			{
+				...EMPTY,
+				rules: "squares",
+				bookEntries: 40_729,
+				bookDepth: 4,
+			},
+		);
+		expect(ask(solver, "evaluate", undefined)).toMatchObject(
+			{
+				value: 0,
+			},
+		);
 		expect(ask(solver, "evaluate", undefined).nodes).toBeLessThan(100);
 	});
 
-	it("refuses a book for the other rules, whatever the payload claims", () => {
+	it("refuses a book for the other rules, whatever the payload claims", () =>
+	{
 		const solver = new WasmSolver(true);
-		expect(refuse(solver, {kind: "loadBook", payload: {rules: "lines", bytes: bookBytes("lines")}})).toBe(
-			"The lines book does not fit squares rules",
+		expect(
+			refuse(
+				solver,
+				{
+					kind: "loadBook",
+					payload:
+					{
+						rules: "lines",
+						bytes: bookBytes("lines"),
+					},
+				},
+			),
+		).toBe("The lines book does not fit squares rules");
+		expect(
+			refuse(
+				solver,
+				{
+					kind: "loadBook",
+					payload:
+					{
+						rules: "squares",
+						bytes: bookBytes("lines"),
+					},
+				},
+			),
+		).toBe("opening book is for Lines rules, not Squares");
+		expect(
+			refuse(
+				solver,
+				{
+					kind: "loadBook",
+					payload:
+					{
+						rules: "squares",
+						bytes: new ArrayBuffer(3),
+					},
+				},
+			),
+		).toBe("opening book is truncated");
+		expect(ask(solver, "snapshot", undefined)).toMatchObject(
+			{
+				bookEntries: 0,
+				bookDepth: 0,
+			},
 		);
-		expect(refuse(solver, {kind: "loadBook", payload: {rules: "squares", bytes: bookBytes("lines")}})).toBe(
-			"opening book is for Lines rules, not Squares",
-		);
-		expect(refuse(solver, {kind: "loadBook", payload: {rules: "squares", bytes: new ArrayBuffer(3)}})).toBe(
-			"opening book is truncated",
-		);
-		expect(ask(solver, "snapshot", undefined)).toMatchObject({bookEntries: 0, bookDepth: 0});
 	});
 
-	it("switches rules, restarts and drops the book", () => {
+	it("switches rules, restarts and drops the book", () =>
+	{
 		const solver = withBook("squares");
-		ask(solver, "applySelect", {piece: 0});
-		const snapshot = ask(solver, "setRules", {rules: "lines"});
-		expect(snapshot).toStrictEqual({...EMPTY, rules: "lines", bookEntries: 0, bookDepth: 0});
-		expect(ask(solver, "loadBook", {rules: "lines", bytes: bookBytes("lines")})).toMatchObject({
-			bookEntries: 40_789,
-			bookDepth: 4,
-		});
+		ask(
+			solver,
+			"applySelect",
+			{
+				piece: 0,
+			},
+		);
+		const snapshot = ask(
+			solver,
+			"setRules",
+			{
+				rules: "lines",
+			},
+		);
+		expect(snapshot).toStrictEqual(
+			{
+				...EMPTY,
+				rules: "lines",
+				bookEntries: 0,
+				bookDepth: 0,
+			},
+		);
+		expect(
+			ask(
+				solver,
+				"loadBook",
+				{
+					rules: "lines",
+					bytes: bookBytes("lines"),
+				},
+			),
+		).toMatchObject(
+			{
+				bookEntries: 40_789,
+				bookDepth: 4,
+			},
+		);
 	});
 
-	it("tracks a selection and a placement, and undoes them", () => {
+	it("tracks a selection and a placement, and undoes them", () =>
+	{
 		const solver = new WasmSolver(true);
 		const start = ask(solver, "snapshot", undefined);
-		const afterSelect = ask(solver, "applySelect", {piece: pieceFromToken("Bx")});
-		expect(afterSelect).toMatchObject({
-			movesLeft: 16,
-			currentPiece: 7,
-			piecesTaken: 1 << 7,
-			cellsTaken: 0,
-			isToPlace: true,
-		});
-		const afterPlace = ask(solver, "applyPlace", {cell: cellFromName("b3")});
-		expect(afterPlace).toMatchObject({
-			movesLeft: 15,
-			currentPiece: null,
-			piecesTaken: 1 << 7,
-			cellsTaken: 1 << 9,
-			isToPlace: false,
-			board: ALL_CELLS.map((cell) => (cell === 9 ? 7 : null)),
-		});
+		const afterSelect = ask(
+			solver,
+			"applySelect",
+			{
+				piece: pieceFromToken("Bx"),
+			},
+		);
+		expect(afterSelect).toMatchObject(
+			{
+				movesLeft: 16,
+				currentPiece: 7,
+				piecesTaken: 1 << 7,
+				cellsTaken: 0,
+				isToPlace: true,
+			},
+		);
+		const afterPlace = ask(
+			solver,
+			"applyPlace",
+			{
+				cell: cellFromName("b3"),
+			},
+		);
+		expect(afterPlace).toMatchObject(
+			{
+				movesLeft: 15,
+				currentPiece: null,
+				piecesTaken: 1 << 7,
+				cellsTaken: 1 << 9,
+				isToPlace: false,
+				board: ALL_CELLS.map((cell) => (cell === 9 ? 7 : null)),
+			},
+		);
 		expect(ask(solver, "undo", undefined)).toStrictEqual(afterSelect);
 		expect(ask(solver, "undo", undefined)).toStrictEqual(start);
 	});
 
-	it("refuses illegal moves and an undo at the start without changing the position", () => {
+	it("refuses illegal moves and an undo at the start without changing the position", () =>
+	{
 		const solver = new WasmSolver(true);
-		expect(refuse(solver, {kind: "undo", payload: undefined})).toBe("Nothing to undo");
-		expect(refuse(solver, {kind: "applyPlace", payload: {cell: 0}})).toBe("Cannot place on cell 0 now");
-		ask(solver, "applySelect", {piece: 3});
-		expect(refuse(solver, {kind: "applySelect", payload: {piece: 3}})).toBe("Cannot select piece 3 now");
-		ask(solver, "applyPlace", {cell: 5});
-		expect(refuse(solver, {kind: "applySelect", payload: {piece: 3}})).toBe("Cannot select piece 3 now");
-		ask(solver, "applySelect", {piece: 4});
-		expect(refuse(solver, {kind: "applyPlace", payload: {cell: 5}})).toBe("Cannot place on cell 5 now");
-		expect(ask(solver, "snapshot", undefined)).toMatchObject({
-			currentPiece: 4,
-			piecesTaken: (1 << 3) | (1 << 4),
-			cellsTaken: 1 << 5,
-		});
+		expect(
+			refuse(
+				solver,
+				{
+					kind: "undo",
+					payload: undefined,
+				},
+			),
+		).toBe("Nothing to undo");
+		expect(
+			refuse(
+				solver,
+				{
+					kind: "applyPlace",
+					payload:
+					{
+						cell: 0,
+					},
+				},
+			),
+		).toBe("Cannot place on cell 0 now");
+		ask(
+			solver,
+			"applySelect",
+			{
+				piece: 3,
+			},
+		);
+		expect(
+			refuse(
+				solver,
+				{
+					kind: "applySelect",
+					payload:
+					{
+						piece: 3,
+					},
+				},
+			),
+		).toBe("Cannot select piece 3 now");
+		ask(
+			solver,
+			"applyPlace",
+			{
+				cell: 5,
+			},
+		);
+		expect(
+			refuse(
+				solver,
+				{
+					kind: "applySelect",
+					payload:
+					{
+						piece: 3,
+					},
+				},
+			),
+		).toBe("Cannot select piece 3 now");
+		ask(
+			solver,
+			"applySelect",
+			{
+				piece: 4,
+			},
+		);
+		expect(
+			refuse(
+				solver,
+				{
+					kind: "applyPlace",
+					payload:
+					{
+						cell: 5,
+					},
+				},
+			),
+		).toBe("Cannot place on cell 5 now");
+		expect(ask(solver, "snapshot", undefined)).toMatchObject(
+			{
+				currentPiece: 4,
+				piecesTaken: (1 << 3) | (1 << 4),
+				cellsTaken: 1 << 5,
+			},
+		);
 	});
 
-	it("reports the search effort with an evaluation", () => {
+	it("reports the search effort with an evaluation", () =>
+	{
 		const solver = withBook("squares");
 		ask(solver, "reset", undefined);
 		const evaluation = ask(solver, "evaluate", undefined);
@@ -153,13 +381,26 @@ describe("handle", () => {
 		expect(evaluation.ms).toBeGreaterThanOrEqual(0);
 	});
 
-	it("picks a best move whose value matches the position", () => {
+	it("picks a best move whose value matches the position", () =>
+	{
 		const solver = withBook("squares");
-		ask(solver, "setSeed", {seed: 7});
+		ask(
+			solver,
+			"setSeed",
+			{
+				seed: 7,
+			},
+		);
 		const selection = ask(solver, "bestMove", undefined);
 		expect(ALL_PIECES).toContain(selection.move);
 		expect(selection.value).toBe(0);
-		ask(solver, "applySelect", {piece: selection.move});
+		ask(
+			solver,
+			"applySelect",
+			{
+				piece: selection.move,
+			},
+		);
 		const placement = ask(solver, "bestMove", undefined);
 		expect(ALL_CELLS).toContain(placement.move);
 		expect(placement.value).toBe(0);
@@ -167,7 +408,8 @@ describe("handle", () => {
 		expect(placement.ms).toBeGreaterThanOrEqual(0);
 	});
 
-	it("has no best move or move values once the game is over", () => {
+	it("has no best move or move values once the game is over", () =>
+	{
 		const solver = new WasmSolver(true);
 		ask(solver, "reset", undefined);
 		const column = [
@@ -176,86 +418,178 @@ describe("handle", () => {
 			[2, 8],
 			[3, 12],
 		] as const;
-		for (const [piece, cell] of column) {
-			ask(solver, "applySelect", {piece});
-			ask(solver, "applyPlace", {cell});
+		for (const [piece, cell] of column)
+		{
+			ask(
+				solver,
+				"applySelect",
+				{
+					piece,
+				},
+			);
+			ask(
+				solver,
+				"applyPlace",
+				{
+					cell,
+				},
+			);
 		}
-		expect(ask(solver, "snapshot", undefined)).toMatchObject({isWon: true, isDone: false, movesLeft: 12});
+		expect(ask(solver, "snapshot", undefined)).toMatchObject(
+			{
+				isWon: true,
+				isDone: false,
+				movesLeft: 12,
+			},
+		);
 		expect(ask(solver, "moveValues", undefined)).toStrictEqual([]);
-		expect(refuse(solver, {kind: "bestMove", payload: undefined})).toBe("The game is over");
+		expect(
+			refuse(
+				solver,
+				{
+					kind: "bestMove",
+					payload: undefined,
+				},
+			),
+		).toBe("The game is over");
 	});
 });
 
-const OUTCOMES = {win: "Win", loss: "Loss"} as const;
+const OUTCOMES =
+{
+	win: "Win",
+	loss: "Loss",
+} as const;
 
 /** The upstream `evalToString`, from the mover's point of view, which `describeValue` calls the human's. */
-function fixtureString(value: number, movesLeft: number): string {
+function fixtureString(value: number, movesLeft: number): string
+{
 	const evaluation = describeValue(value, movesLeft, true);
 	return evaluation.kind === "draw" ? "Draw" : `${OUTCOMES[evaluation.kind]} in ${evaluation.distance}`;
 }
 
-interface Ply {
+interface Ply
+{
 	readonly phase: "select" | "place";
 	readonly evaluation: string;
 	readonly moves: ReadonlyMap<string, string>;
 	readonly chosen: string;
 }
 
-interface Fixture {
+interface Fixture
+{
 	readonly plies: readonly Ply[];
 	readonly result: "Win" | "Draw";
 }
 
 /** Parses a `play()` transcript: blank-line separated blocks headed `Eval:`, `Moves:`, `Piece:` or `Cell:`. */
-function parseFixture(text: string): Fixture {
+function parseFixture(text: string): Fixture
+{
 	const plies: Ply[] = [];
 	let result: Fixture["result"] | null = null;
-	let pending: {evaluation: string; moves: Map<string, string>} | null = null;
-	for (const block of text.split(/\n\n+/)) {
+	let pending:
+	{
+		evaluation: string;
+		moves: Map<string, string>;
+	} | null = null;
+	for (const block of text.split(/\n\n+/))
+	{
 		const [header, ...body] = block.trim().split("\n");
-		if (header === "Eval:") {
-			pending = {evaluation: body[0]!, moves: new Map()};
-		} else if (header === "Moves:") {
-			for (const line of body) {
+		if (header === "Eval:")
+		{
+			pending =
+			{
+				evaluation: body[0]!,
+				moves: new Map(),
+			};
+		}
+		else if (header === "Moves:")
+		{
+			for (const line of body)
+			{
 				const [tokens, evaluation] = line.split(" : ");
-				for (const token of tokens!.split(" ")) {
+				for (const token of tokens!.split(" "))
+				{
 					pending!.moves.set(token, evaluation!);
 				}
 			}
-		} else if (header === "Piece:" || header === "Cell:") {
-			plies.push({...pending!, phase: header === "Piece:" ? "select" : "place", chosen: body[0]!});
+		}
+		else if (header === "Piece:" || header === "Cell:")
+		{
+			plies.push(
+				{
+					...pending!,
+					phase: header === "Piece:" ? "select" : "place",
+					chosen: body[0]!,
+				},
+			);
 			pending = null;
-		} else if (header === "Win" || header === "Draw") {
+		}
+		else if (header === "Win" || header === "Draw")
+		{
 			result = header;
 		}
 	}
-	return {plies, result: result!};
+	return {
+		plies,
+		result: result!,
+	};
 }
 
-describe("replaying games_reg/2.txt through the protocol", () => {
-	it("reproduces every evaluation the transcript records", () => {
+describe("replaying games_reg/2.txt through the protocol", () =>
+{
+	it("reproduces every evaluation the transcript records", () =>
+	{
 		const {plies, result} = parseFixture(readFileSync(fixturePath, "utf8"));
 		expect(plies.length).toBeGreaterThan(20);
 		const solver = new WasmSolver(true);
-		ask(solver, "init", {rules: "squares"});
-		let snapshot = ask(solver, "loadBook", {rules: "squares", bytes: bookBytes("squares")});
+		ask(
+			solver,
+			"init",
+			{
+				rules: "squares",
+			},
+		);
+		let snapshot = ask(
+			solver,
+			"loadBook",
+			{
+				rules: "squares",
+				bytes: bookBytes("squares"),
+			},
+		);
 		const replayed: Ply[] = [];
-		for (const ply of plies) {
+		for (const ply of plies)
+		{
 			const {movesLeft} = snapshot;
 			const placing = snapshot.isToPlace;
 			const moves = ask(solver, "moveValues", undefined).map(
 				([move, value]) =>
 					[placing ? cellName(move) : pieceToken(move), fixtureString(value, movesLeft)] as const,
 			);
-			replayed.push({
-				phase: placing ? "place" : "select",
-				evaluation: fixtureString(ask(solver, "evaluate", undefined).value, movesLeft),
-				moves: new Map(moves),
-				chosen: ply.chosen,
-			});
+			replayed.push(
+				{
+					phase: placing ? "place" : "select",
+					evaluation: fixtureString(ask(solver, "evaluate", undefined).value, movesLeft),
+					moves: new Map(moves),
+					chosen: ply.chosen,
+				},
+			);
 			snapshot = placing
-				? ask(solver, "applyPlace", {cell: cellFromName(ply.chosen)})
-				: ask(solver, "applySelect", {piece: pieceFromToken(ply.chosen)});
+				? ask(
+						solver,
+						"applyPlace",
+						{
+							cell: cellFromName(ply.chosen),
+						},
+					)
+				: ask(
+						solver,
+						"applySelect",
+						{
+							piece: pieceFromToken(ply.chosen),
+						},
+					);
 		}
 		expect(replayed).toStrictEqual(plies);
 		expect(snapshot.isWon).toBe(result === "Win");

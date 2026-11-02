@@ -8,7 +8,8 @@ import type {Piece} from "../game/pieces.js";
 import {PieceGlyph} from "./PieceGlyph.js";
 import type {DragToPlace} from "./useDragToPlace.js";
 
-export interface HandProps {
+export interface HandProps
+{
 	/** The piece chosen for the next placement, or nothing while a piece is being chosen. */
 	readonly piece: Piece | null;
 	/** The instruction's first line, such as "Your move". */
@@ -21,21 +22,26 @@ export interface HandProps {
 /** The ghost sits a little larger than the piece in the hand, as if lifted off the table. */
 const LIFT_SCALE = 1.12;
 
-function handClasses(piece: Piece | null, drag: DragToPlace): string {
+function handClasses(piece: Piece | null, drag: DragToPlace): string
+{
 	const names = ["hand-piece"];
-	if (piece === null) {
+	if (piece === null)
+	{
 		names.push("empty");
 	}
-	if (drag.enabled) {
+	if (drag.enabled)
+	{
 		names.push("draggable");
 	}
-	if (drag.ghost !== null && !drag.ghost.returning) {
+	if (drag.ghost !== null && !drag.ghost.returning)
+	{
 		names.push("lifted");
 	}
 	return names.join(" ");
 }
 
-export function Hand({piece, title, detail, drag}: HandProps) {
+export function Hand({piece, title, detail, drag}: HandProps)
+{
 	const {ghost} = drag;
 	return (
 		<>
@@ -46,7 +52,8 @@ export function Hand({piece, title, detail, drag}: HandProps) {
 				<div
 					className={`drag-ghost${ghost.returning ? " returning" : ""}`}
 					aria-hidden="true"
-					style={{
+					style={
+					{
 						left: ghost.left,
 						top: ghost.top,
 						width: ghost.width,

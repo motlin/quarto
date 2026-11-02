@@ -10,13 +10,19 @@ import type {Rules} from "../game/rules.js";
 import linesUrl from "./books/lines.qbk?url";
 import squaresUrl from "./books/squares.qbk?url";
 
-export const BOOK_URLS: Readonly<Record<Rules, string>> = {lines: linesUrl, squares: squaresUrl};
+export const BOOK_URLS: Readonly<Record<Rules, string>> =
+{
+	lines: linesUrl,
+	squares: squaresUrl,
+};
 
-function reason(error: unknown): string {
+function reason(error: unknown): string
+{
 	return error instanceof Error ? error.message : String(error);
 }
 
-export class OpeningBooks {
+export class OpeningBooks
+{
 	private readonly fetchImpl: typeof fetch;
 	private readonly urls: Readonly<Record<Rules, string>>;
 	private readonly downloads = new Map<Rules, Promise<ArrayBuffer>>();
@@ -24,18 +30,22 @@ export class OpeningBooks {
 	constructor(
 		fetchImpl: typeof fetch = async (input, init) => globalThis.fetch(input, init),
 		urls: Readonly<Record<Rules, string>> = BOOK_URLS,
-	) {
+	)
+	{
 		this.fetchImpl = fetchImpl;
 		this.urls = urls;
 	}
 
 	/** The book for `rules`, downloaded once and then shared; a download that failed is tried again next time. */
-	async load(rules: Rules): Promise<ArrayBuffer> {
+	async load(rules: Rules): Promise<ArrayBuffer>
+	{
 		let download = this.downloads.get(rules);
-		if (download === undefined) {
+		if (download === undefined)
+		{
 			download = this.download(rules);
 			this.downloads.set(rules, download);
-			download.catch(() => {
+			download.catch(() =>
+			{
 				this.downloads.delete(rules);
 			});
 		}
@@ -43,21 +53,33 @@ export class OpeningBooks {
 	}
 
 	/** Starts downloading the book for `rules` so a solver created later finds it ready; failures wait for `load`. */
-	prefetch(rules: Rules): void {
-		this.load(rules).catch(() => {
+	prefetch(rules: Rules): void
+	{
+		this.load(rules).catch(() =>
+		{
 			// The solver that needs the book will report the failure when it asks for it.
 		});
 	}
 
-	private async download(rules: Rules): Promise<ArrayBuffer> {
+	private async download(rules: Rules): Promise<ArrayBuffer>
+	{
 		const url = this.urls[rules];
 		let response: Response;
-		try {
-			response = await this.fetchImpl(url, {cache: "force-cache"});
-		} catch (error: unknown) {
+		try
+		{
+			response = await this.fetchImpl(
+				url,
+				{
+					cache: "force-cache",
+				},
+			);
+		}
+		catch (error: unknown)
+		{
 			throw new Error(`Could not fetch the opening book at ${url}: ${reason(error)}`);
 		}
-		if (!response.ok) {
+		if (!response.ok)
+		{
 			throw new Error(`Could not fetch the opening book at ${url}: HTTP ${response.status}`);
 		}
 		return response.arrayBuffer();

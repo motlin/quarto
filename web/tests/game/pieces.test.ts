@@ -1,5 +1,6 @@
 import {describe, it, expect} from "vitest";
-import {
+import
+{
 	ALL_PIECES,
 	asPiece,
 	isDark,
@@ -12,8 +13,10 @@ import {
 	pieceToken,
 } from "../../src/game/pieces.js";
 
-describe("pieceName", () => {
-	it("names every piece from its trait bits", () => {
+describe("pieceName", () =>
+{
+	it("names every piece from its trait bits", () =>
+	{
 		expect(ALL_PIECES.map(pieceName)).toStrictEqual([
 			"light round short solid",
 			"dark round short solid",
@@ -35,8 +38,10 @@ describe("pieceName", () => {
 	});
 });
 
-describe("traits", () => {
-	it("reads each trait from its own bit", () => {
+describe("traits", () =>
+{
+	it("reads each trait from its own bit", () =>
+	{
 		expect(ALL_PIECES.map(isDark)).toStrictEqual(ALL_PIECES.map((piece) => piece % 2 === 1));
 		expect(ALL_PIECES.map(isSquare)).toStrictEqual(ALL_PIECES.map((piece) => Math.floor(piece / 2) % 2 === 1));
 		expect(ALL_PIECES.map(isTall)).toStrictEqual(ALL_PIECES.map((piece) => Math.floor(piece / 4) % 2 === 1));
@@ -44,8 +49,10 @@ describe("traits", () => {
 	});
 });
 
-describe("pieceToken", () => {
-	it("matches the upstream token order", () => {
+describe("pieceToken", () =>
+{
+	it("matches the upstream token order", () =>
+	{
 		expect(ALL_PIECES.map(pieceToken)).toStrictEqual([
 			"ao",
 			"bo",
@@ -66,26 +73,32 @@ describe("pieceToken", () => {
 		]);
 	});
 
-	it("round-trips through pieceFromToken", () => {
+	it("round-trips through pieceFromToken", () =>
+	{
 		expect(ALL_PIECES.map((piece) => pieceFromToken(pieceToken(piece)))).toStrictEqual([...ALL_PIECES]);
 	});
 });
 
-describe("pieceFromToken", () => {
-	it("rejects tokens outside the notation", () => {
+describe("pieceFromToken", () =>
+{
+	it("rejects tokens outside the notation", () =>
+	{
 		expect(() => pieceFromToken("a1")).toThrow('Not a piece token: "a1"');
 		expect(() => pieceFromToken("aox")).toThrow('Not a piece token: "aox"');
 		expect(() => pieceFromToken("")).toThrow('Not a piece token: ""');
 	});
 });
 
-describe("asPiece", () => {
-	it("accepts the sixteen piece numbers", () => {
+describe("asPiece", () =>
+{
+	it("accepts the sixteen piece numbers", () =>
+	{
 		expect(ALL_PIECES.map(asPiece)).toStrictEqual([...ALL_PIECES]);
 		expect(ALL_PIECES.map(isPiece)).toStrictEqual(ALL_PIECES.map(() => true));
 	});
 
-	it("rejects anything else", () => {
+	it("rejects anything else", () =>
+	{
 		expect(() => asPiece(16)).toThrow("Not a piece: 16");
 		expect(() => asPiece(-1)).toThrow("Not a piece: -1");
 		expect(() => asPiece(2.5)).toThrow("Not a piece: 2.5");

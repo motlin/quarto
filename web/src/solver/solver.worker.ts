@@ -9,20 +9,28 @@
 import init, {WasmSolver} from "./pkg/quarto_solver.js";
 import {failure, handle, type Request, type Response} from "./protocol.js";
 
-const ready: Promise<WasmSolver> = init({
-	module_or_path: new URL("./pkg/quarto_solver_bg.wasm", import.meta.url),
-}).then(() => new WasmSolver(true));
+const ready: Promise<WasmSolver> = init(
+	{
+		module_or_path: new URL("./pkg/quarto_solver_bg.wasm", import.meta.url),
+	},
+).then(() => new WasmSolver(true));
 
-async function respond(request: Request): Promise<Response> {
-	try {
+async function respond(request: Request): Promise<Response>
+{
+	try
+	{
 		return handle(request, await ready);
-	} catch (error: unknown) {
+	}
+	catch (error: unknown)
+	{
 		return failure(request.id, error);
 	}
 }
 
-self.onmessage = (event: MessageEvent<Request>) => {
-	void respond(event.data).then((response) => {
+self.onmessage = (event: MessageEvent<Request>) =>
+{
+	void respond(event.data).then((response) =>
+	{
 		self.postMessage(response);
 	});
 };

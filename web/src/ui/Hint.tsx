@@ -5,23 +5,29 @@
 
 type HintKind = "win" | "loss" | "draw";
 
-function hintKind(label: string): HintKind {
-	if (label.startsWith("W")) {
+function hintKind(label: string): HintKind
+{
+	if (label.startsWith("W"))
+	{
 		return "win";
 	}
-	if (label.startsWith("L")) {
+	if (label.startsWith("L"))
+	{
 		return "loss";
 	}
-	if (label === "=") {
+	if (label === "=")
+	{
 		return "draw";
 	}
 	throw new Error(`Not a move value label: ${JSON.stringify(label)}`);
 }
 
-export function Hint({label}: {label: string}) {
+export function Hint({label}: {label: string})
+{
 	return <span className={`hint ${hintKind(label)}`}>{label}</span>;
 }
 
-export function Chip({label}: {label: string}) {
+export function Chip({label}: {label: string})
+{
 	return <span className={`chip ${hintKind(label)}`}>{label}</span>;
 }

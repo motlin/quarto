@@ -1,5 +1,6 @@
 /* 🧾 The strip above the board, the verdict and its lamp, the controls and the move log. */
-.strip {
+.strip
+{
 	display: flex;
 	align-items: center;
 	gap: 12px;
@@ -9,28 +10,32 @@
 	border-radius: var(--radius-panel);
 	background: var(--panel);
 }
-.prompt {
+.prompt
+{
 	flex: 1;
 	min-width: 0;
 	font-size: 15px;
 	font-weight: 500;
 	line-height: 1.3;
 }
-.prompt small {
+.prompt small
+{
 	display: block;
 	font-weight: 400;
 	font-size: 12px;
 	color: var(--ink-muted);
 }
 
-.oracle {
+.oracle
+{
 	flex: none;
 	display: grid;
 	justify-items: end;
 	gap: 2px;
 	max-width: 42%;
 }
-.verdict {
+.verdict
+{
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
@@ -42,26 +47,32 @@
 	text-align: right;
 	color: var(--ink-muted);
 }
-.verdict.win {
+.verdict.win
+{
 	color: var(--win);
 }
-.verdict.loss {
+.verdict.loss
+{
 	color: var(--loss);
 }
-.verdict.decisive {
+.verdict.decisive
+{
 	color: var(--amber-ink);
 }
-.verdict.draw {
+.verdict.draw
+{
 	color: var(--ink-muted);
 }
-.verdict-detail {
+.verdict-detail
+{
 	font-family: var(--mono);
 	font-size: 11px;
 	letter-spacing: 0.02em;
 	color: var(--ink-muted);
 	white-space: nowrap;
 }
-.lamp {
+.lamp
+{
 	width: 9px;
 	height: 9px;
 	border-radius: 50%;
@@ -69,37 +80,46 @@
 	background: var(--amber);
 	box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 25%, transparent);
 }
-.lamp.thinking {
+.lamp.thinking
+{
 	animation: pulse 0.9s ease-in-out infinite;
 }
-@keyframes pulse {
-	50% {
+@keyframes pulse
+{
+	50%
+	{
 		opacity: 0.25;
 	}
 }
-@media (prefers-reduced-motion: reduce) {
-	.lamp.thinking {
+@media (prefers-reduced-motion: reduce)
+{
+	.lamp.thinking
+	{
 		animation: none;
 		opacity: 0.5;
 	}
 }
 
-.controls {
+.controls
+{
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
 	align-items: center;
 }
 /* Confirm commits a whole turn, so it gets the full tap target. */
-.controls .primary {
+.controls .primary
+{
 	min-height: 44px;
 }
-.moves summary {
+.moves summary
+{
 	cursor: pointer;
 	font-size: 13px;
 	color: var(--ink-muted);
 }
-.log {
+.log
+{
 	margin-top: 8px;
 	font-family: var(--mono);
 	font-size: 12px;
@@ -110,23 +130,27 @@
 	max-height: 160px;
 	overflow-y: auto;
 }
-.log-entry {
+.log-entry
+{
 	display: flex;
 	gap: 8px;
 	align-items: center;
 	white-space: nowrap;
 }
-.log-entry .piece {
+.log-entry .piece
+{
 	width: 14px;
 	height: 18px;
 }
-.log-entry .who {
+.log-entry .who
+{
 	width: 4.5em;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 /* The side column's gap already sets it off; a margin on top of that pushed the phone layout past 740px. */
-.play-status {
+.play-status
+{
 	font-family: var(--mono);
 	font-size: 11px;
 	color: var(--ink-muted);

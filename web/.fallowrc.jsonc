@@ -26,7 +26,8 @@
 		"jiti",
 		"wrangler",
 	],
-	"rules": {
+	"rules":
+	{
 		"unused-dependencies": "warn",
 	},
 }

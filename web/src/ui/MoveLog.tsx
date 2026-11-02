@@ -5,12 +5,14 @@ import type {Move} from "../game/state.js";
 import type {Player} from "../game/turns.js";
 import {PieceGlyph} from "./PieceGlyph.js";
 
-export interface MoveLogProps {
+export interface MoveLogProps
+{
 	readonly moves: readonly Move[];
 	readonly playerName: (player: Player) => string;
 }
 
-export function MoveLog({moves, playerName}: MoveLogProps) {
+export function MoveLog({moves, playerName}: MoveLogProps)
+{
 	const placements = moves.filter((move) => move.kind === "place").length;
 	return (
 		<details className="moves">

@@ -18,19 +18,32 @@ const GROOVE_Y = BASE_Y - 18;
 const ROUND_RX = 15;
 const ROUND_RY = 4.5;
 
-interface Wood {
+interface Wood
+{
 	readonly fill: string;
 	readonly edge: string;
 	readonly hole: string;
 }
 
-function woodOf(piece: Piece): Wood {
+function woodOf(piece: Piece): Wood
+{
 	return isDark(piece)
-		? {fill: "var(--walnut)", edge: "var(--walnut-edge)", hole: "var(--walnut-hole)"}
-		: {fill: "var(--maple)", edge: "var(--maple-edge)", hole: "var(--maple-hole)"};
+		?
+			{
+				fill: "var(--walnut)",
+				edge: "var(--walnut-edge)",
+				hole: "var(--walnut-hole)",
+			}
+		:
+			{
+				fill: "var(--maple)",
+				edge: "var(--maple-edge)",
+				hole: "var(--maple-hole)",
+			};
 }
 
-function SquareBody({top, wood}: {top: number; wood: Wood}) {
+function SquareBody({top, wood}: {top: number; wood: Wood})
+{
 	return (
 		<>
 			<rect x={LEFT} y={top} width={WIDTH} height={BASE_Y - top} rx={3} fill={wood.edge} />
@@ -50,7 +63,8 @@ function SquareBody({top, wood}: {top: number; wood: Wood}) {
 	);
 }
 
-function RoundBody({top, wood}: {top: number; wood: Wood}) {
+function RoundBody({top, wood}: {top: number; wood: Wood})
+{
 	const capY = top + ROUND_RY;
 	return (
 		<>
@@ -72,8 +86,10 @@ function RoundBody({top, wood}: {top: number; wood: Wood}) {
 }
 
 /** The groove is straight across a block and follows the curve of a cylinder; the pale line under it is the light catching the cut. */
-function Groove({square, wood}: {square: boolean; wood: Wood}) {
-	if (square) {
+function Groove({square, wood}: {square: boolean; wood: Wood})
+{
+	if (square)
+	{
 		return (
 			<>
 				<line
@@ -107,8 +123,10 @@ function Groove({square, wood}: {square: boolean; wood: Wood}) {
 }
 
 /** The bore is a good deal darker than the wood, and the far lip catches the light so the hole reads as depth. */
-function Hole({square, top, wood}: {square: boolean; top: number; wood: Wood}) {
-	if (square) {
+function Hole({square, top, wood}: {square: boolean; top: number; wood: Wood})
+{
+	if (square)
+	{
 		return (
 			<>
 				<rect x={12} y={top + 2.4} width={16} height={6} rx={1.5} fill="#fff" fillOpacity={0.3} />
@@ -130,7 +148,8 @@ export const PIECE_VIEW_WIDTH = 40;
 export const PIECE_VIEW_HEIGHT = 60;
 
 /** The piece drawn in its 40x60 coordinate space, for a `<g transform>` inside another SVG. */
-export function PieceShape({piece}: {piece: Piece}) {
+export function PieceShape({piece}: {piece: Piece})
+{
 	const wood = woodOf(piece);
 	const square = isSquare(piece);
 	const top = isTall(piece) ? TALL_TOP : SHORT_TOP;
@@ -143,7 +162,8 @@ export function PieceShape({piece}: {piece: Piece}) {
 	);
 }
 
-export function PieceGlyph({piece}: {piece: Piece}) {
+export function PieceGlyph({piece}: {piece: Piece})
+{
 	return (
 		<svg className="piece" viewBox={`0 0 ${PIECE_VIEW_WIDTH} ${PIECE_VIEW_HEIGHT}`} aria-hidden="true">
 			<PieceShape piece={piece} />

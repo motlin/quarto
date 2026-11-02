@@ -15,7 +15,8 @@ export type Hints = "off" | "outcome" | "values";
 /** Whether a committed move can be taken back; when off, every human turn is confirmed before it commits. */
 export type Undo = "allowed" | "off";
 
-export interface GameSetup {
+export interface GameSetup
+{
 	readonly opponent: Opponent;
 	readonly rules: Rules;
 	readonly first: FirstMover;

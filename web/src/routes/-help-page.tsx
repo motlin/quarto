@@ -10,10 +10,12 @@ import {Link, useCanGoBack, useRouter} from "@tanstack/react-router";
  * Back returns to the page that linked here, so a game opened with "?" is still there with its rules; a page
  * opened directly (a shared link, a bookmark) has nowhere to go back to and leads to setup instead.
  */
-function BackControl() {
+function BackControl()
+{
 	const router = useRouter();
 	const canGoBack = useCanGoBack();
-	if (!canGoBack) {
+	if (!canGoBack)
+	{
 		return (
 			<Link className="btn quiet" to="/">
 				<span aria-hidden="true">‹</span> Back
@@ -24,7 +26,8 @@ function BackControl() {
 		<button
 			type="button"
 			className="btn quiet"
-			onClick={() => {
+			onClick={() =>
+			{
 				router.history.back();
 			}}
 		>
@@ -33,7 +36,8 @@ function BackControl() {
 	);
 }
 
-export function HelpPage({title, children}: {title: string; children: ReactNode}) {
+export function HelpPage({title, children}: {title: string; children: ReactNode})
+{
 	return (
 		<main className="screen">
 			<nav className="topbar help" aria-label="Pages">

@@ -9,7 +9,8 @@ import "../styles/index.css";
  * play screen gets a solver, so tests and stories can hand it a scripted one, and a way for the setup screen to
  * start downloading the opening book for the chosen rules before the game begins.
  */
-export interface RouterContext {
+export interface RouterContext
+{
 	readonly store: Store;
 	/** Where the game in progress is kept for the tab, so visiting the help page or reloading does not lose it. */
 	readonly gameStore: Store;
@@ -17,6 +18,8 @@ export interface RouterContext {
 	readonly prefetchBook: (rules: Rules) => void;
 }
 
-export const Route = createRootRouteWithContext<RouterContext>()({
-	component: () => <Outlet />,
-});
+export const Route = createRootRouteWithContext<RouterContext>()(
+	{
+		component: () => <Outlet />,
+	},
+);

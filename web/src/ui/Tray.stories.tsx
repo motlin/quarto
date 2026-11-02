@@ -8,35 +8,58 @@ import "../styles/index.css";
 const played = new Set<Piece>([5, 10, 3, 12, 7, 8, 1, 14]);
 const midGame = ALL_PIECES.filter((piece) => !played.has(piece));
 
-const meta: Meta<typeof Tray> = {
+const meta: Meta<typeof Tray> =
+{
 	title: "Play/Tray",
 	component: Tray,
 	decorators: [
 		(Story) => (
-			<div style={{maxWidth: 360}}>
+			<div
+				style={
+				{
+					maxWidth: 360,
+				}}
+			>
 				<Story />
 			</div>
 		),
 	],
-	args: {onSelect: fn(), pendingPiece: null, hints: new Map()},
+	args:
+	{
+		onSelect: fn(),
+		pendingPiece: null,
+		hints: new Map(),
+	},
 };
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The full set, all sixteen up for choosing. */
-export const Full: Story = {
-	args: {remaining: ALL_PIECES, legalPieces: new Set(ALL_PIECES)},
+export const Full: Story =
+{
+	args:
+	{
+		remaining: ALL_PIECES,
+		legalPieces: new Set(ALL_PIECES),
+	},
 };
 
 /** Eight pieces gone: their slots keep their place so nothing shifts. */
-export const MidGame: Story = {
-	args: {remaining: midGame, legalPieces: new Set(midGame)},
+export const MidGame: Story =
+{
+	args:
+	{
+		remaining: midGame,
+		legalPieces: new Set(midGame),
+	},
 };
 
 /** Every remaining piece labelled with the value of handing it over. */
-export const MidGameWithHints: Story = {
-	args: {
+export const MidGameWithHints: Story =
+{
+	args:
+	{
 		remaining: midGame,
 		legalPieces: new Set(midGame),
 		hints: new Map<Piece, string>(
@@ -46,11 +69,17 @@ export const MidGameWithHints: Story = {
 };
 
 /** Between choices: the pieces are there but none is live. */
-export const OpponentToMove: Story = {
-	args: {remaining: midGame, legalPieces: new Set()},
+export const OpponentToMove: Story =
+{
+	args:
+	{
+		remaining: midGame,
+		legalPieces: new Set(),
+	},
 };
 
-export const MidGameDark: Story = {
+export const MidGameDark: Story =
+{
 	...MidGameWithHints,
 	decorators: [withTheme("dark")],
 };

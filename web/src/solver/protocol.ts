@@ -14,7 +14,8 @@ import {version, type WasmSolver} from "./pkg/quarto_solver.js";
 /** The wasm side's sentinel for an empty hand or cell. */
 const NO_PIECE = 16;
 
-export interface Snapshot {
+export interface Snapshot
+{
 	readonly rules: Rules;
 	readonly movesLeft: number;
 	readonly currentPiece: Piece | null;
@@ -29,35 +30,62 @@ export interface Snapshot {
 }
 
 /** A search result: the exact value plus how hard the solver worked for it. */
-export interface Search {
+export interface Search
+{
 	readonly value: number;
 	readonly nodes: number;
 	readonly ms: number;
 }
 
-export interface BestMove extends Search {
+export interface BestMove extends Search
+{
 	/** A cell when a piece is in hand, otherwise a piece. */
 	readonly move: Cell | Piece;
 }
 
-export interface Payloads {
-	readonly init: {readonly rules: Rules};
-	readonly setRules: {readonly rules: Rules};
+export interface Payloads
+{
+	readonly init:
+	{
+		readonly rules: Rules;
+	};
+	readonly setRules:
+	{
+		readonly rules: Rules;
+	};
 	/** A `.qbk` opening book for `rules`, which must be the rules in force; the buffer is transferred, not copied. */
-	readonly loadBook: {readonly rules: Rules; readonly bytes: ArrayBuffer};
+	readonly loadBook:
+	{
+		readonly rules: Rules;
+		readonly bytes: ArrayBuffer;
+	};
 	readonly reset: undefined;
-	readonly applySelect: {readonly piece: Piece};
-	readonly applyPlace: {readonly cell: Cell};
+	readonly applySelect:
+	{
+		readonly piece: Piece;
+	};
+	readonly applyPlace:
+	{
+		readonly cell: Cell;
+	};
 	readonly undo: undefined;
 	readonly snapshot: undefined;
 	readonly evaluate: undefined;
 	readonly moveValues: undefined;
 	readonly bestMove: undefined;
-	readonly setSeed: {readonly seed: number};
+	readonly setSeed:
+	{
+		readonly seed: number;
+	};
 }
 
-export interface Results {
-	readonly init: {readonly version: string; readonly snapshot: Snapshot};
+export interface Results
+{
+	readonly init:
+	{
+		readonly version: string;
+		readonly snapshot: Snapshot;
+	};
 	readonly setRules: Snapshot;
 	readonly loadBook: Snapshot;
 	readonly reset: Snapshot;
@@ -74,7 +102,8 @@ export interface Results {
 
 export type Kind = keyof Payloads;
 
-export interface Envelope<K extends Kind> {
+export interface Envelope<K extends Kind>
+{
 	readonly id: number;
 	readonly kind: K;
 	readonly payload: Payloads[K];
@@ -84,36 +113,58 @@ export interface Envelope<K extends Kind> {
 export type Request<K extends Kind = Kind> = {[Each in Kind]: Envelope<Each>}[K];
 
 export type Response<K extends Kind = Kind> =
-	| {readonly id: number; readonly ok: true; readonly result: Results[K]}
-	| {readonly id: number; readonly ok: false; readonly error: string};
+	|
+	  {
+			readonly id: number;
+			readonly ok: true;
+			readonly result: Results[K];
+	  }
+	|
+	  {
+			readonly id: number;
+			readonly ok: false;
+			readonly error: string;
+	  };
 
-export function isResponse(value: unknown): value is Response {
+export function isResponse(value: unknown): value is Response
+{
 	return typeof value === "object" && value !== null && "id" in value && "ok" in value;
 }
 
-function errorMessage(error: unknown): string {
+function errorMessage(error: unknown): string
+{
 	return error instanceof Error ? error.message : String(error);
 }
 
-export function failure(id: number, error: unknown): Response {
-	return {id, ok: false, error: errorMessage(error)};
+export function failure(id: number, error: unknown): Response
+{
+	return {
+		id,
+		ok: false,
+		error: errorMessage(error),
+	};
 }
 
-function pieceOrNull(value: number): Piece | null {
-	if (value === NO_PIECE) {
+function pieceOrNull(value: number): Piece | null
+{
+	if (value === NO_PIECE)
+	{
 		return null;
 	}
-	if (!isPiece(value)) {
+	if (!isPiece(value))
+	{
 		throw new Error(`Solver returned an impossible piece: ${value}`);
 	}
 	return value;
 }
 
-function rulesOf(solver: WasmSolver): Rules {
+function rulesOf(solver: WasmSolver): Rules
+{
 	return solver.rulesSquares() ? "squares" : "lines";
 }
 
-function snapshot(solver: WasmSolver): Snapshot {
+function snapshot(solver: WasmSolver): Snapshot
+{
 	return {
 		rules: rulesOf(solver),
 		movesLeft: solver.movesLeft(),
@@ -129,24 +180,33 @@ function snapshot(solver: WasmSolver): Snapshot {
 	};
 }
 
-function isOver(solver: WasmSolver): boolean {
+function isOver(solver: WasmSolver): boolean
+{
 	return solver.isWon() || solver.isDone();
 }
 
 /** Runs `search` and reports the nodes visited and milliseconds spent on it. */
-function timed(solver: WasmSolver, search: () => number): Search {
+function timed(solver: WasmSolver, search: () => number): Search
+{
 	const nodesBefore = solver.nodeCount();
 	const start = performance.now();
 	const value = search();
-	return {value, nodes: solver.nodeCount() - nodesBefore, ms: performance.now() - start};
+	return {
+		value,
+		nodes: solver.nodeCount() - nodesBefore,
+		ms: performance.now() - start,
+	};
 }
 
-function evaluateMove(solver: WasmSolver, move: number): number {
+function evaluateMove(solver: WasmSolver, move: number): number
+{
 	return solver.isToPlace() ? solver.evaluatePlace(move) : solver.evaluateSelect(move);
 }
 
-function moveValues(solver: WasmSolver): Results["moveValues"] {
-	if (isOver(solver)) {
+function moveValues(solver: WasmSolver): Results["moveValues"]
+{
+	if (isOver(solver))
+	{
 		return [];
 	}
 	const placing = solver.isToPlace();
@@ -157,26 +217,39 @@ function moveValues(solver: WasmSolver): Results["moveValues"] {
 		.map((move) => [move, evaluateMove(solver, move)] as const);
 }
 
-function bestMove(solver: WasmSolver): BestMove {
-	if (isOver(solver)) {
+function bestMove(solver: WasmSolver): BestMove
+{
+	if (isOver(solver))
+	{
 		throw new Error("The game is over");
 	}
 	const placing = solver.isToPlace();
 	const chosen = timed(solver, () => solver.bestMove());
 	const move = placing ? asCell(chosen.value) : asPiece(chosen.value);
-	return {move, value: evaluateMove(solver, move), nodes: chosen.nodes, ms: chosen.ms};
+	return {
+		move,
+		value: evaluateMove(solver, move),
+		nodes: chosen.nodes,
+		ms: chosen.ms,
+	};
 }
 
-function dispatch(request: Request, solver: WasmSolver): Results[Kind] {
-	switch (request.kind) {
+function dispatch(request: Request, solver: WasmSolver): Results[Kind]
+{
+	switch (request.kind)
+	{
 		case "init":
 			solver.setRules(request.payload.rules === "squares");
-			return {version: version(), snapshot: snapshot(solver)};
+			return {
+				version: version(),
+				snapshot: snapshot(solver),
+			};
 		case "setRules":
 			solver.setRules(request.payload.rules === "squares");
 			return snapshot(solver);
 		case "loadBook":
-			if (request.payload.rules !== rulesOf(solver)) {
+			if (request.payload.rules !== rulesOf(solver))
+			{
 				throw new Error(`The ${request.payload.rules} book does not fit ${rulesOf(solver)} rules`);
 			}
 			solver.loadBook(new Uint8Array(request.payload.bytes));
@@ -185,17 +258,20 @@ function dispatch(request: Request, solver: WasmSolver): Results[Kind] {
 			solver.reset();
 			return snapshot(solver);
 		case "applySelect":
-			if (!solver.applySelect(request.payload.piece)) {
+			if (!solver.applySelect(request.payload.piece))
+			{
 				throw new Error(`Cannot select piece ${request.payload.piece} now`);
 			}
 			return snapshot(solver);
 		case "applyPlace":
-			if (!solver.applyPlace(request.payload.cell)) {
+			if (!solver.applyPlace(request.payload.cell))
+			{
 				throw new Error(`Cannot place on cell ${request.payload.cell} now`);
 			}
 			return snapshot(solver);
 		case "undo":
-			if (!solver.undo()) {
+			if (!solver.undo())
+			{
 				throw new Error("Nothing to undo");
 			}
 			return snapshot(solver);
@@ -216,10 +292,18 @@ function dispatch(request: Request, solver: WasmSolver): Results[Kind] {
 }
 
 /** Answers one request, turning anything the solver refuses or throws into an `ok: false` response. */
-export function handle(request: Request, solver: WasmSolver): Response {
-	try {
-		return {id: request.id, ok: true, result: dispatch(request, solver)};
-	} catch (error: unknown) {
+export function handle(request: Request, solver: WasmSolver): Response
+{
+	try
+	{
+		return {
+			id: request.id,
+			ok: true,
+			result: dispatch(request, solver),
+		};
+	}
+	catch (error: unknown)
+	{
 		return failure(request.id, error);
 	}
 }

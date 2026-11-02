@@ -5,14 +5,16 @@
 
 import type {VerdictView} from "../game/narration.js";
 
-export interface OracleBarProps {
+export interface OracleBarProps
+{
 	readonly verdict: VerdictView | null;
 	readonly thinking: boolean;
 	readonly nodes?: number;
 	readonly milliseconds?: number;
 }
 
-export function OracleBar({verdict, thinking, nodes, milliseconds}: OracleBarProps) {
+export function OracleBar({verdict, thinking, nodes, milliseconds}: OracleBarProps)
+{
 	const detail =
 		nodes !== undefined && milliseconds !== undefined
 			? `${nodes.toLocaleString("en-US")} nodes · ${Math.round(milliseconds)} ms`

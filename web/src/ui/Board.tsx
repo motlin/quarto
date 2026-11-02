@@ -11,7 +11,8 @@ import type {Board as BoardValue} from "../game/rules.js";
 import {Hint} from "./Hint.js";
 import {PieceGlyph} from "./PieceGlyph.js";
 
-export interface BoardProps {
+export interface BoardProps
+{
 	readonly board: BoardValue;
 	readonly legalCells: ReadonlySet<Cell>;
 	readonly onPlace: (cell: Cell) => void;
@@ -25,25 +26,31 @@ export interface BoardProps {
 	readonly dropCell: Cell | null;
 }
 
-function classes(...names: (string | false)[]): string {
+function classes(...names: (string | false)[]): string
+{
 	return names.filter((name) => name !== false).join(" ");
 }
 
-function cellLabel(cell: Cell, piece: Piece | null, pending: boolean): string {
+function cellLabel(cell: Cell, piece: Piece | null, pending: boolean): string
+{
 	const parts = [`cell ${cellName(cell)}`];
-	if (piece !== null) {
+	if (piece !== null)
+	{
 		parts.push(pieceName(piece));
 	}
-	if (pending) {
+	if (pending)
+	{
 		parts.push("unconfirmed");
 	}
 	return parts.join(", ");
 }
 
-export function Board({board, legalCells, onPlace, lastCell, pendingCell, winningCells, hints, dropCell}: BoardProps) {
+export function Board({board, legalCells, onPlace, lastCell, pendingCell, winningCells, hints, dropCell}: BoardProps)
+{
 	return (
 		<div className="board" role="grid" aria-label="Quarto board">
-			{ALL_CELLS.map((cell) => {
+			{ALL_CELLS.map((cell) =>
+			{
 				const piece = board[cell] ?? null;
 				const legal = legalCells.has(cell);
 				const hint = legal ? hints.get(cell) : undefined;
@@ -62,7 +69,8 @@ export function Board({board, legalCells, onPlace, lastCell, pendingCell, winnin
 						aria-label={cellLabel(cell, piece, cell === pendingCell)}
 						data-cell={cell}
 						disabled={!legal}
-						onClick={() => {
+						onClick={() =>
+						{
 							onPlace(cell);
 						}}
 					>

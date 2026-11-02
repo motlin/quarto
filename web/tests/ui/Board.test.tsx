@@ -5,8 +5,10 @@ import {type Cell, cellFromName} from "../../src/game/cells.js";
 import {type Board as BoardValue, emptyBoard} from "../../src/game/rules.js";
 import {Board} from "../../src/ui/Board.js";
 
-function withPieces(placed: Record<string, number>): BoardValue {
-	return emptyBoard().map((_, index) => {
+function withPieces(placed: Record<string, number>): BoardValue
+{
+	return emptyBoard().map((_, index) =>
+	{
 		const entry = Object.entries(placed).find(([name]) => cellFromName(name) === index);
 		return entry ? (entry[1] as BoardValue[number]) : null;
 	});
@@ -16,8 +18,10 @@ const a1 = cellFromName("a1");
 const b2 = cellFromName("b2");
 const d4 = cellFromName("d4");
 
-describe("Board", () => {
-	it("calls onPlace with the cell when a legal cell is tapped", () => {
+describe("Board", () =>
+{
+	it("calls onPlace with the cell when a legal cell is tapped", () =>
+	{
 		const onPlace = vi.fn<(cell: Cell) => void>();
 		render(
 			<Board
@@ -31,14 +35,26 @@ describe("Board", () => {
 				dropCell={null}
 			/>,
 		);
-		fireEvent.click(screen.getByRole("button", {name: "cell b2"}));
+		fireEvent.click(
+			screen.getByRole(
+				"button",
+				{
+					name: "cell b2",
+				},
+			),
+		);
 		expect(onPlace).toHaveBeenCalledWith(b2);
 	});
 
-	it("names every cell for hit testing and marks the one a drag hovers", () => {
+	it("names every cell for hit testing and marks the one a drag hovers", () =>
+	{
 		render(
 			<Board
-				board={withPieces({a1: 5})}
+				board={withPieces(
+					{
+						a1: 5,
+					},
+				)}
 				legalCells={new Set([b2, d4])}
 				onPlace={vi.fn<(cell: Cell) => void>()}
 				lastCell={a1}
@@ -51,15 +67,34 @@ describe("Board", () => {
 		expect(screen.getAllByRole("button").map((button) => button.dataset["cell"])).toStrictEqual(
 			[...Array(16).keys()].map(String),
 		);
-		expect(screen.getByRole("button", {name: "cell b2"}).className).toBe("cell legal drop");
-		expect(screen.getByRole("button", {name: "cell d4"}).className).toBe("cell legal");
+		expect(
+			screen.getByRole(
+				"button",
+				{
+					name: "cell b2",
+				},
+			).className,
+		).toBe("cell legal drop");
+		expect(
+			screen.getByRole(
+				"button",
+				{
+					name: "cell d4",
+				},
+			).className,
+		).toBe("cell legal");
 	});
 
-	it("disables every cell that is not legal, occupied or not", () => {
+	it("disables every cell that is not legal, occupied or not", () =>
+	{
 		const onPlace = vi.fn<(cell: Cell) => void>();
 		render(
 			<Board
-				board={withPieces({a1: 5})}
+				board={withPieces(
+					{
+						a1: 5,
+					},
+				)}
 				legalCells={new Set([b2])}
 				onPlace={onPlace}
 				lastCell={a1}
@@ -72,18 +107,38 @@ describe("Board", () => {
 		const buttons = screen.getAllByRole("button");
 		expect(buttons).toHaveLength(16);
 		expect(buttons.filter((button) => !(button as HTMLButtonElement).disabled)).toHaveLength(1);
-		const occupied = screen.getByRole("button", {name: /^cell a1/});
+		const occupied = screen.getByRole(
+			"button",
+			{
+				name: /^cell a1/,
+			},
+		);
 		expect((occupied as HTMLButtonElement).disabled).toBe(true);
 		expect(occupied.getAttribute("aria-label")).toBe("cell a1, dark round tall solid");
 		fireEvent.click(occupied);
-		fireEvent.click(screen.getByRole("button", {name: "cell d4"}));
+		fireEvent.click(
+			screen.getByRole(
+				"button",
+				{
+					name: "cell d4",
+				},
+			),
+		);
 		expect(onPlace).not.toHaveBeenCalled();
 	});
 
-	it("marks the last move and the winning line", () => {
+	it("marks the last move and the winning line", () =>
+	{
 		render(
 			<Board
-				board={withPieces({a1: 4, b1: 13, c1: 6, d1: 15})}
+				board={withPieces(
+					{
+						a1: 4,
+						b1: 13,
+						c1: 6,
+						d1: 15,
+					},
+				)}
 				legalCells={new Set()}
 				onPlace={vi.fn<(cell: Cell) => void>()}
 				lastCell={cellFromName("d1")}
@@ -93,12 +148,34 @@ describe("Board", () => {
 				dropCell={null}
 			/>,
 		);
-		expect(screen.getByRole("button", {name: /^cell d1/}).className).toContain("winning");
-		expect(screen.getByRole("button", {name: /^cell d1/}).className).toContain("last");
-		expect(screen.getByRole("button", {name: /^cell a2/}).className).not.toContain("winning");
+		expect(
+			screen.getByRole(
+				"button",
+				{
+					name: /^cell d1/,
+				},
+			).className,
+		).toContain("winning");
+		expect(
+			screen.getByRole(
+				"button",
+				{
+					name: /^cell d1/,
+				},
+			).className,
+		).toContain("last");
+		expect(
+			screen.getByRole(
+				"button",
+				{
+					name: /^cell a2/,
+				},
+			).className,
+		).not.toContain("winning");
 	});
 
-	it("labels legal cells with their move value", () => {
+	it("labels legal cells with their move value", () =>
+	{
 		render(
 			<Board
 				board={emptyBoard()}
@@ -117,7 +194,15 @@ describe("Board", () => {
 				dropCell={null}
 			/>,
 		);
-		const hint = (name: string) => screen.getByRole("button", {name}).querySelector(".hint");
+		const hint = (name: string) =>
+			screen
+				.getByRole(
+					"button",
+					{
+						name,
+					},
+				)
+				.querySelector(".hint");
 		expect(hint("cell a1")?.textContent).toBe("W3");
 		expect(hint("cell a1")?.className).toContain("win");
 		expect(hint("cell b2")?.className).toContain("draw");

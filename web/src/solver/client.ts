@@ -13,13 +13,15 @@ import type {Rules} from "../game/rules.js";
 import {type OpeningBooks, openingBooks} from "./books.js";
 import {type Envelope, isResponse, type Kind, type Payloads, type Results} from "./protocol.js";
 
-export interface WorkerEvents {
+export interface WorkerEvents
+{
 	readonly message: MessageEvent<unknown>;
 	readonly error: ErrorEvent;
 }
 
 /** The slice of `Worker` the client uses, so tests can stand in a fake. */
-export interface WorkerLike {
+export interface WorkerLike
+{
 	postMessage(message: Envelope<Kind>, transfer?: readonly Transferable[]): void;
 	addEventListener<K extends keyof WorkerEvents>(type: K, listener: (event: WorkerEvents[K]) => void): void;
 	terminate(): void;
@@ -29,28 +31,38 @@ export interface WorkerLike {
 export type PayloadArguments<K extends Kind> = Payloads[K] extends undefined ? [] : [payload: Payloads[K]];
 
 /** What the play screen needs of a solver, so a scripted one can stand in for the worker in tests and stories. */
-export interface Solver {
+export interface Solver
+{
 	request<K extends Kind>(kind: K, ...args: PayloadArguments<K>): Promise<Results[K]>;
 	terminate(): void;
 }
 
 /** Method syntax on purpose: it lets a `Promise<Results[K]>` resolver sit in a map that forgets `K`. */
-interface Pending {
+interface Pending
+{
 	resolve(result: unknown): void;
 	reject(error: Error): void;
 }
 
 type Handlers = {readonly [K in Kind]: (...args: PayloadArguments<K>) => Promise<Results[K]>};
 
-function createWorker(): Worker {
-	return new Worker(new URL("./solver.worker.ts", import.meta.url), {type: "module"});
+function createWorker(): Worker
+{
+	return new Worker(
+		new URL("./solver.worker.ts", import.meta.url),
+		{
+			type: "module",
+		},
+	);
 }
 
-function toError(error: unknown): Error {
+function toError(error: unknown): Error
+{
 	return error instanceof Error ? error : new Error(String(error));
 }
 
-export class SolverClient implements Solver {
+export class SolverClient implements Solver
+{
 	private readonly worker: WorkerLike;
 	private readonly books: OpeningBooks;
 	private readonly pending = new Map<number, Pending>();
@@ -60,13 +72,35 @@ export class SolverClient implements Solver {
 	/** Settles once every book asked for so far is in the worker; requests post behind it. */
 	private gate: Promise<void> = Promise.resolve();
 	/** Changing rules also fetches and loads the matching book; everything else is one round trip to the worker. */
-	private readonly handlers: Handlers = {
-		init: async ({rules}) => {
-			const [{version}, snapshot] = await Promise.all([this.post("init", {rules}), this.loadBook(rules)]);
-			return {version, snapshot};
+	private readonly handlers: Handlers =
+	{
+		init: async ({rules}) =>
+		{
+			const [{version}, snapshot] = await Promise.all([
+				this.post(
+					"init",
+					{
+						rules,
+					},
+				),
+				this.loadBook(rules),
+			]);
+			return {
+				version,
+				snapshot,
+			};
 		},
-		setRules: async ({rules}) => {
-			const [, snapshot] = await Promise.all([this.post("setRules", {rules}), this.loadBook(rules)]);
+		setRules: async ({rules}) =>
+		{
+			const [, snapshot] = await Promise.all([
+				this.post(
+					"setRules",
+					{
+						rules,
+					},
+				),
+				this.loadBook(rules),
+			]);
 			return snapshot;
 		},
 		loadBook: async (payload) => this.post("loadBook", payload),
@@ -81,25 +115,31 @@ export class SolverClient implements Solver {
 		setSeed: async (payload) => this.post("setSeed", payload),
 	};
 
-	constructor(worker: WorkerLike = createWorker(), books: OpeningBooks = openingBooks) {
+	constructor(worker: WorkerLike = createWorker(), books: OpeningBooks = openingBooks)
+	{
 		this.worker = worker;
 		this.books = books;
-		worker.addEventListener("message", (event) => {
+		worker.addEventListener("message", (event) =>
+		{
 			this.receive(event.data);
 		});
-		worker.addEventListener("error", (event) => {
+		worker.addEventListener("error", (event) =>
+		{
 			this.fail(new Error(`Solver worker failed: ${event.message}`));
 		});
 	}
 
-	async request<K extends Kind>(kind: K, ...args: PayloadArguments<K>): Promise<Results[K]> {
-		if (this.dead !== null) {
+	async request<K extends Kind>(kind: K, ...args: PayloadArguments<K>): Promise<Results[K]>
+	{
+		if (this.dead !== null)
+		{
 			throw this.dead;
 		}
 		return this.handlers[kind](...args);
 	}
 
-	terminate(): void {
+	terminate(): void
+	{
 		this.fail(new Error("Solver worker terminated"));
 	}
 
@@ -109,62 +149,100 @@ export class SolverClient implements Solver {
 		payload: Payloads[Kind],
 		transfer: readonly Transferable[] = [],
 		after: Promise<void> = this.gate,
-	): Promise<Results[K]> {
-		if (this.dead !== null) {
+	): Promise<Results[K]>
+	{
+		if (this.dead !== null)
+		{
 			throw this.dead;
 		}
 		const id = this.nextId++;
-		const reply = new Promise<Results[K]>((resolve, reject) => {
-			this.pending.set(id, {resolve, reject});
+		const reply = new Promise<Results[K]>((resolve, reject) =>
+		{
+			this.pending.set(
+				id,
+				{
+					resolve,
+					reject,
+				},
+			);
 		});
-		void after.then(() => {
-			if (this.dead === null) {
-				this.worker.postMessage({id, kind, payload}, transfer);
+		void after.then(() =>
+		{
+			if (this.dead === null)
+			{
+				this.worker.postMessage(
+					{
+						id,
+						kind,
+						payload,
+					},
+					transfer,
+				);
 			}
 		});
 		return reply;
 	}
 
 	/** Fetches the book for `rules` and posts it behind the current gate, holding every later request until it is in. */
-	private async loadBook(rules: Rules): Promise<Results["loadBook"]> {
+	private async loadBook(rules: Rules): Promise<Results["loadBook"]>
+	{
 		const before = this.gate;
-		const loaded = this.books.load(rules).then(async (bytes) => {
+		const loaded = this.books.load(rules).then(async (bytes) =>
+		{
 			// Each solver gets its own copy to transfer, so the shared download stays usable.
 			const copy = bytes.slice(0);
-			return this.post("loadBook", {rules, bytes: copy}, [copy], before);
+			return this.post(
+				"loadBook",
+				{
+					rules,
+					bytes: copy,
+				},
+				[copy],
+				before,
+			);
 		});
 		this.gate = loaded.then(
 			() => undefined,
-			(error: unknown) => {
+			(error: unknown) =>
+			{
 				this.fail(toError(error));
 			},
 		);
 		return loaded;
 	}
 
-	private receive(data: unknown): void {
-		if (!isResponse(data)) {
+	private receive(data: unknown): void
+	{
+		if (!isResponse(data))
+		{
 			return;
 		}
 		const pending = this.pending.get(data.id);
-		if (pending === undefined) {
+		if (pending === undefined)
+		{
 			return;
 		}
 		this.pending.delete(data.id);
-		if (data.ok) {
+		if (data.ok)
+		{
 			pending.resolve(data.result);
-		} else {
+		}
+		else
+		{
 			pending.reject(new Error(data.error));
 		}
 	}
 
 	/** Stops the worker and rejects everything in flight and everything asked afterwards. */
-	private fail(error: Error): void {
-		if (this.dead === null) {
+	private fail(error: Error): void
+	{
+		if (this.dead === null)
+		{
 			this.dead = error;
 			this.worker.terminate();
 		}
-		for (const pending of this.pending.values()) {
+		for (const pending of this.pending.values())
+		{
 			pending.reject(this.dead);
 		}
 		this.pending.clear();

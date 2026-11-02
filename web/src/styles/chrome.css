@@ -1,6 +1,7 @@
 /* 🧭 Page furniture: buttons, the top bar, the setup form, and the help prose. */
 /* Links dressed as buttons (the setup screen's Play is a real link) share the rule with <button>. */
-.btn {
+.btn
+{
 	border: 1px solid var(--line);
 	background: var(--panel);
 	border-radius: var(--radius-control);
@@ -16,30 +17,36 @@
 	color: var(--ink);
 	text-decoration: none;
 }
-.btn:hover {
+.btn:hover
+{
 	border-color: var(--ink-muted);
 }
-.btn:disabled {
+.btn:disabled
+{
 	opacity: 0.45;
 	cursor: default;
 }
-.btn.primary {
+.btn.primary
+{
 	background: var(--amber);
 	border-color: var(--amber);
 	color: var(--on-amber);
 	padding: 12px 22px;
 	font-size: 15px;
 }
-.btn.quiet {
+.btn.quiet
+{
 	border-color: transparent;
 	background: transparent;
 	color: var(--ink-muted);
 }
-.btn.quiet:hover {
+.btn.quiet:hover
+{
 	color: var(--ink);
 	background: var(--panel);
 }
-.btn.round {
+.btn.round
+{
 	width: 40px;
 	padding: 0;
 	justify-content: center;
@@ -47,7 +54,8 @@
 	font-weight: 600;
 }
 
-.topbar {
+.topbar
+{
 	display: flex;
 	align-items: center;
 	gap: 10px;
@@ -55,13 +63,16 @@
 	margin-bottom: 12px;
 }
 /* A help page's top bar holds only the way back; the same control repeats under the text. */
-.help-foot {
+.help-foot
+{
 	margin-top: 28px;
 }
-.topbar.help {
+.topbar.help
+{
 	justify-content: space-between;
 }
-.topbar-title {
+.topbar-title
+{
 	font-family: var(--display);
 	font-weight: 700;
 	font-size: 18px;
@@ -72,7 +83,8 @@
 	text-overflow: ellipsis;
 }
 
-h1 {
+h1
+{
 	font-family: var(--display);
 	font-weight: 700;
 	font-size: clamp(32px, 6vw, 40px);
@@ -81,43 +93,51 @@ h1 {
 	line-height: 1;
 	text-wrap: balance;
 }
-.masthead {
+.masthead
+{
 	margin-bottom: 24px;
 }
-.masthead p {
+.masthead p
+{
 	margin: 10px 0 0;
 	color: var(--ink-muted);
 	max-width: 48ch;
 }
 
-.fields {
+.fields
+{
 	display: grid;
 	gap: 22px;
 	max-width: 520px;
 }
-.field {
+.field
+{
 	display: grid;
 	gap: 8px;
 }
-.field-label {
+.field-label
+{
 	font-size: 11px;
 	text-transform: uppercase;
 	letter-spacing: 0.12em;
 	color: var(--ink-muted);
 }
-.field-help {
+.field-help
+{
 	font-size: 13px;
 	color: var(--ink-muted);
 	margin: 0;
 }
-.segment {
+.segment
+{
 	display: flex;
 	border: 1px solid var(--line);
 	border-radius: var(--radius-control);
 	overflow: hidden;
 	background: var(--panel);
 }
-.segment button {
+.segment button
+{
 	flex: 1;
 	border: 0;
 	background: transparent;
@@ -128,20 +148,24 @@ h1 {
 	cursor: pointer;
 	color: var(--ink-muted);
 }
-.segment button + button {
+.segment button + button
+{
 	border-left: 1px solid var(--line);
 }
-.segment button[aria-checked="true"] {
+.segment button[aria-checked="true"]
+{
 	background: var(--amber);
 	color: var(--on-amber);
 	font-weight: 500;
 }
-.names {
+.names
+{
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 8px;
 }
-.names input {
+.names input
+{
 	font: inherit;
 	color: var(--ink);
 	background: var(--panel);
@@ -151,12 +175,14 @@ h1 {
 	min-height: 44px;
 	min-width: 0;
 }
-.names input:focus {
+.names input:focus
+{
 	border-color: var(--amber);
 	outline: none;
 	box-shadow: 0 0 0 2px color-mix(in srgb, var(--amber) 35%, transparent);
 }
-.actions {
+.actions
+{
 	display: flex;
 	flex-wrap: wrap;
 	gap: 10px;
@@ -167,23 +193,28 @@ h1 {
  * On a phone the form runs past the fold, so Play rides along the bottom edge within thumb reach, on a fade of the
  * page ground so the fields scrolling under it stay legible. The help links tuck in beside it.
  */
-@media (max-width: 720px) {
-	.actions.pinned {
+@media (max-width: 720px)
+{
+	.actions.pinned
+	{
 		position: sticky;
 		bottom: 0;
 		margin: 0 calc(-1 * var(--screen-padding));
 		padding: 12px var(--screen-padding) max(12px, env(safe-area-inset-bottom));
 		background: linear-gradient(to top, var(--ground) 75%, transparent);
 	}
-	.actions.pinned .primary {
+	.actions.pinned .primary
+	{
 		flex: 1 0 100%;
 		min-height: 48px;
 	}
-	.actions.pinned .quiet {
+	.actions.pinned .quiet
+	{
 		flex: 1;
 	}
 }
-.status-line {
+.status-line
+{
 	font-family: var(--mono);
 	font-size: 12px;
 	color: var(--ink-muted);
@@ -191,37 +222,45 @@ h1 {
 	margin-top: 28px;
 }
 
-.prose {
+.prose
+{
 	max-width: 62ch;
 }
-.prose h2 {
+.prose h2
+{
 	font-family: var(--display);
 	font-weight: 700;
 	font-size: 22px;
 	letter-spacing: -0.01em;
 	margin: 28px 0 8px;
 }
-.prose h2:first-child {
+.prose h2:first-child
+{
 	margin-top: 4px;
 }
 .prose p,
-.prose li {
+.prose li
+{
 	margin: 0 0 10px;
 }
 .prose ul,
-.prose ol {
+.prose ol
+{
 	padding-left: 20px;
 }
-.prose b {
+.prose b
+{
 	font-weight: 600;
 }
-.prose a {
+.prose a
+{
 	color: inherit;
 	text-decoration-color: var(--amber-ink);
 	text-underline-offset: 2px;
 }
 /* The sixteen pieces on the tray's ground, four to a row in piece order, so each row shares a height and a top. */
-.piece-set {
+.piece-set
+{
 	display: grid;
 	grid-template-columns: repeat(4, 56px);
 	gap: 8px;
@@ -232,16 +271,19 @@ h1 {
 	background: var(--ground-deep);
 	border: 1px solid var(--line);
 }
-.piece-set .slot {
+.piece-set .slot
+{
 	padding: 8%;
 }
-.trait-row {
+.trait-row
+{
 	display: grid;
 	grid-template-columns: repeat(4, 64px);
 	gap: 10px 14px;
 	margin: 6px 0 14px;
 }
-.trait {
+.trait
+{
 	display: grid;
 	justify-items: center;
 	gap: 2px;
@@ -250,22 +292,26 @@ h1 {
 	text-align: center;
 	color: var(--ink-muted);
 }
-.trait .pair {
+.trait .pair
+{
 	display: flex;
 	gap: 2px;
 }
-.trait .piece {
+.trait .piece
+{
 	width: 28px;
 	height: 42px;
 }
 /* A won board as a picture: it keeps the board's shadow and never grows past a hand's width. */
-.diagram {
+.diagram
+{
 	display: grid;
 	gap: 8px;
 	width: min(100%, 220px);
 	margin: 6px 0 16px;
 }
-.diagram svg {
+.diagram svg
+{
 	display: block;
 	width: 100%;
 	height: auto;
@@ -274,26 +320,30 @@ h1 {
 		0 0 0 1px var(--rail-edge),
 		0 18px 40px -22px #000;
 }
-.diagram figcaption {
+.diagram figcaption
+{
 	font-size: 13px;
 	color: var(--ink-muted);
 }
 /* The numbered steps of a turn. */
-.prose .flow {
+.prose .flow
+{
 	list-style: none;
 	padding: 0;
 	display: grid;
 	gap: 10px;
 	margin: 6px 0 14px;
 }
-.prose .flow li {
+.prose .flow li
+{
 	display: grid;
 	grid-template-columns: 28px 1fr;
 	gap: 10px;
 	align-items: start;
 	margin: 0;
 }
-.step {
+.step
+{
 	width: 28px;
 	height: 28px;
 	border-radius: 50%;
@@ -305,26 +355,31 @@ h1 {
 	font-size: 12px;
 	font-weight: 500;
 }
-.prose .flow p {
+.prose .flow p
+{
 	margin: 2px 0 0;
 	font-size: 14px;
 	color: var(--ink-muted);
 }
 /* The verdicts a game can show, each with what it means. */
-.verdicts {
+.verdicts
+{
 	display: grid;
 	gap: 12px;
 	margin: 6px 0 14px;
 }
-.verdicts dt .verdict {
+.verdicts dt .verdict
+{
 	text-align: left;
 }
-.verdicts dd {
+.verdicts dd
+{
 	margin: 2px 0 0;
 	font-size: 14px;
 	color: var(--ink-muted);
 }
-.chip {
+.chip
+{
 	font-family: var(--mono);
 	font-size: 12px;
 	padding: 1px 5px;
@@ -332,12 +387,15 @@ h1 {
 	background: var(--chip-ground);
 	color: #fff;
 }
-.chip.win {
+.chip.win
+{
 	color: var(--label-win);
 }
-.chip.loss {
+.chip.loss
+{
 	color: var(--label-loss);
 }
-.chip.draw {
+.chip.draw
+{
 	color: var(--label-draw);
 }

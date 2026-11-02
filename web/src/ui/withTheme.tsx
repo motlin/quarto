@@ -3,7 +3,8 @@
 import type {Decorator} from "@storybook/react-vite";
 import {type Theme, Themed} from "./Themed.js";
 
-export function withTheme(theme: Theme): Decorator {
+export function withTheme(theme: Theme): Decorator
+{
 	return (Story) => (
 		<Themed theme={theme}>
 			<Story />

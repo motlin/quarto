@@ -3,7 +3,8 @@
  * only what changes, so no colour exists solely inside a media or [data-theme] block. Pieces keep the
  * same wood in both themes.
  */
-:root {
+:root
+{
 	--ground: #e4e6e1;
 	--ground-deep: #d6d9d2;
 	--panel: #f3f4f0;
@@ -47,8 +48,10 @@
 
 	color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-	:root:not([data-theme="light"]) {
+@media (prefers-color-scheme: dark)
+{
+	:root:not([data-theme="light"])
+	{
 		--ground: #17201c;
 		--ground-deep: #101613;
 		--panel: #1e2a25;
@@ -70,7 +73,8 @@
 		color-scheme: dark;
 	}
 }
-:root[data-theme="dark"] {
+:root[data-theme="dark"]
+{
 	--ground: #17201c;
 	--ground-deep: #101613;
 	--panel: #1e2a25;
@@ -92,14 +96,17 @@
 	color-scheme: dark;
 }
 
-* {
+*
+{
 	box-sizing: border-box;
 }
 html,
-body {
+body
+{
 	margin: 0;
 }
-body {
+body
+{
 	background: var(--ground);
 	color: var(--ink);
 	font-family: var(--body);
@@ -108,15 +115,18 @@ body {
 	min-height: 100vh;
 	-webkit-tap-highlight-color: transparent;
 }
-button {
+button
+{
 	font: inherit;
 	color: inherit;
 	touch-action: manipulation;
 }
-:focus-visible {
+:focus-visible
+{
 	outline: 2px solid var(--focus);
 	outline-offset: 2px;
 }
-[hidden] {
+[hidden]
+{
 	display: none !important;
 }
