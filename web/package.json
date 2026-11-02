@@ -12,7 +12,7 @@
 		"build": "vp build",
 		"oxlint": "vp lint . --fix",
 		"oxlint:ci": "vp lint . --format github",
-		"fmt:ci": "vp fmt --check",
+		"fmt:ci": "oxfmt-next-line --check",
 		"fallow": "fallow fix --yes",
 		"fallow:ci": "fallow dead-code",
 		"typecheck": "tsc --noEmit",
