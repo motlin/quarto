@@ -3,11 +3,18 @@ import {Chip} from "../ui/Hint.js";
 import type {VerdictKind} from "../game/narration.js";
 import {HelpPage} from "./-help-page.js";
 
-export const Route = createFileRoute("/app")({
-	component: AppPage,
-});
+export const Route = createFileRoute("/app")(
+	{
+		component: AppPage,
+	},
+);
 
-const VERDICTS: readonly {readonly kind: VerdictKind; readonly text: string; readonly meaning: string}[] = [
+const VERDICTS: readonly
+{
+	readonly kind: VerdictKind;
+	readonly text: string;
+	readonly meaning: string;
+}[] = [
 	{
 		kind: "draw",
 		text: "Draw with perfect play",
@@ -30,7 +37,8 @@ const VERDICTS: readonly {readonly kind: VerdictKind; readonly text: string; rea
 	},
 ];
 
-function AppPage() {
+function AppPage()
+{
 	return (
 		<HelpPage title="Using the app">
 			<h2>Reading the verdict</h2>

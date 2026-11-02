@@ -5,7 +5,8 @@
 
 import {z} from "zod";
 import type {GameSetup} from "../game/setup.js";
-import {
+import
+{
 	annotationsSchema,
 	difficultySchema,
 	firstSchema,
@@ -20,17 +21,19 @@ import type {Store} from "./storage.js";
 
 export {NAME_MAX_LENGTH};
 
-const setupSchema = z.object({
-	opponent: opponentSchema.default("bot"),
-	rules: rulesSchema.default("squares"),
-	first: firstSchema.default("you"),
-	difficulty: difficultySchema.default("impossible"),
-	// A bot game usually wants to see the outcome; the URL default stays "off" so a bare /play plays blind.
-	annotations: annotationsSchema.default("outcome"),
-	undo: undoSchema.default("allowed"),
-	// Blank falls back to "Player 1" / "Player 2" when the game starts.
-	names: z.tuple([z.string().max(NAME_MAX_LENGTH), z.string().max(NAME_MAX_LENGTH)]).default(["", ""]),
-});
+const setupSchema = z.object(
+	{
+		opponent: opponentSchema.default("bot"),
+		rules: rulesSchema.default("squares"),
+		first: firstSchema.default("you"),
+		difficulty: difficultySchema.default("impossible"),
+		// A bot game usually wants to see the outcome; the URL default stays "off" so a bare /play plays blind.
+		annotations: annotationsSchema.default("outcome"),
+		undo: undoSchema.default("allowed"),
+		// Blank falls back to "Player 1" / "Player 2" when the game starts.
+		names: z.tuple([z.string().max(NAME_MAX_LENGTH), z.string().max(NAME_MAX_LENGTH)]).default(["", ""]),
+	},
+);
 
 export type Setup = z.infer<typeof setupSchema>;
 
@@ -39,46 +42,74 @@ export const DEFAULT_SETUP: Setup = setupSchema.parse({});
 export const SETUP_KEY = "quarto.setup";
 
 /** The remembered setup, or the defaults when nothing usable is stored. */
-export function loadSetup(store: Store): Setup {
+export function loadSetup(store: Store): Setup
+{
 	const stored = store.get(SETUP_KEY);
-	if (stored === null) {
+	if (stored === null)
+	{
 		return DEFAULT_SETUP;
 	}
 	let parsed: unknown;
-	try {
+	try
+	{
 		parsed = JSON.parse(stored);
-	} catch {
+	}
+	catch
+	{
 		return DEFAULT_SETUP;
 	}
 	const result = setupSchema.safeParse(parsed);
 	return result.success ? result.data : DEFAULT_SETUP;
 }
 
-export function saveSetup(store: Store, setup: Setup): void {
+export function saveSetup(store: Store, setup: Setup): void
+{
 	store.set(SETUP_KEY, JSON.stringify(setup));
 }
 
-function trimmedName(name: string): string | undefined {
+function trimmedName(name: string): string | undefined
+{
 	const trimmed = name.trim();
 	return trimmed === "" ? undefined : trimmed;
 }
 
 /** The part of the setup that travels in the /play URL: the names only matter when two people play. */
-export function toPlaySearch({opponent, rules, first, difficulty, annotations, undo, names}: Setup): PlaySearch {
-	const search: PlaySearch = {opponent, rules, first, difficulty, annotations, undo};
-	if (opponent !== "human") {
+export function toPlaySearch({opponent, rules, first, difficulty, annotations, undo, names}: Setup): PlaySearch
+{
+	const search: PlaySearch =
+	{
+		opponent,
+		rules,
+		first,
+		difficulty,
+		annotations,
+		undo,
+	};
+	if (opponent !== "human")
+	{
 		return search;
 	}
 	const [name1, name2] = [trimmedName(names[0]), trimmedName(names[1])];
 	return {
 		...search,
-		...(name1 === undefined ? {} : {name1}),
-		...(name2 === undefined ? {} : {name2}),
+		...(name1 === undefined
+			? {}
+			:
+				{
+					name1,
+				}),
+		...(name2 === undefined
+			? {}
+			:
+				{
+					name2,
+				}),
 	};
 }
 
 /** The setup a shared URL describes: whatever it mentions wins, and `base` fills in the rest. */
-export function fromPlaySearch(search: SetupSearch, base: Setup): Setup {
+export function fromPlaySearch(search: SetupSearch, base: Setup): Setup
+{
 	return {
 		opponent: search.opponent ?? base.opponent,
 		rules: search.rules ?? base.rules,
@@ -102,7 +133,8 @@ export function toGameSetup({
 	undo,
 	name1,
 	name2,
-}: PlaySearch): GameSetup {
+}: PlaySearch): GameSetup
+{
 	return {
 		opponent,
 		rules,

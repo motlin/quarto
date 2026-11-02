@@ -14,7 +14,8 @@ import {describeVerdict, gameTitle, outcomeView, playerName, promptFor, statusLi
 import {asPiece, type Piece} from "../game/pieces.js";
 import {winningCells} from "../game/rules.js";
 import type {GameSetup, Hints} from "../game/setup.js";
-import {
+import
+{
 	awaitsPlacement,
 	awaitsSelection,
 	boardWithPending,
@@ -41,7 +42,8 @@ import {usePlayGame} from "./usePlayGame.js";
 /** Long enough that a bot move read from the opening book still registers as a move. */
 const ENGINE_DELAY_MILLISECONDS = 350;
 
-export interface PlayScreenProps {
+export interface PlayScreenProps
+{
 	/** Fixed for the life of the screen except `hints`, which the Annotations control changes mid-game. */
 	readonly setup: GameSetup;
 	/** Called once on mount; must be a stable function, since a new one would start a new solver. */
@@ -62,15 +64,19 @@ export interface PlayScreenProps {
 const NO_CELLS: ReadonlySet<Cell> = new Set();
 const NO_PIECES: ReadonlySet<Piece> = new Set();
 
-function legalCells(state: GameState): ReadonlySet<Cell> {
-	if (!isHumanToMove(state) || !awaitsPlacement(state)) {
+function legalCells(state: GameState): ReadonlySet<Cell>
+{
+	if (!isHumanToMove(state) || !awaitsPlacement(state))
+	{
 		return NO_CELLS;
 	}
 	return new Set(ALL_CELLS.filter((cell) => state.board[cell] === null));
 }
 
-function legalPieces(state: GameState): ReadonlySet<Piece> {
-	if (!isHumanToMove(state) || !awaitsSelection(state)) {
+function legalPieces(state: GameState): ReadonlySet<Piece>
+{
+	if (!isHumanToMove(state) || !awaitsSelection(state))
+	{
 		return NO_PIECES;
 	}
 	return new Set(state.remaining);
@@ -85,8 +91,10 @@ function hintLabels<Move extends number>(
 	hints: Hints,
 	placing: boolean,
 	asMove: (move: number) => Move,
-): ReadonlyMap<Move, string> {
-	if (hints !== "values" || state.hintValues === null || isToPlace(state) !== placing) {
+): ReadonlyMap<Move, string>
+{
+	if (hints !== "values" || state.hintValues === null || isToPlace(state) !== placing)
+	{
 		return new Map();
 	}
 	const left = movesLeft(state);
@@ -102,14 +110,16 @@ export function PlayScreen({
 	onHintsChange,
 	resumeFrom,
 	onMovesChange,
-}: PlayScreenProps) {
+}: PlayScreenProps)
+{
 	const {state, thinking, select, place, confirm, takeBack, undo, restart} = usePlayGame(
 		setup,
 		createSolver,
 		engineDelayMilliseconds,
 		resumeFrom,
 	);
-	useEffect(() => {
+	useEffect(() =>
+	{
 		onMovesChange?.(state.log);
 	}, [onMovesChange, state.log]);
 	const cells = useMemo(() => legalCells(state), [state]);

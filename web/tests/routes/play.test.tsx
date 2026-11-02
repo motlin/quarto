@@ -13,7 +13,8 @@ import {type Script, ScriptedSolver} from "../../src/solver/scripted.js";
 import {PlayScreen} from "../../src/ui/PlayScreen.js";
 import {installPointerStubs, pointer} from "../ui/pointer.js";
 
-const youFirst: GameSetup = {
+const youFirst: GameSetup =
+{
 	opponent: "bot",
 	rules: "squares",
 	first: "you",
@@ -22,13 +23,24 @@ const youFirst: GameSetup = {
 	undo: "allowed",
 	names: ["", ""],
 };
-const botFirst: GameSetup = {...youFirst, first: "bot"};
-const twoPeople: GameSetup = {...youFirst, opponent: "human", hints: "off", names: ["Ada", "Grace"]};
+const botFirst: GameSetup =
+{
+	...youFirst,
+	first: "bot",
+};
+const twoPeople: GameSetup =
+{
+	...youFirst,
+	opponent: "human",
+	hints: "off",
+	names: ["Ada", "Grace"],
+};
 
 /** "=" on every third move, then a win in two and a loss in three, so every label shape shows up. */
 const VARIED: Script["moveValue"] = (move, movesLeft) => [0, movesLeft - 1, -(movesLeft - 2)][move % 3] ?? 0;
 
-interface Mounted {
+interface Mounted
+{
 	readonly solver: ScriptedSolver;
 	/** Re-renders the same screen (same solver) with a different setup, as the route does when the URL changes. */
 	readonly rerender: (setup: GameSetup) => void;
@@ -36,10 +48,12 @@ interface Mounted {
 	readonly hintsChanges: GameSetup["hints"][];
 }
 
-function mountPlay(setup: GameSetup, script: Partial<Script> = {}): Mounted {
+function mountPlay(setup: GameSetup, script: Partial<Script> = {}): Mounted
+{
 	const solver = new ScriptedSolver(script, setup.rules);
 	const hintsChanges: GameSetup["hints"][] = [];
-	const onHintsChange = (hints: GameSetup["hints"]) => {
+	const onHintsChange = (hints: GameSetup["hints"]) =>
+	{
 		hintsChanges.push(hints);
 	};
 	const createSolver = () => solver;
@@ -56,7 +70,8 @@ function mountPlay(setup: GameSetup, script: Partial<Script> = {}): Mounted {
 	const view = render(screenFor(setup));
 	return {
 		solver,
-		rerender: (current) => {
+		rerender: (current) =>
+		{
 			view.rerender(screenFor(current));
 		},
 		onHintsChange,
@@ -64,47 +79,82 @@ function mountPlay(setup: GameSetup, script: Partial<Script> = {}): Mounted {
 	};
 }
 
-function renderPlay(setup: GameSetup, script: Partial<Script> = {}): ScriptedSolver {
+function renderPlay(setup: GameSetup, script: Partial<Script> = {}): ScriptedSolver
+{
 	return mountPlay(setup, script).solver;
 }
 
 // The router restores scroll on navigation and jsdom has no scrollTo; a no-op keeps the log clean.
-window.scrollTo = () => {};
+window.scrollTo = () =>
+{
+};
 
 afterEach(cleanup);
 
-function tray(name: string): HTMLElement {
-	return screen.getByRole("button", {name: `${name} piece`});
+function tray(name: string): HTMLElement
+{
+	return screen.getByRole(
+		"button",
+		{
+			name: `${name} piece`,
+		},
+	);
 }
 
-function cell(name: string): HTMLElement {
-	return screen.getByRole("button", {name: new RegExp(`^cell ${name}`)});
+function cell(name: string): HTMLElement
+{
+	return screen.getByRole(
+		"button",
+		{
+			name: new RegExp(`^cell ${name}`),
+		},
+	);
 }
 
-function enabledSlots(): number {
-	return screen.getAllByRole("button", {name: / piece$/}).filter((slot) => !slot.hasAttribute("disabled")).length;
+function enabledSlots(): number
+{
+	return screen
+		.getAllByRole(
+			"button",
+			{
+				name: / piece$/,
+			},
+		)
+		.filter((slot) => !slot.hasAttribute("disabled")).length;
 }
 
-function enabledCells(): number {
-	return screen.getAllByRole("button", {name: /^cell /}).filter((slot) => !slot.hasAttribute("disabled")).length;
+function enabledCells(): number
+{
+	return screen
+		.getAllByRole(
+			"button",
+			{
+				name: /^cell /,
+			},
+		)
+		.filter((slot) => !slot.hasAttribute("disabled")).length;
 }
 
-function handPiece(): HTMLElement {
+function handPiece(): HTMLElement
+{
 	const found = document.querySelector(".hand-piece");
-	if (!(found instanceof HTMLElement)) {
+	if (!(found instanceof HTMLElement))
+	{
 		throw new Error("No hand piece");
 	}
 	return found;
 }
 
 /** What one placement leaves behind on both sides, however the piece got to the cell. */
-interface Placed {
+interface Placed
+{
 	readonly kinds: readonly string[];
 	readonly log: unknown;
 	readonly board: string[];
 }
 
-async function afterPlacing(setup: GameSetup, placeOnC3: () => void): Promise<Placed> {
+async function afterPlacing(setup: GameSetup, placeOnC3: () => void): Promise<Placed>
+{
 	const solver = renderPlay(setup);
 	await screen.findByText("Choose a piece for Grace.");
 	expect(handPiece().className).toBe("hand-piece empty");
@@ -115,14 +165,28 @@ async function afterPlacing(setup: GameSetup, placeOnC3: () => void): Promise<Pl
 	return {
 		kinds: solver.kinds(),
 		log: solver.position.log,
-		board: screen.getAllByRole("button", {name: /^cell /}).map((button) => button.getAttribute("aria-label") ?? ""),
+		board: screen
+			.getAllByRole(
+				"button",
+				{
+					name: /^cell /,
+				},
+			)
+			.map((button) => button.getAttribute("aria-label") ?? ""),
 	};
 }
 
-describe("PlayScreen against the bot", () => {
-	it("lets the human choose, then the bot places and chooses, then asks the human to place", async () => {
+describe("PlayScreen against the bot", () =>
+{
+	it("lets the human choose, then the bot places and chooses, then asks the human to place", async () =>
+	{
 		// The bot places whatever it is given on b2, then hands over the dark square tall solid piece.
-		const solver = renderPlay(youFirst, {bestMoves: [cellFromName("b2"), 7]});
+		const solver = renderPlay(
+			youFirst,
+			{
+				bestMoves: [cellFromName("b2"), 7],
+			},
+		);
 		await screen.findByText("Choose a piece for the bot.");
 		expect(enabledSlots()).toBe(16);
 		expect(enabledCells()).toBe(0);
@@ -130,7 +194,14 @@ describe("PlayScreen against the bot", () => {
 		fireEvent.click(tray("dark square short solid"));
 
 		await screen.findByText("Place the dark square tall solid piece.");
-		expect(screen.getByRole("button", {name: "cell b2, dark square short solid"})).toBeDefined();
+		expect(
+			screen.getByRole(
+				"button",
+				{
+					name: "cell b2, dark square short solid",
+				},
+			),
+		).toBeDefined();
 		expect(cell("b2").className).toContain("last");
 		expect(enabledCells()).toBe(15);
 		expect(enabledSlots()).toBe(0);
@@ -147,24 +218,46 @@ describe("PlayScreen against the bot", () => {
 			"applySelect",
 			"evaluate",
 		]);
-		expect(solver.requests[3]).toStrictEqual({kind: "applySelect", payload: {piece: 3}});
+		expect(solver.requests[3]).toStrictEqual(
+			{
+				kind: "applySelect",
+				payload:
+				{
+					piece: 3,
+				},
+			},
+		);
 	});
 
-	it("shows the verdict and the search cost from the oracle", async () => {
+	it("shows the verdict and the search cost from the oracle", async () =>
+	{
 		// A value of 14 with 16 placements left is a win on the third placement from now.
-		renderPlay(youFirst, {value: 14});
+		renderPlay(
+			youFirst,
+			{
+				value: 14,
+			},
+		);
 		await screen.findByText("You win in 3");
 		expect(screen.getByText("You win in 3").closest(".verdict")?.className).toBe("verdict win");
 		expect(screen.getByText("lines + squares · move 1 of 16 · 1,234 nodes · 5 ms")).toBeDefined();
 	});
 
-	it("labels every legal move with its value when the setup asks for values", async () => {
+	it("labels every legal move with its value when the setup asks for values", async () =>
+	{
 		const solver = renderPlay(
-			{...youFirst, hints: "values"},
-			{bestMoves: [cellFromName("a1"), 1], moveValue: VARIED},
+			{
+				...youFirst,
+				hints: "values",
+			},
+			{
+				bestMoves: [cellFromName("a1"), 1],
+				moveValue: VARIED,
+			},
 		);
 		await screen.findByText("Choose a piece for the bot.");
-		await waitFor(() => {
+		await waitFor(() =>
+		{
 			expect(screen.getAllByText("=")).toHaveLength(6);
 		});
 		expect(screen.getAllByText("W2")).toHaveLength(5);
@@ -174,35 +267,71 @@ describe("PlayScreen against the bot", () => {
 		fireEvent.click(tray("light round short solid"));
 		await screen.findByText("Place the dark round short solid piece.");
 		// Now the labels sit on the fifteen empty cells instead of the tray.
-		await waitFor(() => {
+		await waitFor(() =>
+		{
 			expect(screen.getAllByText("W2")).toHaveLength(5);
 		});
 		expect(cell("b1").querySelector(".hint")?.textContent).toBe("W2");
 		expect(document.querySelectorAll(".slot .hint")).toHaveLength(0);
 	});
 
-	it("undoes the human's choice together with the bot's two plies", async () => {
-		const solver = renderPlay(youFirst, {bestMoves: [cellFromName("b2"), 7]});
+	it("undoes the human's choice together with the bot's two plies", async () =>
+	{
+		const solver = renderPlay(
+			youFirst,
+			{
+				bestMoves: [cellFromName("b2"), 7],
+			},
+		);
 		await screen.findByText("Choose a piece for the bot.");
-		expect(screen.getByRole("button", {name: "Undo"}).hasAttribute("disabled")).toBe(true);
+		expect(
+			screen
+				.getByRole(
+					"button",
+					{
+						name: "Undo",
+					},
+				)
+				.hasAttribute("disabled"),
+		).toBe(true);
 		fireEvent.click(tray("dark square short solid"));
 		await screen.findByText("Place the dark square tall solid piece.");
 		expect(screen.getByText("Move list · 1 placements")).toBeDefined();
 
-		fireEvent.click(screen.getByRole("button", {name: "Undo"}));
+		fireEvent.click(
+			screen.getByRole(
+				"button",
+				{
+					name: "Undo",
+				},
+			),
+		);
 
 		await screen.findByText("Choose a piece for the bot.");
 		expect(enabledSlots()).toBe(16);
-		expect(screen.getByRole("button", {name: "cell b2"})).toBeDefined();
+		expect(
+			screen.getByRole(
+				"button",
+				{
+					name: "cell b2",
+				},
+			),
+		).toBeDefined();
 		expect(screen.getByText("Move list · 0 placements")).toBeDefined();
 		expect(solver.kinds().filter((kind) => kind === "undo")).toHaveLength(3);
 		expect(solver.position.log).toStrictEqual([]);
 		expect(solver.kinds().at(-1)).toBe("evaluate");
 	});
 
-	it("announces a win, colours the verdict and rings the winning cells", async () => {
+	it("announces a win, colours the verdict and rings the winning cells", async () =>
+	{
 		// Tall pieces along the top row; the human completes it with the fourth placement.
-		renderPlay(youFirst, {bestMoves: [cellFromName("a1"), 5, cellFromName("c1"), 7]});
+		renderPlay(
+			youFirst,
+			{
+				bestMoves: [cellFromName("a1"), 5, cellFromName("c1"), 7],
+			},
+		);
 		await screen.findByText("Choose a piece for the bot.");
 		fireEvent.click(tray("light round tall solid"));
 		await screen.findByText("Place the dark round tall solid piece.");
@@ -214,7 +343,8 @@ describe("PlayScreen against the bot", () => {
 
 		await screen.findByText("Quarto! You win.");
 		expect(screen.getByText("You win").closest(".verdict")?.className).toBe("verdict win");
-		for (const name of ["a1", "b1", "c1", "d1"]) {
+		for (const name of ["a1", "b1", "c1", "d1"])
+		{
 			expect(cell(name).className).toContain("winning");
 		}
 		expect(cell("a2").className).not.toContain("winning");
@@ -223,14 +353,28 @@ describe("PlayScreen against the bot", () => {
 		expect(screen.getByText("lines + squares · move 5 of 16")).toBeDefined();
 	});
 
-	it("lets the bot open when it moves first, with the lamp on while it thinks", async () => {
-		const solver = renderPlay(botFirst, {bestMoves: [9]});
+	it("lets the bot open when it moves first, with the lamp on while it thinks", async () =>
+	{
+		const solver = renderPlay(
+			botFirst,
+			{
+				bestMoves: [9],
+			},
+		);
 		solver.hold("bestMove");
 		await screen.findByText("Bot is thinking…");
-		await waitFor(() => {
+		await waitFor(() =>
+		{
 			expect(document.querySelector(".lamp.thinking")).not.toBeNull();
 		});
-		expect(screen.getByRole("heading", {level: 1}).textContent).toBe("Bot vs you · impossible");
+		expect(
+			screen.getByRole(
+				"heading",
+				{
+					level: 1,
+				},
+			).textContent,
+		).toBe("Bot vs you · impossible");
 		expect(enabledSlots()).toBe(0);
 
 		solver.release();
@@ -240,8 +384,17 @@ describe("PlayScreen against the bot", () => {
 		expect(solver.kinds()).toStrictEqual(["init", "setSeed", "evaluate", "bestMove", "applySelect", "evaluate"]);
 	});
 
-	it("asks the solver nothing about the position when annotations are off", async () => {
-		const solver = renderPlay({...youFirst, hints: "off"}, {bestMoves: [cellFromName("b2"), 7]});
+	it("asks the solver nothing about the position when annotations are off", async () =>
+	{
+		const solver = renderPlay(
+			{
+				...youFirst,
+				hints: "off",
+			},
+			{
+				bestMoves: [cellFromName("b2"), 7],
+			},
+		);
 		await screen.findByText("Choose a piece for the bot.");
 		fireEvent.click(tray("dark square short solid"));
 		await screen.findByText("Place the dark square tall solid piece.");
@@ -259,27 +412,71 @@ describe("PlayScreen against the bot", () => {
 		expect(screen.getByText("lines + squares · move 2 of 16")).toBeDefined();
 	});
 
-	it("offers an Annotations control on the play screen that reports the level chosen", async () => {
+	it("offers an Annotations control on the play screen that reports the level chosen", async () =>
+	{
 		const {hintsChanges} = mountPlay(youFirst);
 		await screen.findByText("Choose a piece for the bot.");
-		const group = screen.getByRole("radiogroup", {name: "Annotations"});
-		expect(within(group).getByRole("radio", {name: "Outcome"}).getAttribute("aria-checked")).toBe("true");
-		fireEvent.click(within(group).getByRole("radio", {name: "Outcome + move values"}));
-		fireEvent.click(within(group).getByRole("radio", {name: "Off"}));
+		const group = screen.getByRole(
+			"radiogroup",
+			{
+				name: "Annotations",
+			},
+		);
+		expect(
+			within(group)
+				.getByRole(
+					"radio",
+					{
+						name: "Outcome",
+					},
+				)
+				.getAttribute("aria-checked"),
+		).toBe("true");
+		fireEvent.click(
+			within(group).getByRole(
+				"radio",
+				{
+					name: "Outcome + move values",
+				},
+			),
+		);
+		fireEvent.click(
+			within(group).getByRole(
+				"radio",
+				{
+					name: "Off",
+				},
+			),
+		);
 		expect(hintsChanges).toStrictEqual(["values", "off"]);
 	});
 
-	it("turning annotations on mid-game evaluates the current position without restarting the game", async () => {
-		const {solver, rerender} = mountPlay({...youFirst, hints: "off"}, {bestMoves: [cellFromName("b2"), 7]});
+	it("turning annotations on mid-game evaluates the current position without restarting the game", async () =>
+	{
+		const {solver, rerender} = mountPlay(
+			{
+				...youFirst,
+				hints: "off",
+			},
+			{
+				bestMoves: [cellFromName("b2"), 7],
+			},
+		);
 		await screen.findByText("Choose a piece for the bot.");
 		fireEvent.click(tray("dark square short solid"));
 		await screen.findByText("Place the dark square tall solid piece.");
 		expect(document.querySelector(".oracle")).toBeNull();
 		const before = solver.kinds().length;
 
-		rerender({...youFirst, hints: "outcome"});
+		rerender(
+			{
+				...youFirst,
+				hints: "outcome",
+			},
+		);
 
-		await waitFor(() => {
+		await waitFor(() =>
+		{
 			expect(document.querySelector(".oracle .verdict")).not.toBeNull();
 		});
 		// The game carried on: the same solver, one more evaluation, no fresh init, the move still played.
@@ -290,35 +487,69 @@ describe("PlayScreen against the bot", () => {
 		expect(screen.getByText("Place the dark square tall solid piece.")).toBeDefined();
 	});
 
-	it("turning annotations off hides the verdict and the move values and asks the solver nothing", async () => {
-		const {solver, rerender} = mountPlay({...youFirst, hints: "values"}, {moveValue: VARIED});
+	it("turning annotations off hides the verdict and the move values and asks the solver nothing", async () =>
+	{
+		const {solver, rerender} = mountPlay(
+			{
+				...youFirst,
+				hints: "values",
+			},
+			{
+				moveValue: VARIED,
+			},
+		);
 		await screen.findByText("Choose a piece for the bot.");
-		await waitFor(() => {
+		await waitFor(() =>
+		{
 			expect(document.querySelectorAll(".hint").length).toBeGreaterThan(0);
 		});
 		const before = solver.kinds().length;
 
-		rerender({...youFirst, hints: "off"});
+		rerender(
+			{
+				...youFirst,
+				hints: "off",
+			},
+		);
 
 		expect(document.querySelector(".oracle")).toBeNull();
 		expect(document.querySelectorAll(".hint")).toHaveLength(0);
 		expect(solver.kinds()).toHaveLength(before);
 
 		// Back to outcome only: the verdict returns, the per-move labels do not.
-		rerender({...youFirst, hints: "outcome"});
-		await waitFor(() => {
+		rerender(
+			{
+				...youFirst,
+				hints: "outcome",
+			},
+		);
+		await waitFor(() =>
+		{
 			expect(document.querySelector(".oracle .verdict")).not.toBeNull();
 		});
 		expect(document.querySelectorAll(".hint")).toHaveLength(0);
 	});
 
-	it("starts over with the same setup on New game", async () => {
-		const solver = renderPlay(youFirst, {bestMoves: [cellFromName("b2"), 7]});
+	it("starts over with the same setup on New game", async () =>
+	{
+		const solver = renderPlay(
+			youFirst,
+			{
+				bestMoves: [cellFromName("b2"), 7],
+			},
+		);
 		await screen.findByText("Choose a piece for the bot.");
 		fireEvent.click(tray("dark square short solid"));
 		await screen.findByText("Place the dark square tall solid piece.");
 
-		fireEvent.click(screen.getByRole("button", {name: "New game"}));
+		fireEvent.click(
+			screen.getByRole(
+				"button",
+				{
+					name: "New game",
+				},
+			),
+		);
 
 		await screen.findByText("Choose a piece for the bot.");
 		expect(enabledSlots()).toBe(16);
@@ -327,13 +558,31 @@ describe("PlayScreen against the bot", () => {
 	});
 });
 
-describe("PlayScreen against the Medium bot", () => {
-	const medium: GameSetup = {...youFirst, difficulty: "medium"};
+describe("PlayScreen against the Medium bot", () =>
+{
+	const medium: GameSetup =
+	{
+		...youFirst,
+		difficulty: "medium",
+	};
 
-	it("never asks the solver for a move, yet still asks it for the verdict", async () => {
-		const solver = renderPlay(medium, {value: 14});
+	it("never asks the solver for a move, yet still asks it for the verdict", async () =>
+	{
+		const solver = renderPlay(
+			medium,
+			{
+				value: 14,
+			},
+		);
 		await screen.findByText("Choose a piece for the bot.");
-		expect(screen.getByRole("heading", {level: 1}).textContent).toBe("You vs bot · medium");
+		expect(
+			screen.getByRole(
+				"heading",
+				{
+					level: 1,
+				},
+			).textContent,
+		).toBe("You vs bot · medium");
 		await screen.findByText("You win in 3");
 
 		fireEvent.click(tray("dark square short solid"));
@@ -356,54 +605,129 @@ describe("PlayScreen against the Medium bot", () => {
 		expect(solver.position.log).toHaveLength(3);
 	});
 
-	it("opens with a choice only when it moves first", async () => {
-		const solver = renderPlay({...medium, first: "bot", hints: "off"});
+	it("opens with a choice only when it moves first", async () =>
+	{
+		const solver = renderPlay(
+			{
+				...medium,
+				first: "bot",
+				hints: "off",
+			},
+		);
 		await screen.findByText(/^Place the .* piece\.$/);
 		expect(solver.kinds()).toStrictEqual(["init", "setSeed", "applySelect"]);
 		expect(enabledCells()).toBe(16);
 	});
 });
 
-describe("PlayScreen between two people", () => {
-	it("alternates the two names, never asks the solver for a move, and undoes one ply", async () => {
+describe("PlayScreen between two people", () =>
+{
+	it("alternates the two names, never asks the solver for a move, and undoes one ply", async () =>
+	{
 		const solver = renderPlay(twoPeople);
 		await screen.findByText("Choose a piece for Grace.");
-		expect(screen.getByRole("heading", {level: 1}).textContent).toBe("Ada vs Grace");
-		expect(screen.getByText("Ada", {selector: ".prompt"})).toBeDefined();
+		expect(
+			screen.getByRole(
+				"heading",
+				{
+					level: 1,
+				},
+			).textContent,
+		).toBe("Ada vs Grace");
+		expect(
+			screen.getByText(
+				"Ada",
+				{
+					selector: ".prompt",
+				},
+			),
+		).toBeDefined();
 
 		fireEvent.click(tray("dark round short hollow"));
 		await screen.findByText("Place the dark round short hollow piece.");
-		expect(screen.getByText("Grace", {selector: ".prompt"})).toBeDefined();
+		expect(
+			screen.getByText(
+				"Grace",
+				{
+					selector: ".prompt",
+				},
+			),
+		).toBeDefined();
 
 		fireEvent.click(cell("c3"));
 		await screen.findByText("Choose a piece for Ada.");
-		expect(screen.getByText("Grace", {selector: ".prompt"})).toBeDefined();
+		expect(
+			screen.getByText(
+				"Grace",
+				{
+					selector: ".prompt",
+				},
+			),
+		).toBeDefined();
 		expect(screen.getByText("Move list · 1 placements")).toBeDefined();
 
-		fireEvent.click(screen.getByRole("button", {name: "Undo"}));
+		fireEvent.click(
+			screen.getByRole(
+				"button",
+				{
+					name: "Undo",
+				},
+			),
+		);
 		await screen.findByText("Place the dark round short hollow piece.");
-		expect(screen.getByRole("button", {name: "cell c3"})).toBeDefined();
+		expect(
+			screen.getByRole(
+				"button",
+				{
+					name: "cell c3",
+				},
+			),
+		).toBeDefined();
 
 		expect(solver.kinds()).toStrictEqual(["init", "setSeed", "applySelect", "applyPlace", "undo"]);
 		expect(document.querySelector(".oracle")).toBeNull();
 	});
 
-	it("places by dragging the piece in hand onto a cell exactly as a tap on the cell does", async () => {
+	it("places by dragging the piece in hand onto a cell exactly as a tap on the cell does", async () =>
+	{
 		const stubs = installPointerStubs();
-		const byTap = await afterPlacing(twoPeople, () => {
+		const byTap = await afterPlacing(twoPeople, () =>
+		{
 			fireEvent.click(cell("c3"));
 		});
 		cleanup();
 
-		const byDrag = await afterPlacing(twoPeople, () => {
+		const byDrag = await afterPlacing(twoPeople, () =>
+		{
 			const hand = handPiece();
 			expect(hand.className).toBe("hand-piece draggable");
-			pointer(hand, "pointerdown", {x: 20, y: 30});
+			pointer(
+				hand,
+				"pointerdown",
+				{
+					x: 20,
+					y: 30,
+				},
+			);
 			stubs.hitTest(cell("c3"));
-			pointer(hand, "pointermove", {x: 200, y: 300});
+			pointer(
+				hand,
+				"pointermove",
+				{
+					x: 200,
+					y: 300,
+				},
+			);
 			expect(cell("c3").className).toBe("cell legal drop");
 			expect(document.querySelector(".drag-ghost .piece")).not.toBeNull();
-			pointer(hand, "pointerup", {x: 200, y: 300});
+			pointer(
+				hand,
+				"pointerup",
+				{
+					x: 200,
+					y: 300,
+				},
+			);
 		});
 
 		expect(document.querySelector(".drag-ghost")).toBeNull();
@@ -415,8 +739,14 @@ describe("PlayScreen between two people", () => {
 		expect(handPiece().className).toBe("hand-piece empty");
 	});
 
-	it("names the winner in the neutral colour", async () => {
-		renderPlay({...twoPeople, hints: "outcome"});
+	it("names the winner in the neutral colour", async () =>
+	{
+		renderPlay(
+			{
+				...twoPeople,
+				hints: "outcome",
+			},
+		);
 		await screen.findByText("Choose a piece for Grace.");
 		const moves: readonly [string, string][] = [
 			["light round tall solid", "a1"],
@@ -424,7 +754,8 @@ describe("PlayScreen between two people", () => {
 			["light square tall solid", "c1"],
 			["dark square tall solid", "d1"],
 		];
-		for (const [piece, target] of moves) {
+		for (const [piece, target] of moves)
+		{
 			fireEvent.click(tray(piece));
 			await screen.findByText(new RegExp(`^Place the ${piece} piece\\.$`));
 			fireEvent.click(cell(target));
@@ -434,18 +765,43 @@ describe("PlayScreen between two people", () => {
 	});
 });
 
-describe("PlayScreen with undo off", () => {
-	const noUndo: GameSetup = {...youFirst, hints: "off", undo: "off"};
+describe("PlayScreen with undo off", () =>
+{
+	const noUndo: GameSetup =
+	{
+		...youFirst,
+		hints: "off",
+		undo: "off",
+	};
 	const CONFIRM_PROMPT = "Confirm your turn, or take it back.";
 
-	function control(name: string): HTMLElement {
-		return screen.getByRole("button", {name});
+	function control(name: string): HTMLElement
+	{
+		return screen.getByRole(
+			"button",
+			{
+				name,
+			},
+		);
 	}
 
-	it("holds the human's choice back from the solver until Confirm, then lets the bot reply", async () => {
-		const solver = renderPlay(noUndo, {bestMoves: [cellFromName("b2"), 7]});
+	it("holds the human's choice back from the solver until Confirm, then lets the bot reply", async () =>
+	{
+		const solver = renderPlay(
+			noUndo,
+			{
+				bestMoves: [cellFromName("b2"), 7],
+			},
+		);
 		await screen.findByText("Choose a piece for the bot.");
-		expect(screen.queryByRole("button", {name: "Undo"})).toBeNull();
+		expect(
+			screen.queryByRole(
+				"button",
+				{
+					name: "Undo",
+				},
+			),
+		).toBeNull();
 		expect(control("Confirm").hasAttribute("disabled")).toBe(true);
 		expect(control("Confirm").className).toBe("btn primary");
 		expect(control("Take back").hasAttribute("disabled")).toBe(true);
@@ -471,21 +827,43 @@ describe("PlayScreen with undo off", () => {
 			"bestMove",
 			"applySelect",
 		]);
-		expect(solver.requests[2]).toStrictEqual({kind: "applySelect", payload: {piece: 3}});
+		expect(solver.requests[2]).toStrictEqual(
+			{
+				kind: "applySelect",
+				payload:
+				{
+					piece: 3,
+				},
+			},
+		);
 		expect(screen.getByText("Move list · 1 placements")).toBeDefined();
 	});
 
-	it("shows the provisional placement on the board and sends both plies only on Confirm", async () => {
-		const solver = renderPlay({...noUndo, first: "bot"}, {bestMoves: [7, cellFromName("b2"), 9]});
+	it("shows the provisional placement on the board and sends both plies only on Confirm", async () =>
+	{
+		const solver = renderPlay(
+			{
+				...noUndo,
+				first: "bot",
+			},
+			{
+				bestMoves: [7, cellFromName("b2"), 9],
+			},
+		);
 		await screen.findByText("Place the dark square tall solid piece.");
 		const requestsBefore = solver.requests.length;
 
 		fireEvent.click(cell("c3"));
 
 		await screen.findByText("Choose a piece for the bot.");
-		expect(screen.getByRole("button", {name: "cell c3, dark square tall solid, unconfirmed"}).className).toBe(
-			"cell pending",
-		);
+		expect(
+			screen.getByRole(
+				"button",
+				{
+					name: "cell c3, dark square tall solid, unconfirmed",
+				},
+			).className,
+		).toBe("cell pending");
 		expect(enabledCells()).toBe(0);
 		expect(enabledSlots()).toBe(15);
 		expect(handPiece().className).toBe("hand-piece empty");
@@ -502,20 +880,59 @@ describe("PlayScreen with undo off", () => {
 
 		await screen.findByText("Place the dark round short hollow piece.");
 		expect(solver.requests.slice(requestsBefore)).toStrictEqual([
-			{kind: "applyPlace", payload: {cell: cellFromName("c3")}},
-			{kind: "applySelect", payload: {piece: 8}},
-			{kind: "bestMove", payload: undefined},
-			{kind: "applyPlace", payload: {cell: cellFromName("b2")}},
-			{kind: "bestMove", payload: undefined},
-			{kind: "applySelect", payload: {piece: 9}},
+			{
+				kind: "applyPlace",
+				payload:
+				{
+					cell: cellFromName("c3"),
+				},
+			},
+			{
+				kind: "applySelect",
+				payload:
+				{
+					piece: 8,
+				},
+			},
+			{
+				kind: "bestMove",
+				payload: undefined,
+			},
+			{
+				kind: "applyPlace",
+				payload:
+				{
+					cell: cellFromName("b2"),
+				},
+			},
+			{
+				kind: "bestMove",
+				payload: undefined,
+			},
+			{
+				kind: "applySelect",
+				payload:
+				{
+					piece: 9,
+				},
+			},
 		]);
 		expect(cell("c3").className).toBe("cell");
 		expect(cell("b2").className).toBe("cell last");
 		expect(solver.position.log).toHaveLength(5);
 	});
 
-	it("takes back the selection first, then the placement, restoring each earlier provisional state", async () => {
-		const solver = renderPlay({...noUndo, first: "bot"}, {bestMoves: [7]});
+	it("takes back the selection first, then the placement, restoring each earlier provisional state", async () =>
+	{
+		const solver = renderPlay(
+			{
+				...noUndo,
+				first: "bot",
+			},
+			{
+				bestMoves: [7],
+			},
+		);
 		await screen.findByText("Place the dark square tall solid piece.");
 		fireEvent.click(cell("c3"));
 		await screen.findByText("Choose a piece for the bot.");
@@ -539,8 +956,17 @@ describe("PlayScreen with undo off", () => {
 		expect(solver.kinds()).toStrictEqual(["init", "setSeed", "bestMove", "applySelect"]);
 	});
 
-	it("keeps the committed position's verdict and asks the oracle nothing about the provisional one", async () => {
-		const solver = renderPlay({...noUndo, hints: "outcome"}, {value: 14});
+	it("keeps the committed position's verdict and asks the oracle nothing about the provisional one", async () =>
+	{
+		const solver = renderPlay(
+			{
+				...noUndo,
+				hints: "outcome",
+			},
+			{
+				value: 14,
+			},
+		);
 		await screen.findByText("You win in 3");
 		fireEvent.click(tray("dark square short solid"));
 		await screen.findByText(CONFIRM_PROMPT);
@@ -548,17 +974,44 @@ describe("PlayScreen with undo off", () => {
 		expect(solver.kinds()).toStrictEqual(["init", "setSeed", "evaluate"]);
 	});
 
-	it("makes each person's turn provisional and never shows Undo between two people", async () => {
-		const solver = renderPlay({...twoPeople, undo: "off"});
+	it("makes each person's turn provisional and never shows Undo between two people", async () =>
+	{
+		const solver = renderPlay(
+			{
+				...twoPeople,
+				undo: "off",
+			},
+		);
 		await screen.findByText("Choose a piece for Grace.");
-		expect(screen.queryByRole("button", {name: "Undo"})).toBeNull();
+		expect(
+			screen.queryByRole(
+				"button",
+				{
+					name: "Undo",
+				},
+			),
+		).toBeNull();
 		fireEvent.click(tray("dark round short hollow"));
 		await screen.findByText(CONFIRM_PROMPT);
-		expect(screen.getByText("Ada", {selector: ".prompt"})).toBeDefined();
+		expect(
+			screen.getByText(
+				"Ada",
+				{
+					selector: ".prompt",
+				},
+			),
+		).toBeDefined();
 		fireEvent.click(control("Confirm"));
 
 		await screen.findByText("Place the dark round short hollow piece.");
-		expect(screen.getByText("Grace", {selector: ".prompt"})).toBeDefined();
+		expect(
+			screen.getByText(
+				"Grace",
+				{
+					selector: ".prompt",
+				},
+			),
+		).toBeDefined();
 		fireEvent.click(cell("c3"));
 		await screen.findByText("Choose a piece for Ada.");
 		fireEvent.click(tray("light round short hollow"));
@@ -567,12 +1020,25 @@ describe("PlayScreen with undo off", () => {
 		fireEvent.click(control("Confirm"));
 
 		await screen.findByText("Place the light round short hollow piece.");
-		expect(screen.getByText("Ada", {selector: ".prompt"})).toBeDefined();
+		expect(
+			screen.getByText(
+				"Ada",
+				{
+					selector: ".prompt",
+				},
+			),
+		).toBeDefined();
 		expect(solver.kinds()).toStrictEqual(["init", "setSeed", "applySelect", "applyPlace", "applySelect"]);
 	});
 
-	it("waits for Confirm before declaring a winning placement", async () => {
-		renderPlay({...twoPeople, undo: "off"});
+	it("waits for Confirm before declaring a winning placement", async () =>
+	{
+		renderPlay(
+			{
+				...twoPeople,
+				undo: "off",
+			},
+		);
 		await screen.findByText("Choose a piece for Grace.");
 		const handovers: readonly [string, string | null][] = [
 			["light round tall solid", null],
@@ -580,8 +1046,10 @@ describe("PlayScreen with undo off", () => {
 			["light square tall solid", "b1"],
 			["dark square tall solid", "c1"],
 		];
-		for (const [piece, target] of handovers) {
-			if (target !== null) {
+		for (const [piece, target] of handovers)
+		{
+			if (target !== null)
+			{
 				fireEvent.click(cell(target));
 			}
 			fireEvent.click(tray(piece));
@@ -602,67 +1070,133 @@ describe("PlayScreen with undo off", () => {
 		fireEvent.click(control("Confirm"));
 
 		await screen.findByText("Quarto! Ada wins.");
-		for (const name of ["a1", "b1", "c1", "d1"]) {
+		for (const name of ["a1", "b1", "c1", "d1"])
+		{
 			expect(cell(name).className).toContain("winning");
 		}
 		expect(control("Confirm").hasAttribute("disabled")).toBe(true);
 	});
 });
 
-describe("the same setup search starts the same game", () => {
-	it("gives the same initial state for the same URL", () => {
-		const search = playSearchSchema.parse({opponent: "human", rules: "lines", annotations: "values", name1: "Ada"});
-		expect(newGame(toGameSetup(search))).toStrictEqual(newGame(toGameSetup(playSearchSchema.parse({...search}))));
-		expect(newGame(toGameSetup(search)).setup).toStrictEqual({
-			opponent: "human",
-			rules: "lines",
-			first: "you",
-			difficulty: "impossible",
-			hints: "values",
-			undo: "allowed",
-			names: ["Ada", "Player 2"],
-		});
+describe("the same setup search starts the same game", () =>
+{
+	it("gives the same initial state for the same URL", () =>
+	{
+		const search = playSearchSchema.parse(
+			{
+				opponent: "human",
+				rules: "lines",
+				annotations: "values",
+				name1: "Ada",
+			},
+		);
+		expect(newGame(toGameSetup(search))).toStrictEqual(
+			newGame(
+				toGameSetup(
+					playSearchSchema.parse(
+						{
+							...search,
+						},
+					),
+				),
+			),
+		);
+		expect(newGame(toGameSetup(search)).setup).toStrictEqual(
+			{
+				opponent: "human",
+				rules: "lines",
+				first: "you",
+				difficulty: "impossible",
+				hints: "values",
+				undo: "allowed",
+				names: ["Ada", "Player 2"],
+			},
+		);
 	});
 });
 
-describe("/play route", () => {
-	it("reads the setup from the search, titles the game and links back to setup and help", async () => {
-		const router = createRouter({
-			routeTree,
-			history: createMemoryHistory({initialEntries: ["/play?opponent=human&rules=lines&name1=Ada&name2=Grace"]}),
-			context: {
-				store: memoryStore(),
-				gameStore: memoryStore(),
-				createSolver: () => new ScriptedSolver(),
-				prefetchBook: () => {},
+describe("/play route", () =>
+{
+	it("reads the setup from the search, titles the game and links back to setup and help", async () =>
+	{
+		const router = createRouter(
+			{
+				routeTree,
+				history: createMemoryHistory(
+					{
+						initialEntries: ["/play?opponent=human&rules=lines&name1=Ada&name2=Grace"],
+					},
+				),
+				context:
+				{
+					store: memoryStore(),
+					gameStore: memoryStore(),
+					createSolver: () => new ScriptedSolver(),
+					prefetchBook: () =>
+					{
+					},
+				},
 			},
-		});
+		);
 		render(<RouterProvider router={router} />);
-		await screen.findByRole("heading", {level: 1, name: "Ada vs Grace"});
+		await screen.findByRole(
+			"heading",
+			{
+				level: 1,
+				name: "Ada vs Grace",
+			},
+		);
 		await screen.findByText("Choose a piece for Grace.");
-		expect(screen.getByRole("link", {name: /Setup/}).getAttribute("href")).toBe("/");
-		expect(screen.getByRole("link", {name: "Using the app"}).getAttribute("href")).toBe("/app");
+		expect(
+			screen
+				.getByRole(
+					"link",
+					{
+						name: /Setup/,
+					},
+				)
+				.getAttribute("href"),
+		).toBe("/");
+		expect(
+			screen
+				.getByRole(
+					"link",
+					{
+						name: "Using the app",
+					},
+				)
+				.getAttribute("href"),
+		).toBe("/app");
 		expect(screen.getByText("lines only · move 1 of 16")).toBeDefined();
 	});
 
-	it("keeps the game in progress while the reader visits the help page and comes back", async () => {
+	it("keeps the game in progress while the reader visits the help page and comes back", async () =>
+	{
 		const solvers: ScriptedSolver[] = [];
-		const router = createRouter({
-			routeTree,
-			history: createMemoryHistory({
-				initialEntries: ["/play?opponent=human&rules=lines&annotations=off&name1=Ada&name2=Grace"],
-			}),
-			context: {
-				store: memoryStore(),
-				gameStore: memoryStore(),
-				createSolver: () => {
-					const solver = new ScriptedSolver({}, "lines");
-					solvers.push(solver);
-					return solver;
+		const router = createRouter(
+			{
+				routeTree,
+				history: createMemoryHistory(
+					{
+						initialEntries: ["/play?opponent=human&rules=lines&annotations=off&name1=Ada&name2=Grace"],
+					},
+				),
+				context:
+				{
+					store: memoryStore(),
+					gameStore: memoryStore(),
+					createSolver: () =>
+					{
+						const solver = new ScriptedSolver({}, "lines");
+						solvers.push(solver);
+						return solver;
+					},
+					prefetchBook: () =>
+					{
+					},
 				},
-				prefetchBook: () => {},
 			},
-		});
+		);
 		render(<RouterProvider router={router} />);
 		await screen.findByText("Choose a piece for Grace.");
 		fireEvent.click(tray("dark square short solid"));
@@ -670,9 +1204,29 @@ describe("/play route", () => {
 		fireEvent.click(cell("b2"));
 		await screen.findByText("Choose a piece for Ada.");
 
-		fireEvent.click(screen.getByRole("link", {name: "Using the app"}));
-		await screen.findByRole("heading", {level: 1, name: "Using the app"});
-		fireEvent.click(screen.getAllByRole("button", {name: /Back/})[0]!);
+		fireEvent.click(
+			screen.getByRole(
+				"link",
+				{
+					name: "Using the app",
+				},
+			),
+		);
+		await screen.findByRole(
+			"heading",
+			{
+				level: 1,
+				name: "Using the app",
+			},
+		);
+		fireEvent.click(
+			screen.getAllByRole(
+				"button",
+				{
+					name: /Back/,
+				},
+			)[0]!,
+		);
 
 		// The same game, not a fresh one: Grace is still to choose, b2 is taken, two plies are logged.
 		await screen.findByText("Choose a piece for Ada.");
@@ -684,62 +1238,124 @@ describe("/play route", () => {
 		expect(restored.kinds().slice(0, 4)).toStrictEqual(["init", "setSeed", "applySelect", "applyPlace"]);
 	});
 
-	it("starts a fresh game after New game, even when coming back from the help page", async () => {
-		const router = createRouter({
-			routeTree,
-			history: createMemoryHistory({
-				initialEntries: ["/play?opponent=human&rules=lines&annotations=off&name1=Ada&name2=Grace"],
-			}),
-			context: {
-				store: memoryStore(),
-				gameStore: memoryStore(),
-				createSolver: () => new ScriptedSolver({}, "lines"),
-				prefetchBook: () => {},
+	it("starts a fresh game after New game, even when coming back from the help page", async () =>
+	{
+		const router = createRouter(
+			{
+				routeTree,
+				history: createMemoryHistory(
+					{
+						initialEntries: ["/play?opponent=human&rules=lines&annotations=off&name1=Ada&name2=Grace"],
+					},
+				),
+				context:
+				{
+					store: memoryStore(),
+					gameStore: memoryStore(),
+					createSolver: () => new ScriptedSolver({}, "lines"),
+					prefetchBook: () =>
+					{
+					},
+				},
 			},
-		});
+		);
 		render(<RouterProvider router={router} />);
 		await screen.findByText("Choose a piece for Grace.");
 		fireEvent.click(tray("dark square short solid"));
 		await screen.findByText("Place the dark square short solid piece.");
-		fireEvent.click(screen.getByRole("button", {name: "New game"}));
+		fireEvent.click(
+			screen.getByRole(
+				"button",
+				{
+					name: "New game",
+				},
+			),
+		);
 		await screen.findByText("Choose a piece for Grace.");
 
-		fireEvent.click(screen.getByRole("link", {name: "Using the app"}));
-		await screen.findByRole("heading", {level: 1, name: "Using the app"});
-		fireEvent.click(screen.getAllByRole("button", {name: /Back/})[0]!);
+		fireEvent.click(
+			screen.getByRole(
+				"link",
+				{
+					name: "Using the app",
+				},
+			),
+		);
+		await screen.findByRole(
+			"heading",
+			{
+				level: 1,
+				name: "Using the app",
+			},
+		);
+		fireEvent.click(
+			screen.getAllByRole(
+				"button",
+				{
+					name: /Back/,
+				},
+			)[0]!,
+		);
 
 		await screen.findByText("Choose a piece for Grace.");
 		expect(screen.getByText(/^lines only · move 1 of 16/)).toBeDefined();
 	});
 
-	it("writes an annotations change to the URL without starting a new game", async () => {
+	it("writes an annotations change to the URL without starting a new game", async () =>
+	{
 		const solver = new ScriptedSolver({}, "lines");
-		const router = createRouter({
-			routeTree,
-			history: createMemoryHistory({
-				initialEntries: ["/play?opponent=human&rules=lines&annotations=off&name1=Ada&name2=Grace"],
-			}),
-			context: {
-				store: memoryStore(),
-				gameStore: memoryStore(),
-				createSolver: () => solver,
-				prefetchBook: () => {},
+		const router = createRouter(
+			{
+				routeTree,
+				history: createMemoryHistory(
+					{
+						initialEntries: ["/play?opponent=human&rules=lines&annotations=off&name1=Ada&name2=Grace"],
+					},
+				),
+				context:
+				{
+					store: memoryStore(),
+					gameStore: memoryStore(),
+					createSolver: () => solver,
+					prefetchBook: () =>
+					{
+					},
+				},
 			},
-		});
+		);
 		render(<RouterProvider router={router} />);
 		await screen.findByText("Choose a piece for Grace.");
 		fireEvent.click(tray("dark square short solid"));
 		await screen.findByText("Place the dark square short solid piece.");
 
-		const group = screen.getByRole("radiogroup", {name: "Annotations"});
-		fireEvent.click(within(group).getByRole("radio", {name: "Outcome"}));
+		const group = screen.getByRole(
+			"radiogroup",
+			{
+				name: "Annotations",
+			},
+		);
+		fireEvent.click(
+			within(group).getByRole(
+				"radio",
+				{
+					name: "Outcome",
+				},
+			),
+		);
 
-		await waitFor(() => {
-			expect(router.state.location.search).toMatchObject({annotations: "outcome", name1: "Ada"});
+		await waitFor(() =>
+		{
+			expect(router.state.location.search).toMatchObject(
+				{
+					annotations: "outcome",
+					name1: "Ada",
+				},
+			);
 		});
 		// Replaced, not pushed: Back still leaves the game rather than stepping through annotation changes.
 		expect(router.history.canGoBack()).toBe(false);
-		await waitFor(() => {
+		await waitFor(() =>
+		{
 			expect(document.querySelector(".oracle .verdict")).not.toBeNull();
 		});
 		expect(screen.getByText("Place the dark square short solid piece.")).toBeDefined();

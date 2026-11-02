@@ -8,7 +8,8 @@ import {PlayScreen} from "./PlayScreen.js";
 import {withTheme} from "./withTheme.js";
 import "../styles/index.css";
 
-const botGame: GameSetup = {
+const botGame: GameSetup =
+{
 	opponent: "bot",
 	rules: "squares",
 	first: "you",
@@ -19,20 +20,26 @@ const botGame: GameSetup = {
 };
 
 /** The bot fills the top row from the left, then works down; every third move value reads "=", then W2 and L3. */
-const script: Partial<Script> = {
+const script: Partial<Script> =
+{
 	bestMoves: [cellFromName("a1"), 5, cellFromName("b1"), 9, cellFromName("c1"), 13, cellFromName("a2"), 1],
 	value: 0,
 	moveValue: (move, movesLeft) => [0, movesLeft - 1, -(movesLeft - 2)][move % 3] ?? 0,
 };
 
 /** Hands the screen a scripted solver so the story plays without the worker, and stands in for the router's links. */
-function Scripted({setup}: {setup: GameSetup}) {
+function Scripted({setup}: {setup: GameSetup})
+{
 	const createSolver = useCallback(() => new ScriptedSolver(script, setup.rules), [setup.rules]);
 	// The Annotations control works in the story too: the level lives here, as it lives in the URL on the site.
 	const [hints, setHints] = useState(setup.hints);
 	return (
 		<PlayScreen
-			setup={{...setup, hints}}
+			setup={
+			{
+				...setup,
+				hints,
+			}}
 			createSolver={createSolver}
 			onHintsChange={setHints}
 			backLink={
@@ -49,11 +56,18 @@ function Scripted({setup}: {setup: GameSetup}) {
 	);
 }
 
-const meta: Meta<typeof Scripted> = {
+const meta: Meta<typeof Scripted> =
+{
 	title: "Play/PlayScreen",
 	component: Scripted,
-	parameters: {layout: "fullscreen"},
-	args: {setup: botGame},
+	parameters:
+	{
+		layout: "fullscreen",
+	},
+	args:
+	{
+		setup: botGame,
+	},
 };
 
 export default meta;
@@ -63,38 +77,104 @@ type Story = StoryObj<typeof meta>;
 export const YouVsBot: Story = {};
 
 /** The bot opens, so the screen starts on its turn with the lamp pulsing. */
-export const BotFirst: Story = {
-	args: {setup: {...botGame, first: "bot"}},
+export const BotFirst: Story =
+{
+	args:
+	{
+		setup:
+		{
+			...botGame,
+			first: "bot",
+		},
+	},
 };
 
 /** Every legal move carries its exact value. */
-export const MoveValues: Story = {
-	args: {setup: {...botGame, hints: "values"}},
+export const MoveValues: Story =
+{
+	args:
+	{
+		setup:
+		{
+			...botGame,
+			hints: "values",
+		},
+	},
 };
 
 /** Two people on one device, no oracle at all. */
-export const TwoPeople: Story = {
-	args: {setup: {...botGame, opponent: "human", rules: "lines", hints: "off", names: ["Ada", "Grace"]}},
+export const TwoPeople: Story =
+{
+	args:
+	{
+		setup:
+		{
+			...botGame,
+			opponent: "human",
+			rules: "lines",
+			hints: "off",
+			names: ["Ada", "Grace"],
+		},
+	},
 };
 
 /** Undo off: the placement and the choice sit on the board and in the tray, unconfirmed, until Confirm commits them. */
-export const AwaitingConfirmation: Story = {
-	args: {setup: {...botGame, first: "bot", undo: "off"}},
-	play: async ({canvasElement}) => {
+export const AwaitingConfirmation: Story =
+{
+	args:
+	{
+		setup:
+		{
+			...botGame,
+			first: "bot",
+			undo: "off",
+		},
+	},
+	play: async ({canvasElement}) =>
+	{
 		const canvas = within(canvasElement);
 		await canvas.findByText(/^Place the .* piece\.$/);
-		await userEvent.click(canvas.getByRole("button", {name: "cell c3"}));
-		await userEvent.click(canvas.getByRole("button", {name: "light round short hollow piece"}));
+		await userEvent.click(
+			canvas.getByRole(
+				"button",
+				{
+					name: "cell c3",
+				},
+			),
+		);
+		await userEvent.click(
+			canvas.getByRole(
+				"button",
+				{
+					name: "light round short hollow piece",
+				},
+			),
+		);
 		await canvas.findByText("Confirm your turn, or take it back.");
 	},
 };
 
-export const YouVsBotDark: Story = {
+export const YouVsBotDark: Story =
+{
 	decorators: [withTheme("dark")],
 };
 
 /** The phone layout the screen is built for: everything in one column, no scrolling at 390×740. */
-export const Phone: Story = {
-	parameters: {viewport: {defaultViewport: "mobile2"}},
-	globals: {viewport: {value: "mobile2", isRotated: false}},
+export const Phone: Story =
+{
+	parameters:
+	{
+		viewport:
+		{
+			defaultViewport: "mobile2",
+		},
+	},
+	globals:
+	{
+		viewport:
+		{
+			value: "mobile2",
+			isRotated: false,
+		},
+	},
 };

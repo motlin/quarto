@@ -6,38 +6,79 @@ import {Board} from "./Board.js";
 import {withTheme} from "./withTheme.js";
 import "../styles/index.css";
 
-function emptyCells(board: BoardValue): Set<Cell> {
+function emptyCells(board: BoardValue): Set<Cell>
+{
 	return new Set(ALL_CELLS.filter((cell) => board[cell] === null));
 }
 
-const midGame = boardWith({a1: 5, d1: 10, b2: 3, c2: 12, b3: 7, c3: 8, d4: 1});
+const midGame = boardWith(
+	{
+		a1: 5,
+		d1: 10,
+		b2: 3,
+		c2: 12,
+		b3: 7,
+		c3: 8,
+		d4: 1,
+	},
+);
 
-const wonBoard = boardWith({a1: 4, b1: 13, c1: 6, d1: 15, b2: 2, c3: 9});
+const wonBoard = boardWith(
+	{
+		a1: 4,
+		b1: 13,
+		c1: 6,
+		d1: 15,
+		b2: 2,
+		c3: 9,
+	},
+);
 
-const meta: Meta<typeof Board> = {
+const meta: Meta<typeof Board> =
+{
 	title: "Play/Board",
 	component: Board,
 	decorators: [
 		(Story) => (
-			<div style={{maxWidth: 420}}>
+			<div
+				style={
+				{
+					maxWidth: 420,
+				}}
+			>
 				<Story />
 			</div>
 		),
 	],
-	args: {onPlace: fn(), lastCell: null, pendingCell: null, winningCells: new Set(), hints: new Map(), dropCell: null},
+	args:
+	{
+		onPlace: fn(),
+		lastCell: null,
+		pendingCell: null,
+		winningCells: new Set(),
+		hints: new Map(),
+		dropCell: null,
+	},
 };
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** Nothing placed and the player about to place: every cell is legal and carries the amber dot. */
-export const Empty: Story = {
-	args: {board: emptyBoard(), legalCells: emptyCells(emptyBoard())},
+export const Empty: Story =
+{
+	args:
+	{
+		board: emptyBoard(),
+		legalCells: emptyCells(emptyBoard()),
+	},
 };
 
 /** Seven pieces down, the last one at d4, and a value on each legal cell. */
-export const MidGameWithHints: Story = {
-	args: {
+export const MidGameWithHints: Story =
+{
+	args:
+	{
 		board: midGame,
 		legalCells: emptyCells(midGame),
 		lastCell: cellFromName("d4"),
@@ -56,13 +97,21 @@ export const MidGameWithHints: Story = {
 };
 
 /** Waiting on the other side: nothing is legal, so no dots and nothing to tap. */
-export const OpponentToMove: Story = {
-	args: {board: midGame, legalCells: new Set(), lastCell: cellFromName("d4")},
+export const OpponentToMove: Story =
+{
+	args:
+	{
+		board: midGame,
+		legalCells: new Set(),
+		lastCell: cellFromName("d4"),
+	},
 };
 
 /** Four tall pieces along the top row: the winning line is ringed in amber and the board is done. */
-export const Won: Story = {
-	args: {
+export const Won: Story =
+{
+	args:
+	{
 		board: wonBoard,
 		legalCells: new Set(),
 		lastCell: cellFromName("d1"),
@@ -70,7 +119,8 @@ export const Won: Story = {
 	},
 };
 
-export const MidGameDark: Story = {
+export const MidGameDark: Story =
+{
 	...MidGameWithHints,
 	decorators: [withTheme("dark")],
 };

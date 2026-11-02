@@ -15,11 +15,16 @@ const NUM_MOVES = 16;
 const NO_PIECE = 16;
 
 const {default: init, WasmSolver, version} = await import(new URL("quarto_solver.js", packageDirectory));
-await init({module_or_path: await readFile(new URL("quarto_solver_bg.wasm", packageDirectory))});
+await init(
+	{
+		module_or_path: await readFile(new URL("quarto_solver_bg.wasm", packageDirectory)),
+	},
+);
 
 // 📜 Transcript notation, as in the upstream fixtures under solver/tests/fixtures/games_reg/.
 
-function pieceFromString(text) {
+function pieceFromString(text)
+{
 	assert.equal(text.length, 2, `piece token ${text}`);
 	const [first, second] = text;
 	assert.match(first, /^[abAB]$/, `piece token ${text}`);
@@ -32,7 +37,8 @@ function pieceFromString(text) {
 	return piece;
 }
 
-function pieceToString(piece) {
+function pieceToString(piece)
+{
 	let first = piece & 1 ? "b" : "a";
 	let second = piece & 2 ? "x" : "o";
 	if (piece & 4) first = first.toUpperCase();
@@ -40,28 +46,32 @@ function pieceToString(piece) {
 	return first + second;
 }
 
-function cellFromString(text) {
+function cellFromString(text)
+{
 	assert.match(text, /^[a-d][1-4]$/, `cell token ${text}`);
 	const column = text.charCodeAt(0) - "a".charCodeAt(0);
 	const row = text.charCodeAt(1) - "1".charCodeAt(0);
 	return row * 4 + column;
 }
 
-function cellToString(cell) {
+function cellToString(cell)
+{
 	return (
 		String.fromCharCode("a".charCodeAt(0) + (cell % 4)) +
 		String.fromCharCode("1".charCodeAt(0) + Math.floor(cell / 4))
 	);
 }
 
-function evaluationToString(movesLeft, value) {
+function evaluationToString(movesLeft, value)
+{
 	if (value === 0) return "Draw";
 	const distance = movesLeft + 1 - Math.abs(value);
 	return `${value > 0 ? "Win" : "Loss"} in ${distance}`;
 }
 
 // Returns { plies: [{ phase: "select"|"place", evaluation, moves: Map<token, evaluation>, chosen }], result: "Win"|"Draw" }
-function parseFixture(text) {
+function parseFixture(text)
+{
 	const blocks = text
 		.split(/\n\n+/)
 		.map((block) => block.trim())
@@ -69,40 +79,58 @@ function parseFixture(text) {
 	const plies = [];
 	let result = null;
 	let current = null;
-	for (const block of blocks) {
+	for (const block of blocks)
+	{
 		const [header, ...body] = block.split("\n");
-		if (header === "Eval:") {
+		if (header === "Eval:")
+		{
 			assert.equal(body.length, 1, block);
-			current = {evaluation: body[0], moves: new Map()};
-		} else if (header === "Moves:") {
+			current =
+			{
+				evaluation: body[0],
+				moves: new Map(),
+			};
+		}
+		else if (header === "Moves:")
+		{
 			assert.ok(current, "Moves before Eval");
-			for (const line of body) {
+			for (const line of body)
+			{
 				const [tokens, evaluation] = line.split(" : ");
 				for (const token of tokens.trim().split(" ")) current.moves.set(token, evaluation);
 			}
-		} else if (header === "Piece:" || header === "Cell:") {
+		}
+		else if (header === "Piece:" || header === "Cell:")
+		{
 			assert.ok(current, `${header} before Eval`);
 			assert.equal(body.length, 1, block);
 			current.phase = header === "Piece:" ? "select" : "place";
 			current.chosen = body[0];
 			plies.push(current);
 			current = null;
-		} else if (header === "Win" || header === "Draw") {
+		}
+		else if (header === "Win" || header === "Draw")
+		{
 			result = header;
 		}
 	}
 	assert.ok(result, "fixture has no terminal result");
-	return {plies, result};
+	return {
+		plies,
+		result,
+	};
 }
 
-function legalMoves(solver) {
+function legalMoves(solver)
+{
 	const taken = solver.isToPlace() ? solver.cellsTaken() : solver.piecesTaken();
 	const moves = [];
 	for (let move = 0; move < NUM_MOVES; move++) if (!((taken >> move) & 1)) moves.push(move);
 	return moves;
 }
 
-function outcome(solver) {
+function outcome(solver)
+{
 	if (solver.isWon()) return "Win";
 	if (solver.isDone()) return "Draw";
 	return "ongoing";
@@ -129,14 +157,16 @@ assert.ok(solver.bestMove() >= 0, "a move is available at the empty board");
 
 const {plies, result} = parseFixture(await readFile(fixturePath, "utf8"));
 solver.reset();
-for (const [index, ply] of plies.entries()) {
+for (const [index, ply] of plies.entries())
+{
 	const movesLeft = solver.movesLeft();
 	const context = `ply ${index} (${ply.phase})`;
 	const isPlace = ply.phase === "place";
 	assert.equal(solver.isToPlace(), isPlace, context);
 	assert.equal(evaluationToString(movesLeft, solver.evaluate()), ply.evaluation, `${context} root`);
 	const actualMoves = new Map();
-	for (const move of legalMoves(solver)) {
+	for (const move of legalMoves(solver))
+	{
 		const token = isPlace ? cellToString(move) : pieceToString(move);
 		const value = isPlace ? solver.evaluatePlace(move) : solver.evaluateSelect(move);
 		actualMoves.set(token, evaluationToString(movesLeft, value));

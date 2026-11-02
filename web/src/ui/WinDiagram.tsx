@@ -10,7 +10,8 @@ import {ALL_CELLS, cellName, column, row} from "../game/cells.js";
 import {type Board, type Rules, winningCells} from "../game/rules.js";
 import {PIECE_VIEW_HEIGHT, PIECE_VIEW_WIDTH, PieceShape} from "./PieceGlyph.js";
 
-export interface WinDiagramProps {
+export interface WinDiagramProps
+{
 	readonly board: Board;
 	readonly rules: Rules;
 	/** Names the picture for assistive technology and is printed under it. */
@@ -28,13 +29,16 @@ const PIECE_INSET = CELL * 0.08;
 const PIECE_SCALE = (CELL - 2 * PIECE_INSET) / PIECE_VIEW_HEIGHT;
 const PIECE_LEFT = (CELL - PIECE_VIEW_WIDTH * PIECE_SCALE) / 2;
 
-function cellOrigin(index: number): number {
+function cellOrigin(index: number): number
+{
 	return RAIL + PADDING + index * (CELL + GAP);
 }
 
-export function WinDiagram({board, rules, caption}: WinDiagramProps) {
+export function WinDiagram({board, rules, caption}: WinDiagramProps)
+{
 	const winning = winningCells(board, rules);
-	if (winning.size === 0) {
+	if (winning.size === 0)
+	{
 		throw new Error("WinDiagram needs a won board");
 	}
 	return (
@@ -51,7 +55,8 @@ export function WinDiagram({board, rules, caption}: WinDiagramProps) {
 					stroke="var(--felt-line)"
 					strokeWidth={1}
 				/>
-				{ALL_CELLS.map((cell) => {
+				{ALL_CELLS.map((cell) =>
+				{
 					const x = cellOrigin(column(cell));
 					const y = cellOrigin(row(cell));
 					const piece = board[cell] ?? null;

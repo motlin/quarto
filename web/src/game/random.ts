@@ -8,12 +8,15 @@ export type Random = () => number;
 
 const TWO_TO_THE_32 = 4_294_967_296;
 
-export function mulberry32(seed: number): Random {
-	if (!Number.isInteger(seed) || seed < 0 || seed >= TWO_TO_THE_32) {
+export function mulberry32(seed: number): Random
+{
+	if (!Number.isInteger(seed) || seed < 0 || seed >= TWO_TO_THE_32)
+	{
 		throw new Error(`Seed must be an unsigned 32-bit integer: ${seed}`);
 	}
 	let state = seed;
-	return () => {
+	return () =>
+	{
 		state = (state + 0x6d2b_79f5) >>> 0;
 		let mixed = state;
 		mixed = Math.imul(mixed ^ (mixed >>> 15), mixed | 1);
@@ -23,13 +26,16 @@ export function mulberry32(seed: number): Random {
 }
 
 /** One of `items`, each equally likely. */
-export function pickOne<T>(items: readonly T[], random: Random): T {
-	if (items.length === 0) {
+export function pickOne<T>(items: readonly T[], random: Random): T
+{
+	if (items.length === 0)
+	{
 		throw new Error("Nothing to pick from");
 	}
 	const index = Math.floor(random() * items.length);
 	const item = items[index];
-	if (item === undefined) {
+	if (item === undefined)
+	{
 		throw new Error(`Random gave index ${index} for ${items.length} items`);
 	}
 	return item;

@@ -6,60 +6,96 @@ import type {Envelope, Kind, Payloads, Response, Results, Snapshot} from "../../
 type Fetch = typeof globalThis.fetch;
 
 /** Stands in for a Worker: records what was posted and lets the test reply whenever it likes. */
-class FakeWorker implements WorkerLike {
+class FakeWorker implements WorkerLike
+{
 	readonly posted: Envelope<Kind>[] = [];
 	readonly transferred: (readonly Transferable[])[] = [];
 	terminated = false;
 	private readonly listeners = new Map<keyof WorkerEvents, ((event: never) => void)[]>();
 
-	postMessage(message: Envelope<Kind>, transfer: readonly Transferable[] = []): void {
+	postMessage(message: Envelope<Kind>, transfer: readonly Transferable[] = []): void
+	{
 		this.posted.push(message);
 		this.transferred.push(transfer);
 	}
 
-	addEventListener<K extends keyof WorkerEvents>(type: K, listener: (event: WorkerEvents[K]) => void): void {
+	addEventListener<K extends keyof WorkerEvents>(type: K, listener: (event: WorkerEvents[K]) => void): void
+	{
 		this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener]);
 	}
 
-	terminate(): void {
+	terminate(): void
+	{
 		this.terminated = true;
 	}
 
-	kinds(): Kind[] {
+	kinds(): Kind[]
+	{
 		return this.posted.map((message) => message.kind);
 	}
 
-	reply(response: Response): void {
-		this.emit("message", new MessageEvent("message", {data: response}));
+	reply(response: Response): void
+	{
+		this.emit(
+			"message",
+			new MessageEvent(
+				"message",
+				{
+					data: response,
+				},
+			),
+		);
 	}
 
 	/** Answers the most recent post of `kind` with `result`. */
-	answer<K extends Kind>(kind: K, result: Results[K]): void {
+	answer<K extends Kind>(kind: K, result: Results[K]): void
+	{
 		const message = this.posted.filter((posted) => posted.kind === kind).at(-1);
-		if (message === undefined) {
+		if (message === undefined)
+		{
 			throw new Error(`Nothing of kind ${kind} was posted`);
 		}
-		this.reply({id: message.id, ok: true, result});
+		this.reply(
+			{
+				id: message.id,
+				ok: true,
+				result,
+			},
+		);
 	}
 
-	fail(message: string): void {
-		this.emit("error", {message} as ErrorEvent);
+	fail(message: string): void
+	{
+		this.emit(
+			"error",
+			{
+				message,
+			} as ErrorEvent,
+		);
 	}
 
-	private emit<K extends keyof WorkerEvents>(type: K, event: WorkerEvents[K]): void {
-		for (const listener of this.listeners.get(type) ?? []) {
+	private emit<K extends keyof WorkerEvents>(type: K, event: WorkerEvents[K]): void
+	{
+		for (const listener of this.listeners.get(type) ?? [])
+		{
 			(listener as (event: WorkerEvents[K]) => void)(event);
 		}
 	}
 }
 
-const SNAPSHOT: Snapshot = {
+const SNAPSHOT: Snapshot =
+{
 	rules: "squares",
 	movesLeft: 16,
 	currentPiece: null,
 	piecesTaken: 0,
 	cellsTaken: 0,
-	board: Array.from({length: 16}, () => null),
+	board: Array.from(
+		{
+			length: 16,
+		},
+		() => null,
+	),
 	isToPlace: false,
 	isWon: false,
 	isDone: false,
@@ -70,67 +106,164 @@ const SNAPSHOT: Snapshot = {
 const BOOK = new Uint8Array([0x51, 0x42, 0x4b, 0x31, 1, 0, 0, 0, 0, 0]).buffer;
 
 /** A fetch that serves `BOOK` for any URL and records what was asked for. */
-function fakeFetch(status = 200): {fetch: Fetch; urls: string[]} {
+function fakeFetch(status = 200):
+{
+	fetch: Fetch;
+	urls: string[];
+}
+{
 	const urls: string[] = [];
-	const impl: Fetch = async (input) => {
+	const impl: Fetch = async (input) =>
+	{
 		urls.push(String(input));
-		return Promise.resolve(new Response(status === 200 ? BOOK.slice(0) : null, {status}));
+		return Promise.resolve(
+			new Response(
+				status === 200 ? BOOK.slice(0) : null,
+				{
+					status,
+				},
+			),
+		);
 	};
-	return {fetch: impl, urls};
+	return {
+		fetch: impl,
+		urls,
+	};
 }
 
 /** Lets every settled promise run its continuations. */
-async function settle(): Promise<void> {
-	for (let round = 0; round < 10; round++) {
+async function settle(): Promise<void>
+{
+	for (let round = 0; round < 10; round++)
+	{
 		await Promise.resolve();
 	}
 }
 
-describe("SolverClient", () => {
-	it("posts each request with its own id and payload", async () => {
+describe("SolverClient", () =>
+{
+	it("posts each request with its own id and payload", async () =>
+	{
 		const worker = new FakeWorker();
 		const client = new SolverClient(worker, new OpeningBooks(fakeFetch().fetch));
-		void client.request("applyPlace", {cell: 3});
+		void client.request(
+			"applyPlace",
+			{
+				cell: 3,
+			},
+		);
 		void client.request("evaluate");
 		await settle();
 		expect(worker.posted).toStrictEqual([
-			{id: 1, kind: "applyPlace", payload: {cell: 3}},
-			{id: 2, kind: "evaluate", payload: undefined},
+			{
+				id: 1,
+				kind: "applyPlace",
+				payload:
+				{
+					cell: 3,
+				},
+			},
+			{
+				id: 2,
+				kind: "evaluate",
+				payload: undefined,
+			},
 		]);
 	});
 
-	it("resolves each promise with the result that carries its id, whatever the order", async () => {
+	it("resolves each promise with the result that carries its id, whatever the order", async () =>
+	{
 		const worker = new FakeWorker();
 		const client = new SolverClient(worker, new OpeningBooks(fakeFetch().fetch));
 		const first = client.request("evaluate");
-		const second = client.request("setSeed", {seed: 1});
+		const second = client.request(
+			"setSeed",
+			{
+				seed: 1,
+			},
+		);
 		await settle();
-		worker.reply({id: 2, ok: true, result: null});
-		worker.reply({id: 1, ok: true, result: {value: 0, nodes: 10, ms: 1}});
-		expect(await first).toStrictEqual({value: 0, nodes: 10, ms: 1});
+		worker.reply(
+			{
+				id: 2,
+				ok: true,
+				result: null,
+			},
+		);
+		worker.reply(
+			{
+				id: 1,
+				ok: true,
+				result:
+				{
+					value: 0,
+					nodes: 10,
+					ms: 1,
+				},
+			},
+		);
+		expect(await first).toStrictEqual(
+			{
+				value: 0,
+				nodes: 10,
+				ms: 1,
+			},
+		);
 		expect(await second).toBeNull();
 	});
 
-	it("rejects with the worker's error text on a failed response", async () => {
+	it("rejects with the worker's error text on a failed response", async () =>
+	{
 		const worker = new FakeWorker();
 		const client = new SolverClient(worker, new OpeningBooks(fakeFetch().fetch));
 		const pending = client.request("undo");
 		await settle();
-		worker.reply({id: 1, ok: false, error: "Nothing to undo"});
+		worker.reply(
+			{
+				id: 1,
+				ok: false,
+				error: "Nothing to undo",
+			},
+		);
 		await expect(pending).rejects.toThrow("Nothing to undo");
 	});
 
-	it("ignores replies for ids it is not waiting on", async () => {
+	it("ignores replies for ids it is not waiting on", async () =>
+	{
 		const worker = new FakeWorker();
 		const client = new SolverClient(worker, new OpeningBooks(fakeFetch().fetch));
 		const pending = client.request("evaluate");
 		await settle();
-		worker.reply({id: 99, ok: true, result: null});
-		worker.reply({id: 1, ok: true, result: {value: 2, nodes: 0, ms: 0}});
-		expect(await pending).toStrictEqual({value: 2, nodes: 0, ms: 0});
+		worker.reply(
+			{
+				id: 99,
+				ok: true,
+				result: null,
+			},
+		);
+		worker.reply(
+			{
+				id: 1,
+				ok: true,
+				result:
+				{
+					value: 2,
+					nodes: 0,
+					ms: 0,
+				},
+			},
+		);
+		expect(await pending).toStrictEqual(
+			{
+				value: 2,
+				nodes: 0,
+				ms: 0,
+			},
+		);
 	});
 
-	it("terminates a failed worker and rejects everything in flight and every request after", async () => {
+	it("terminates a failed worker and rejects everything in flight and every request after", async () =>
+	{
 		const worker = new FakeWorker();
 		const client = new SolverClient(worker, new OpeningBooks(fakeFetch().fetch));
 		const pending = client.request("evaluate");
@@ -142,7 +275,8 @@ describe("SolverClient", () => {
 		expect(worker.terminated).toBe(true);
 	});
 
-	it("terminates the worker and rejects what was in flight", async () => {
+	it("terminates the worker and rejects what was in flight", async () =>
+	{
 		const worker = new FakeWorker();
 		const client = new SolverClient(worker, new OpeningBooks(fakeFetch().fetch));
 		const pending = client.request("evaluate");
@@ -152,62 +286,178 @@ describe("SolverClient", () => {
 		await expect(client.request("evaluate")).rejects.toThrow("Solver worker terminated");
 	});
 
-	describe("opening books", () => {
-		it("fetches exactly the chosen rules' book on init, loads it, and holds later requests until it is in", async () => {
+	describe("opening books", () =>
+	{
+		it("fetches exactly the chosen rules' book on init, loads it, and holds later requests until it is in", async () =>
+		{
 			const worker = new FakeWorker();
 			const {fetch, urls} = fakeFetch();
 			const client = new SolverClient(worker, new OpeningBooks(fetch));
-			const init = client.request("init", {rules: "lines"});
-			const seeded = client.request("setSeed", {seed: 5});
+			const init = client.request(
+				"init",
+				{
+					rules: "lines",
+				},
+			);
+			const seeded = client.request(
+				"setSeed",
+				{
+					seed: 5,
+				},
+			);
 			const evaluated = client.request("evaluate");
 			await settle();
 			expect(urls).toStrictEqual([BOOK_URLS.lines]);
 			expect(worker.kinds()).toStrictEqual(["init", "loadBook"]);
 			const loadBook = worker.posted[1]?.payload as Payloads["loadBook"];
-			expect(loadBook).toStrictEqual({rules: "lines", bytes: BOOK});
+			expect(loadBook).toStrictEqual(
+				{
+					rules: "lines",
+					bytes: BOOK,
+				},
+			);
 			expect(worker.transferred[1]).toStrictEqual([loadBook.bytes]);
 
-			worker.answer("init", {version: "1.2.3", snapshot: {...SNAPSHOT, rules: "lines", bookEntries: 0}});
+			worker.answer(
+				"init",
+				{
+					version: "1.2.3",
+					snapshot:
+					{
+						...SNAPSHOT,
+						rules: "lines",
+						bookEntries: 0,
+					},
+				},
+			);
 			await settle();
 			expect(worker.kinds()).toStrictEqual(["init", "loadBook"]);
 
-			worker.answer("loadBook", {...SNAPSHOT, rules: "lines"});
-			expect(await init).toStrictEqual({version: "1.2.3", snapshot: {...SNAPSHOT, rules: "lines"}});
+			worker.answer(
+				"loadBook",
+				{
+					...SNAPSHOT,
+					rules: "lines",
+				},
+			);
+			expect(await init).toStrictEqual(
+				{
+					version: "1.2.3",
+					snapshot:
+					{
+						...SNAPSHOT,
+						rules: "lines",
+					},
+				},
+			);
 			await settle();
 			expect(worker.kinds()).toStrictEqual(["init", "loadBook", "setSeed", "evaluate"]);
 			worker.answer("setSeed", null);
-			worker.answer("evaluate", {value: 0, nodes: 1, ms: 1});
+			worker.answer(
+				"evaluate",
+				{
+					value: 0,
+					nodes: 1,
+					ms: 1,
+				},
+			);
 			expect(await seeded).toBeNull();
-			expect(await evaluated).toStrictEqual({value: 0, nodes: 1, ms: 1});
+			expect(await evaluated).toStrictEqual(
+				{
+					value: 0,
+					nodes: 1,
+					ms: 1,
+				},
+			);
 		});
 
-		it("fetches the other book when the rules change, after the first is in", async () => {
+		it("fetches the other book when the rules change, after the first is in", async () =>
+		{
 			const worker = new FakeWorker();
 			const {fetch, urls} = fakeFetch();
 			const client = new SolverClient(worker, new OpeningBooks(fetch));
-			const init = client.request("init", {rules: "squares"});
-			const switched = client.request("setRules", {rules: "lines"});
+			const init = client.request(
+				"init",
+				{
+					rules: "squares",
+				},
+			);
+			const switched = client.request(
+				"setRules",
+				{
+					rules: "lines",
+				},
+			);
 			await settle();
 			expect(urls).toStrictEqual([BOOK_URLS.squares, BOOK_URLS.lines]);
 			expect(worker.kinds()).toStrictEqual(["init", "loadBook"]);
-			worker.answer("init", {version: "1.2.3", snapshot: SNAPSHOT});
+			worker.answer(
+				"init",
+				{
+					version: "1.2.3",
+					snapshot: SNAPSHOT,
+				},
+			);
 			worker.answer("loadBook", SNAPSHOT);
 			await init;
 			await settle();
 			expect(worker.kinds()).toStrictEqual(["init", "loadBook", "setRules", "loadBook"]);
-			expect(worker.posted[3]?.payload).toMatchObject({rules: "lines"});
-			worker.answer("setRules", {...SNAPSHOT, rules: "lines", bookEntries: 0});
-			worker.answer("loadBook", {...SNAPSHOT, rules: "lines"});
-			expect(await switched).toStrictEqual({...SNAPSHOT, rules: "lines"});
+			expect(worker.posted[3]?.payload).toMatchObject(
+				{
+					rules: "lines",
+				},
+			);
+			worker.answer(
+				"setRules",
+				{
+					...SNAPSHOT,
+					rules: "lines",
+					bookEntries: 0,
+				},
+			);
+			worker.answer(
+				"loadBook",
+				{
+					...SNAPSHOT,
+					rules: "lines",
+				},
+			);
+			expect(await switched).toStrictEqual(
+				{
+					...SNAPSHOT,
+					rules: "lines",
+				},
+			);
 		});
 
-		it("rejects init naming the book URL when the fetch fails, and gives up on the worker", async () => {
+		it("rejects init naming the book URL when the fetch fails, and gives up on the worker", async () =>
+		{
 			const worker = new FakeWorker();
 			const client = new SolverClient(worker, new OpeningBooks(fakeFetch(404).fetch));
-			const init = client.request("init", {rules: "squares"});
-			const seeded = client.request("setSeed", {seed: 5});
+			const init = client.request(
+				"init",
+				{
+					rules: "squares",
+				},
+			);
+			const seeded = client.request(
+				"setSeed",
+				{
+					seed: 5,
+				},
+			);
 			await settle();
-			worker.answer("init", {version: "1.2.3", snapshot: {...SNAPSHOT, bookEntries: 0}});
+			worker.answer(
+				"init",
+				{
+					version: "1.2.3",
+					snapshot:
+					{
+						...SNAPSHOT,
+						bookEntries: 0,
+					},
+				},
+			);
 			await expect(init).rejects.toThrow(`Could not fetch the opening book at ${BOOK_URLS.squares}: HTTP 404`);
 			await expect(seeded).rejects.toThrow(BOOK_URLS.squares);
 			expect(worker.kinds()).toStrictEqual(["init"]);
@@ -215,21 +465,34 @@ describe("SolverClient", () => {
 			await expect(client.request("evaluate")).rejects.toThrow(BOOK_URLS.squares);
 		});
 
-		it("rejects a book that arrives after the worker has died instead of leaving init hanging", async () => {
+		it("rejects a book that arrives after the worker has died instead of leaving init hanging", async () =>
+		{
 			const worker = new FakeWorker();
-			const download: {serve: () => void} = {
-				serve: () => {
+			const download:
+			{
+				serve: () => void;
+			} =
+			{
+				serve: () =>
+				{
 					throw new Error("the book was never asked for");
 				},
 			};
 			const slowFetch: Fetch = async () =>
-				new Promise((resolve) => {
-					download.serve = () => {
+				new Promise((resolve) =>
+				{
+					download.serve = () =>
+					{
 						resolve(new Response(BOOK.slice(0)));
 					};
 				});
 			const client = new SolverClient(worker, new OpeningBooks(slowFetch));
-			const init = client.request("init", {rules: "squares"});
+			const init = client.request(
+				"init",
+				{
+					rules: "squares",
+				},
+			);
 			await settle();
 			worker.fail("boom");
 			await settle();
@@ -238,41 +501,73 @@ describe("SolverClient", () => {
 			expect(worker.kinds()).toStrictEqual(["init"]);
 		});
 
-		it("shares one download between solvers, each getting its own buffer to transfer", async () => {
+		it("shares one download between solvers, each getting its own buffer to transfer", async () =>
+		{
 			const {fetch, urls} = fakeFetch();
 			const books = new OpeningBooks(fetch);
 			const first = new FakeWorker();
 			const second = new FakeWorker();
-			void new SolverClient(first, books).request("init", {rules: "squares"});
-			void new SolverClient(second, books).request("init", {rules: "squares"});
+			void new SolverClient(first, books).request(
+				"init",
+				{
+					rules: "squares",
+				},
+			);
+			void new SolverClient(second, books).request(
+				"init",
+				{
+					rules: "squares",
+				},
+			);
 			await settle();
 			expect(urls).toStrictEqual([BOOK_URLS.squares]);
 			const [a, b] = [first.posted[1]?.payload, second.posted[1]?.payload];
-			expect(a).toStrictEqual({rules: "squares", bytes: BOOK});
-			expect(b).toStrictEqual({rules: "squares", bytes: BOOK});
+			expect(a).toStrictEqual(
+				{
+					rules: "squares",
+					bytes: BOOK,
+				},
+			);
+			expect(b).toStrictEqual(
+				{
+					rules: "squares",
+					bytes: BOOK,
+				},
+			);
 			expect(a).not.toBe(b);
 		});
 	});
 });
 
-describe("OpeningBooks", () => {
-	it("maps each rules variant to its own hashed asset", () => {
+describe("OpeningBooks", () =>
+{
+	it("maps each rules variant to its own hashed asset", () =>
+	{
 		expect(BOOK_URLS.squares).toMatch(/squares.*\.qbk$/);
 		expect(BOOK_URLS.lines).toMatch(/lines.*\.qbk$/);
 		expect(BOOK_URLS.squares).not.toBe(BOOK_URLS.lines);
 	});
 
-	it("asks the browser cache first, since the URL changes whenever the book does", async () => {
+	it("asks the browser cache first, since the URL changes whenever the book does", async () =>
+	{
 		const fetchImpl = vi.fn<Fetch>(async () => Promise.resolve(new Response(BOOK.slice(0))));
 		await new OpeningBooks(fetchImpl).load("lines");
-		expect(fetchImpl).toHaveBeenCalledWith(BOOK_URLS.lines, {cache: "force-cache"});
+		expect(fetchImpl).toHaveBeenCalledWith(
+			BOOK_URLS.lines,
+			{
+				cache: "force-cache",
+			},
+		);
 	});
 
-	it("retries a download that failed the next time it is asked", async () => {
+	it("retries a download that failed the next time it is asked", async () =>
+	{
 		let attempts = 0;
-		const fetchImpl: Fetch = async () => {
+		const fetchImpl: Fetch = async () =>
+		{
 			attempts += 1;
-			if (attempts === 1) {
+			if (attempts === 1)
+			{
 				throw new TypeError("offline");
 			}
 			return Promise.resolve(new Response(BOOK.slice(0)));
@@ -285,7 +580,8 @@ describe("OpeningBooks", () => {
 		expect(attempts).toBe(2);
 	});
 
-	it("prefetches quietly so a solver made later finds the book waiting", async () => {
+	it("prefetches quietly so a solver made later finds the book waiting", async () =>
+	{
 		const {fetch, urls} = fakeFetch();
 		const books = new OpeningBooks(fetch);
 		books.prefetch("lines");

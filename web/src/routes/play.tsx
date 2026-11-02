@@ -7,12 +7,15 @@ import {toGameSetup} from "../setup/setup.js";
 import {PlayScreen} from "../ui/PlayScreen.js";
 import {playSearchSchema} from "./-play-search.js";
 
-export const Route = createFileRoute("/play")({
-	validateSearch: playSearchSchema,
-	component: PlayPage,
-});
+export const Route = createFileRoute("/play")(
+	{
+		validateSearch: playSearchSchema,
+		component: PlayPage,
+	},
+);
 
-function PlayPage() {
+function PlayPage()
+{
 	const search = Route.useSearch();
 	const navigate = Route.useNavigate();
 	const {createSolver, gameStore} = Route.useRouteContext();
@@ -25,15 +28,27 @@ function PlayPage() {
 	// `resumeFrom` only when it mounts; after that it owns the moves and just reports them.
 	const resumeFrom = useMemo(() => loadGame(gameStore, setup), [gameStore, setup]);
 	const keepMoves = useCallback(
-		(moves: readonly Move[]) => {
+		(moves: readonly Move[]) =>
+		{
 			saveGame(gameStore, setup, moves);
 		},
 		[gameStore, setup],
 	);
 	const changeHints = useCallback(
-		(hints: Hints) => {
+		(hints: Hints) =>
+		{
 			// Replaced rather than pushed, so Back still leaves the game instead of stepping through levels.
-			void navigate({to: "/play", search: {...search, annotations: hints}, replace: true});
+			void navigate(
+				{
+					to: "/play",
+					search:
+					{
+						...search,
+						annotations: hints,
+					},
+					replace: true,
+				},
+			);
 		},
 		[navigate, search],
 	);

@@ -8,7 +8,8 @@ import {ALL_PIECES, type Piece, pieceName} from "../game/pieces.js";
 import {Hint} from "./Hint.js";
 import {PieceGlyph} from "./PieceGlyph.js";
 
-export interface TrayProps {
+export interface TrayProps
+{
 	readonly remaining: readonly Piece[];
 	readonly legalPieces: ReadonlySet<Piece>;
 	readonly onSelect: (piece: Piece) => void;
@@ -18,11 +19,13 @@ export interface TrayProps {
 	readonly hints: ReadonlyMap<Piece, string>;
 }
 
-export function Tray({remaining, legalPieces, onSelect, pendingPiece, hints}: TrayProps) {
+export function Tray({remaining, legalPieces, onSelect, pendingPiece, hints}: TrayProps)
+{
 	const inTray = new Set(remaining);
 	return (
 		<div className="tray" role="group" aria-label="Pieces remaining">
-			{ALL_PIECES.map((piece) => {
+			{ALL_PIECES.map((piece) =>
+			{
 				const taken = !inTray.has(piece);
 				const legal = !taken && legalPieces.has(piece);
 				const hint = legal ? hints.get(piece) : undefined;
@@ -35,7 +38,8 @@ export function Tray({remaining, legalPieces, onSelect, pendingPiece, hints}: Tr
 						aria-hidden={taken ? "true" : undefined}
 						tabIndex={taken ? -1 : undefined}
 						disabled={!legal}
-						onClick={() => {
+						onClick={() =>
+						{
 							onSelect(piece);
 						}}
 					>

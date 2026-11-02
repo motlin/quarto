@@ -4,7 +4,8 @@
 	"private": true,
 	"description": "QuartoBot: play Quarto against a perfect-play bot in the browser",
 	"type": "module",
-	"scripts": {
+	"scripts":
+	{
 		"preinstall": "npx only-allow pnpm",
 		"dev": "vp dev",
 		"preview": "vp preview",
@@ -23,7 +24,8 @@
 		"deploy": "wrangler pages deploy",
 		"prepare": "VITE_GIT_HOOKS=0 vp config"
 	},
-	"dependencies": {
+	"dependencies":
+	{
 		"@fontsource-variable/bricolage-grotesque": "5.3.0",
 		"@fontsource/ibm-plex-mono": "5.3.0",
 		"@fontsource/ibm-plex-sans": "5.3.0",
@@ -33,7 +35,8 @@
 		"react-dom": "^19.3.1",
 		"zod": "^4.6.7"
 	},
-	"devDependencies": {
+	"devDependencies":
+	{
 		"@chromatic-com/storybook": "^5.6.0",
 		"@storybook/addon-a11y": "^10.6.5",
 		"@storybook/addon-docs": "^10.6.5",

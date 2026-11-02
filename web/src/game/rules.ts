@@ -13,16 +13,20 @@ export type Rules = "lines" | "squares";
 /** One entry per cell, row-major; `null` while the cell is empty. */
 export type Board = readonly (Piece | null)[];
 
-export function emptyBoard(): Board {
+export function emptyBoard(): Board
+{
 	return ALL_CELLS.map(() => null);
 }
 
 /** A board described by which piece sits on which named cell, such as `{a1: 5, b2: 10}`. */
-export function boardWith(placed: Readonly<Record<string, Piece>>): Board {
+export function boardWith(placed: Readonly<Record<string, Piece>>): Board
+{
 	const byCell = new Map<Cell, Piece>();
-	for (const [name, piece] of Object.entries(placed)) {
+	for (const [name, piece] of Object.entries(placed))
+	{
 		const cell = cellFromName(name);
-		if (byCell.has(cell)) {
+		if (byCell.has(cell))
+		{
 			throw new Error(`Cell ${name} is placed twice`);
 		}
 		byCell.set(cell, piece);
@@ -32,7 +36,8 @@ export function boardWith(placed: Readonly<Record<string, Piece>>): Board {
 
 const INDICES = [0, 1, 2, 3];
 
-function lines(): Cell[][] {
+function lines(): Cell[][]
+{
 	const rows = INDICES.map((rowIndex) => INDICES.map((columnIndex) => cellAt(rowIndex, columnIndex)));
 	const columns = INDICES.map((columnIndex) => INDICES.map((rowIndex) => cellAt(rowIndex, columnIndex)));
 	const diagonals = [
@@ -42,7 +47,8 @@ function lines(): Cell[][] {
 	return [...rows, ...columns, ...diagonals];
 }
 
-function squares(): Cell[][] {
+function squares(): Cell[][]
+{
 	const starts = [0, 1, 2];
 	return starts.flatMap((rowIndex) =>
 		starts.map((columnIndex) => [
@@ -56,23 +62,27 @@ function squares(): Cell[][] {
 
 const LINES_ONLY: readonly (readonly Cell[])[] = lines();
 
-const WIN_LINES: Readonly<Record<Rules, readonly (readonly Cell[])[]>> = {
+const WIN_LINES: Readonly<Record<Rules, readonly (readonly Cell[])[]>> =
+{
 	lines: LINES_ONLY,
 	squares: [...LINES_ONLY, ...squares()],
 };
 
 /** Every set of four cells that wins under `rules`: 10 lines, or 19 with the 2x2 squares. */
-export function winLines(rules: Rules): readonly (readonly Cell[])[] {
+export function winLines(rules: Rules): readonly (readonly Cell[])[]
+{
 	return WIN_LINES[rules];
 }
 
 const ALL_TRAITS = 0b1111;
 
 /** Four pieces share a trait when some bit is set in all of them or clear in all of them. */
-function shareTrait(pieces: readonly Piece[]): boolean {
+function shareTrait(pieces: readonly Piece[]): boolean
+{
 	let allSet = ALL_TRAITS;
 	let anySet = 0;
-	for (const piece of pieces) {
+	for (const piece of pieces)
+	{
 		allSet &= piece;
 		anySet |= piece;
 	}
@@ -80,21 +90,28 @@ function shareTrait(pieces: readonly Piece[]): boolean {
 }
 
 /** Every cell on a completed winning line, for highlighting; empty while nobody has won. */
-export function winningCells(board: Board, rules: Rules): ReadonlySet<Cell> {
-	if (board.length !== ALL_CELLS.length) {
+export function winningCells(board: Board, rules: Rules): ReadonlySet<Cell>
+{
+	if (board.length !== ALL_CELLS.length)
+	{
 		throw new Error(`Board must have ${ALL_CELLS.length} cells, got ${board.length}`);
 	}
 	const winning = new Set<Cell>();
-	for (const line of winLines(rules)) {
+	for (const line of winLines(rules))
+	{
 		const pieces: Piece[] = [];
-		for (const cell of line) {
+		for (const cell of line)
+		{
 			const piece = board[cell];
-			if (piece !== null && piece !== undefined) {
+			if (piece !== null && piece !== undefined)
+			{
 				pieces.push(piece);
 			}
 		}
-		if (pieces.length === line.length && shareTrait(pieces)) {
-			for (const cell of line) {
+		if (pieces.length === line.length && shareTrait(pieces))
+		{
+			for (const cell of line)
+			{
 				winning.add(cell);
 			}
 		}

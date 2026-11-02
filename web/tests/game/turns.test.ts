@@ -11,7 +11,8 @@ const plies: readonly [number, boolean][] = [
 	[2, true],
 ];
 
-const setup: GameSetup = {
+const setup: GameSetup =
+{
 	opponent: "bot",
 	rules: "squares",
 	first: "you",
@@ -21,19 +22,24 @@ const setup: GameSetup = {
 	names: ["Player 1", "Player 2"],
 };
 
-describe("playerToMove", () => {
-	it("lets player 0 select first and alternates every ply", () => {
+describe("playerToMove", () =>
+{
+	it("lets player 0 select first and alternates every ply", () =>
+	{
 		expect(plies.map(([done, toPlace]) => playerToMove(done, toPlace))).toStrictEqual([0, 1, 1, 0, 0, 1]);
 	});
 
-	it("gives the sixteenth placement to player 0", () => {
+	it("gives the sixteenth placement to player 0", () =>
+	{
 		expect(playerToMove(15, false)).toBe(1);
 		expect(playerToMove(15, true)).toBe(0);
 	});
 });
 
-describe("isHumanTurn", () => {
-	it("starts with the human when the human goes first", () => {
+describe("isHumanTurn", () =>
+{
+	it("starts with the human when the human goes first", () =>
+	{
 		expect(plies.map(([done, toPlace]) => isHumanTurn(setup, done, toPlace))).toStrictEqual([
 			true,
 			false,
@@ -44,19 +50,30 @@ describe("isHumanTurn", () => {
 		]);
 	});
 
-	it("starts with the bot when the bot goes first", () => {
-		expect(plies.map(([done, toPlace]) => isHumanTurn({...setup, first: "bot"}, done, toPlace))).toStrictEqual([
-			false,
-			true,
-			true,
-			false,
-			false,
-			true,
-		]);
+	it("starts with the bot when the bot goes first", () =>
+	{
+		expect(
+			plies.map(([done, toPlace]) =>
+				isHumanTurn(
+					{
+						...setup,
+						first: "bot",
+					},
+					done,
+					toPlace,
+				),
+			),
+		).toStrictEqual([false, true, true, false, false, true]);
 	});
 
-	it("is always a human's turn between two people", () => {
-		const twoPeople: GameSetup = {...setup, opponent: "human", first: "bot"};
+	it("is always a human's turn between two people", () =>
+	{
+		const twoPeople: GameSetup =
+		{
+			...setup,
+			opponent: "human",
+			first: "bot",
+		};
 		expect(plies.map(([done, toPlace]) => isHumanTurn(twoPeople, done, toPlace))).toStrictEqual([
 			true,
 			true,

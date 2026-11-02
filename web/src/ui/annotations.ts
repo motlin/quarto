@@ -4,8 +4,16 @@ import type {Hints} from "../game/setup.js";
 import type {SegmentOption} from "./Segment.js";
 
 export const ANNOTATIONS: readonly SegmentOption<Hints>[] = [
-	{value: "off", label: "Off", help: "No solver readout. The usual choice for two people."},
-	{value: "outcome", label: "Outcome", help: "Shows who wins with perfect play and in how many moves."},
+	{
+		value: "off",
+		label: "Off",
+		help: "No solver readout. The usual choice for two people.",
+	},
+	{
+		value: "outcome",
+		label: "Outcome",
+		help: "Shows who wins with perfect play and in how many moves.",
+	},
 	{
 		value: "values",
 		label: "Outcome + move values",

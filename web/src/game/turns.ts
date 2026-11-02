@@ -9,24 +9,29 @@ import type {GameSetup} from "./setup.js";
 
 export type Player = 0 | 1;
 
-export function playerToMove(movesDone: number, isToPlace: boolean): Player {
+export function playerToMove(movesDone: number, isToPlace: boolean): Player
+{
 	const parity = (isToPlace ? movesDone + 1 : movesDone) % 2;
 	return parity === 0 ? 0 : 1;
 }
 
-export function otherPlayer(player: Player): Player {
+export function otherPlayer(player: Player): Player
+{
 	return player === 0 ? 1 : 0;
 }
 
 /** The seat the bot occupies in a bot game; meaningless between two people. */
-function botPlayer(setup: GameSetup): Player {
+function botPlayer(setup: GameSetup): Player
+{
 	return setup.first === "bot" ? 0 : 1;
 }
 
-export function isBot(setup: GameSetup, player: Player): boolean {
+export function isBot(setup: GameSetup, player: Player): boolean
+{
 	return setup.opponent === "bot" && player === botPlayer(setup);
 }
 
-export function isHumanTurn(setup: GameSetup, movesDone: number, isToPlace: boolean): boolean {
+export function isHumanTurn(setup: GameSetup, movesDone: number, isToPlace: boolean): boolean
+{
 	return !isBot(setup, playerToMove(movesDone, isToPlace));
 }

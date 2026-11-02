@@ -7,13 +7,27 @@ import {type ReactNode, useLayoutEffect} from "react";
 
 export type Theme = "light" | "dark";
 
-export function Themed({theme, children}: {theme: Theme; children: ReactNode}) {
-	useLayoutEffect(() => {
+export function Themed({theme, children}: {theme: Theme; children: ReactNode})
+{
+	useLayoutEffect(() =>
+	{
 		const root = document.documentElement;
 		root.dataset["theme"] = theme;
-		return () => {
+		return () =>
+		{
 			delete root.dataset["theme"];
 		};
 	}, [theme]);
-	return <div style={{background: "var(--ground)", color: "var(--ink)", padding: 16}}>{children}</div>;
+	return (
+		<div
+			style={
+			{
+				background: "var(--ground)",
+				color: "var(--ink)",
+				padding: 16,
+			}}
+		>
+			{children}
+		</div>
+	);
 }

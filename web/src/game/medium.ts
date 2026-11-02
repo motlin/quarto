@@ -19,70 +19,101 @@ import {pickOne, type Random} from "./random.js";
 import {type Board, type Rules, winningCells} from "./rules.js";
 import type {GameState} from "./state.js";
 
-export interface MediumTurn {
+export interface MediumTurn
+{
 	/** Where the piece in hand goes; nothing on the first turn, when there is no piece in hand. */
 	readonly place: Cell | null;
 	/** The piece handed to the opponent; nothing when the placement ends the game or empties the tray. */
 	readonly select: Piece | null;
 }
 
-interface Pair {
+interface Pair
+{
 	readonly cell: Cell;
 	readonly piece: Piece;
 }
 
-function emptyCells(board: Board): readonly Cell[] {
+function emptyCells(board: Board): readonly Cell[]
+{
 	return ALL_CELLS.filter((cell) => board[cell] === null);
 }
 
-function placing(board: Board, cell: Cell, piece: Piece): Board {
+function placing(board: Board, cell: Cell, piece: Piece): Board
+{
 	return board.map((occupant, index) => (index === cell ? piece : occupant));
 }
 
-function wins(board: Board, cell: Cell, piece: Piece, rules: Rules): boolean {
+function wins(board: Board, cell: Cell, piece: Piece, rules: Rules): boolean
+{
 	return winningCells(placing(board, cell, piece), rules).size > 0;
 }
 
 /** Whether whoever receives `piece` can win by placing it on some empty cell. */
-function winsAtOnce(board: Board, piece: Piece, rules: Rules): boolean {
+function winsAtOnce(board: Board, piece: Piece, rules: Rules): boolean
+{
 	return emptyCells(board).some((cell) => wins(board, cell, piece, rules));
 }
 
 /** A piece for the opponent that cannot win at once if there is one; any piece otherwise. */
-function chooseSelect(board: Board, remaining: readonly Piece[], rules: Rules, random: Random): Piece {
+function chooseSelect(board: Board, remaining: readonly Piece[], rules: Rules, random: Random): Piece
+{
 	const safe = remaining.filter((piece) => !winsAtOnce(board, piece, rules));
 	return pickOne(safe.length > 0 ? safe : remaining, random);
 }
 
-export function mediumTurn(state: GameState, random: Random): MediumTurn {
-	if (state.status !== "playing") {
+export function mediumTurn(state: GameState, random: Random): MediumTurn
+{
+	if (state.status !== "playing")
+	{
 		throw new Error("The game is over");
 	}
 	const {board, hand, remaining} = state;
 	const {rules} = state.setup;
-	if (hand === null) {
-		return {place: null, select: chooseSelect(board, remaining, rules, random)};
+	if (hand === null)
+	{
+		return {
+			place: null,
+			select: chooseSelect(board, remaining, rules, random),
+		};
 	}
 	const empty = emptyCells(board);
 	const winning = empty.find((cell) => wins(board, cell, hand, rules));
-	if (winning !== undefined) {
-		return {place: winning, select: null};
+	if (winning !== undefined)
+	{
+		return {
+			place: winning,
+			select: null,
+		};
 	}
-	if (remaining.length === 0) {
-		return {place: pickOne(empty, random), select: null};
+	if (remaining.length === 0)
+	{
+		return {
+			place: pickOne(empty, random),
+			select: null,
+		};
 	}
 	const pairs: Pair[] = [];
 	const safePairs: Pair[] = [];
-	for (const cell of empty) {
+	for (const cell of empty)
+	{
 		const after = placing(board, cell, hand);
-		for (const piece of remaining) {
-			const pair = {cell, piece};
+		for (const piece of remaining)
+		{
+			const pair =
+			{
+				cell,
+				piece,
+			};
 			pairs.push(pair);
-			if (!winsAtOnce(after, piece, rules)) {
+			if (!winsAtOnce(after, piece, rules))
+			{
 				safePairs.push(pair);
 			}
 		}
 	}
 	const {cell, piece} = pickOne(safePairs.length > 0 ? safePairs : pairs, random);
-	return {place: cell, select: piece};
+	return {
+		place: cell,
+		select: piece,
+	};
 }

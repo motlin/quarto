@@ -5,30 +5,77 @@ import {PieceGlyph} from "../ui/PieceGlyph.js";
 import {WinDiagram} from "../ui/WinDiagram.js";
 import {HelpPage} from "./-help-page.js";
 
-export const Route = createFileRoute("/rules")({
-	component: RulesPage,
-});
+export const Route = createFileRoute("/rules")(
+	{
+		component: RulesPage,
+	},
+);
 
 /** Each trait shown as the pair of pieces that differ in nothing else. */
-const TRAITS: readonly {readonly label: string; readonly pair: readonly [Piece, Piece]}[] = [
-	{label: "light or dark", pair: [0, 1]},
-	{label: "round or square", pair: [0, 2]},
-	{label: "short or tall", pair: [0, 4]},
-	{label: "solid or hollow", pair: [0, 8]},
+const TRAITS: readonly
+{
+	readonly label: string;
+	readonly pair: readonly [Piece, Piece];
+}[] = [
+	{
+		label: "light or dark",
+		pair: [0, 1],
+	},
+	{
+		label: "round or square",
+		pair: [0, 2],
+	},
+	{
+		label: "short or tall",
+		pair: [0, 4],
+	},
+	{
+		label: "solid or hollow",
+		pair: [0, 8],
+	},
 ];
 
-const STEPS: readonly {readonly title: string; readonly detail: string}[] = [
-	{title: "Place", detail: "Put the piece you were handed on any empty cell."},
-	{title: "Pick", detail: "Choose one of the pieces still off the board and hand it to your opponent."},
+const STEPS: readonly
+{
+	readonly title: string;
+	readonly detail: string;
+}[] = [
+	{
+		title: "Place",
+		detail: "Put the piece you were handed on any empty cell.",
+	},
+	{
+		title: "Pick",
+		detail: "Choose one of the pieces still off the board and hand it to your opponent.",
+	},
 ];
 
 /** Four different dark pieces along the top row; the two bystanders share no trait with the row. */
-const DARK_ROW = boardWith({a1: 1, b1: 3, c1: 5, d1: 15, c2: 6, b3: 8});
+const DARK_ROW = boardWith(
+	{
+		a1: 1,
+		b1: 3,
+		c1: 5,
+		d1: 15,
+		c2: 6,
+		b3: 8,
+	},
+);
 
 /** Four tall pieces in the middle block. */
-const TALL_SQUARE = boardWith({b2: 4, c2: 6, b3: 13, c3: 15, a1: 1, d4: 8});
+const TALL_SQUARE = boardWith(
+	{
+		b2: 4,
+		c2: 6,
+		b3: 13,
+		c3: 15,
+		a1: 1,
+		d4: 8,
+	},
+);
 
-function RulesPage() {
+function RulesPage()
+{
 	return (
 		<HelpPage title="Rules">
 			<h2>The pieces</h2>

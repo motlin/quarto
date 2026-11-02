@@ -5,13 +5,16 @@ import viteConfig from "./vite.config";
 // See: https://github.com/storybookjs/storybook/issues/33287
 export default mergeConfig(
 	viteConfig,
-	defineConfig({
-		test: {
-			globals: true,
-			environment: "node",
-			pool: "threads",
-			isolate: true,
-			fsModuleCache: true,
+	defineConfig(
+		{
+			test:
+			{
+				globals: true,
+				environment: "node",
+				pool: "threads",
+				isolate: true,
+				fsModuleCache: true,
+			},
 		},
-	}),
+	),
 );

@@ -5,13 +5,15 @@
 
 import {useId} from "react";
 
-export interface SegmentOption<T extends string> {
+export interface SegmentOption<T extends string>
+{
 	readonly value: T;
 	readonly label: string;
 	readonly help: string;
 }
 
-export interface SegmentProps<T extends string> {
+export interface SegmentProps<T extends string>
+{
 	readonly label: string;
 	readonly options: readonly SegmentOption<T>[];
 	readonly value: T;
@@ -20,11 +22,13 @@ export interface SegmentProps<T extends string> {
 	readonly compact?: boolean;
 }
 
-export function Segment<T extends string>({label, options, value, onChange, compact = false}: SegmentProps<T>) {
+export function Segment<T extends string>({label, options, value, onChange, compact = false}: SegmentProps<T>)
+{
 	const labelId = useId();
 	const helpId = useId();
 	const selected = options.find((option) => option.value === value);
-	if (selected === undefined) {
+	if (selected === undefined)
+	{
 		throw new Error(`${label}: no option for value ${value}`);
 	}
 	return (
@@ -44,7 +48,8 @@ export function Segment<T extends string>({label, options, value, onChange, comp
 						type="button"
 						role="radio"
 						aria-checked={option.value === value}
-						onClick={() => {
+						onClick={() =>
+						{
 							onChange(option.value);
 						}}
 					>
